@@ -1,0 +1,6 @@
+result
+result-*
+.direnv/
+# 元環境の機密情報を誤って公開しない。自分で確認してから管理対象にする。
+hosts/nixos/base/*
+!hosts/nixos/base/configuration.nix
