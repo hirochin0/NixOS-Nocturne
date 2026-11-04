@@ -12,13 +12,21 @@
     };
     # 最新安定版を明示。nixpkgsは上流のlockに従い、Mesa/XDPHも同じ集合を使う。
     hyprland.url = "github:hyprwm/Hyprland/v0.57.1";
+    swww.url = "github:LGFae/swww/v0.11.2";
+    neofetch-src = {
+      url = "github:dylanaraps/neofetch/7.1.0";
+      flake = false;
+    };
   };
-  outputs = { nixpkgs, home-manager, hyprland, ... }:
+  outputs = { nixpkgs, home-manager, hyprland, swww, neofetch-src, ... }:
     let
       user = import ./user.nix;
       theme = import ./theme.nix;
       pkgs = nixpkgs.legacyPackages.${user.system};
-      desktop = import ./lib/desktop-packages.nix { inherit hyprland; system = user.system; };
+      desktop = import ./lib/desktop-packages.nix {
+        inherit hyprland swww neofetch-src;
+        system = user.system;
+      };
     in {
       checks.${user.system} = {
         hyprland-config = import ./lib/hyprland-config.nix { inherit pkgs desktop user theme; };
@@ -28,6 +36,20 @@
         dconf-activation = import ./checks/dconf-activation.nix {
           inherit pkgs home-manager desktop user theme;
         };
+        wallpaper-tools = import ./checks/wallpaper-tools.nix { inherit pkgs desktop theme; };
+        application-cli = pkgs.runCommand "nocturne-application-cli" {
+          nativeBuildInputs = [ desktop.codex desktop.neofetch ];
+        } ''
+          export HOME="$TMPDIR/home"
+          mkdir -p "$HOME"
+          codex --version > "$out"
+          # Original Neofetch deliberately exits 1 for --version.
+          status=0
+          version=$(neofetch --version) || status=$?
+          test "$status" -eq 1
+          test "$version" = "Neofetch 7.1.0"
+          printf '%s\n' "$version" >> "$out"
+        '';
       };
       nixosConfigurations.${user.hostName} = nixpkgs.lib.nixosSystem {
         system = user.system;

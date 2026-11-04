@@ -7,6 +7,8 @@
     ./desktop/lock.nix
     ./desktop/theme.nix
     ./desktop/dconf.nix
+    ./desktop/wallpaper.nix
+    ./programs/development.nix
     ./programs/terminal.nix
     ./programs/shell.nix
     ./scripts.nix

@@ -35,11 +35,20 @@ assert hm.dconf.settings."org/gnome/desktop/interface".color-scheme == "prefer-d
 assert hm.programs.waybar.package.version == desktop.waybar.version;
 assert hm.programs.hyprlock.package.version == desktop.hyprlock.version;
 assert hm.programs.kitty.package.outPath == desktop.kitty.outPath;
+assert hm.programs.vscode.package.outPath == desktop.vscode.outPath;
+assert hm.systemd.user.services.nocturne-wallpaper.Service.ExecStart == [ "${desktop.swww}/bin/swww-daemon --no-cache" ];
 system.pkgs.writeText "nocturne-system-contract.json" (builtins.toJSON {
   hyprland = cfg.programs.hyprland.package.version;
   portal = cfg.programs.hyprland.portalPackage.version;
   mesa = cfg.hardware.graphics.package.version;
   kitty = hm.programs.kitty.package.version;
+  applications = {
+    vscode = hm.programs.vscode.package.version;
+    chrome = desktop.google-chrome.version;
+    codex = desktop.codex.version;
+    neofetch = desktop.neofetch.version;
+    swww = desktop.swww.version;
+  };
   inherit (hm.home) username;
   target = hm.wayland.systemd.target;
   dconfSettings = hm.dconf.settings;

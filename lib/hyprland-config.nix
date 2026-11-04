@@ -1,6 +1,7 @@
 { pkgs, desktop, user, theme }:
 let
   tools = import ./tools.nix { inherit pkgs desktop; };
+  wallpaper = import ./wallpaper-tools.nix { inherit pkgs desktop theme; };
   command = package: executable: "${package}/bin/${executable}";
   generated = pkgs.writeText "nocturne-generated.lua" (
     "return " + pkgs.lib.generators.toLua {} {
@@ -8,9 +9,10 @@ let
       inherit theme;
       commands = {
         terminal = command desktop.kitty "kitty";
-        browser = command pkgs.firefox "firefox";
+        browser = command desktop.google-chrome "google-chrome-stable";
         files = command pkgs.thunar "thunar";
         launcher = pkgs.lib.getExe tools.launcher;
+        wallpaper = "${wallpaper}/bin/nocturne-wallpaper pick";
         lock = pkgs.lib.getExe tools.lock;
         power = pkgs.lib.getExe tools.power;
         screenshot = pkgs.lib.getExe tools.screenshot;

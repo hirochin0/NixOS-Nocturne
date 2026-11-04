@@ -34,7 +34,18 @@ XDG_DATA_DIRSに採用dconfパッケージのサービス定義を明示する�
 - KittyをHyprlandの固定nixpkgsから取得し、Mesaとビルド時の依存集合を揃える。Home Managerのpackageと生成キー設定の実行パスの両方を変更する。
 - `system-contract`にKittyの実パス一致のassertionと採用バージョンを追加した。
 - 追加後の`checks.x86_64-linux.system-contract`を再ビルドして成功。Kitty 0.49.2、Mesa 26.2.6、Hyprland 0.57.1と、Home Manager activation derivationの評価を確認した。KittyのGUI起動テストではない。
-- この変更で実機のEGL失敗が解消するかは、対象マシンで再確認が必要。元ログに動的ローダの失敗理由までは出ていないため、glibc不整合が唯一の原因だとは断定しない。
+- その後、ユーザーの実機でKittyとSuper+Enterの起動成功が報告された。元ログに動的ローダの失敗理由までは出ていないため、glibc不整合が唯一の原因だったとは断定しない。
+
+## 3本指ジェスチャー・swww・開発アプリ追加
+
+- Hyprlandとその既存依存のlock nodeは変更せず、swww v0.11.2とNeofetch 7.1.0の公式ソースを追加固定した。
+- VS CodeとChromeもMesaと同じ固定nixpkgsから取得する。非自由ライセンスの許可はこの2パッケージだけ。
+- 壁紙選択のheadlessテストは、空白・日本語・シェル記号のあるパス、選択保存と復元、キャンセル、適用失敗時の状態保持、起動待ち、状態JSON破損、元画像削除、保存画像の適用失敗からの既定画像への復帰を確認する。
+- このコンテナではChrome展開時のsetuid権限変更がEPERM、swwwの依存crate展開時のUID 1000への所有者変更がEINVALとなる。通常の実ビルド全体は完了していない。実機設定を変更する回避策は入れていない。
+- Lua解析と起動スクリプトの検証では、検証専用の式でChrome/swwwの実際のstoreパス文字列だけを残し、両バイナリのビルド依存を除外する。これはCLI/GUIの起動検証ではなく、同じLua内容とシェル構文の検証に限定する。
+- この限定した検証では、Hyprland 0.57.1の`--verify-config`が`config ok`で終了、Lua構文検査と起動スクリプトのShellCheckが成功、壁紙の4つのheadlessテストが成功した。
+- 通常の`system-contract`と`application-cli`はビルド成功。Home Manager activation derivationまで評価し、インストールしたCodexとNeofetchのバージョン出力も確認した。swww/Chrome/VS CodeのGUI起動は試していない。
+- 実機でのタッチパッド入力、swww起動・画像表示、壁紙選択UI、VS Code/ChromeのGUIは引き続き確認が必要。`checks.x86_64-linux.wallpaper-tools`にはswwwの実コマンド検証も定義してあり、NixOS上で実行できる。
 
 ## 参照した一次資料
 

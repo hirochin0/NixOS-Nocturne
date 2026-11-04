@@ -2,6 +2,59 @@
 
 濃紺・青紫・シアンのHyprland環境。NixOSの土台は26.05のまま、Hyprlandは公式リリースv0.57.1とその依存リビジョンに固定しています。
 
+## 追加機能とアプリ
+
+- タッチパッドの3本指左右スワイプでワークスペースを切り替えます。Hyprland 0.57.1の`hl.gesture`を使用します。
+- 壁紙はswww 0.11.2。UWSMセッションの開始時だけdaemonを起動し、終了時に止めます。
+- Super+W、またはアプリ一覧の「Wallpaper」で壁紙の名前一覧を開きます。`~/Pictures/Wallpapers`にPNG/JPEG/WebP/GIF/BMPを置き、Enterで選択、Escapeでキャンセルします。サブフォルダも対象です。現時点のUIは文字一覧で、サムネイルはありません。
+- 選択を`~/.local/state/nocturne/wallpaper.json`へ保存し、次のログイン時に復元します（`XDG_STATE_HOME`設定時はそちら）。元画像を移動・削除するとNixで指定した既定画像へ戻ります。
+- Codex CLI、VS Code、Google Chrome、オリジナルのNeofetch 7.1.0を導入します。Super+BでChromeを開きます。
+- アプリ一覧の「ChatGPT」は公式サイトをChromeの独立ウィンドウで開きます。Codexはターミナルで`codex`を実行します。
+
+VS Codeは公式Marketplaceの拡張機能を使いやすいため採用しました。エディタ本体はNixで更新し、テレメトリはオフにしています。VS CodeとChromeの非自由ライセンス許可は、この2パッケージに限定しています。
+
+`neofetch`は現在のnixpkgsから削除されているため、上流の最終公開版を`flake.lock`で固定して独自パッケージ化しました。また現在のnixpkgsの`swww`は`awww`への別名なので、指定どおり元のswwwを使うため公式v0.11.2を固定しています。
+
+Codexの初回ログインだけ、本人の操作で行います。認証情報はNixファイルに書きません。
+
+```bash
+codex login
+codex
+```
+
+## 動作中の0.57.1構成を更新
+
+実機設定を入れてビルドしたフォルダを使います。今回の環境では`~/NixOS-Nocturne-0571`です。次を1行ずつ実行し、エラーがあれば止めます。
+
+```bash
+cd ~/NixOS-Nocturne-0571
+git pull --ff-only
+sudo nixos-rebuild test --flake path:.#nocturne
+hyprctl reload
+systemctl --user restart nocturne-wallpaper.service
+```
+
+3本指スワイプ、Super+W、`swww query`、`codex --version`、`code --version`、`google-chrome-stable --version`、`neofetch --version`を確認したら永続適用します。
+
+```bash
+sudo nixos-rebuild switch --flake path:.#nocturne
+```
+
+初回はswwwのビルドやChrome/VS Codeのダウンロードに時間がかかる場合があります。`git pull`がローカル変更との競合で止まったら、その変更を確認してから統合してください。
+
+## 再現性と編集先
+
+| 編集先 | 管理するもの |
+|---|---|
+| `home/programs/development.nix` | Codex・VS Code・Chrome・Neofetch、エディタ設定 |
+| `home/desktop/wallpaper.nix` | swwwサービス、壁紙メニュー登録 |
+| `home/desktop/hypr/input.lua` | 3本指ジェスチャー |
+| `theme.nix` | 再現する既定壁紙、色、フォント |
+| `assets/` | Gitで管理する既定壁紙の画像 |
+| `flake.lock` | 正確なソースリビジョンとハッシュ |
+
+アプリの追加・削除は`.nix`に書いてrebuildします。`nix-env`や`npm install -g`による手動インストールは不要です。更新は`flake.lock`を意図的に更新したときだけ行います。壁紙UIでの選択と各サービスへのログインはユーザーごとの実行時の状態です。別PCでも同じ既定壁紙にしたい場合は、画像を`assets/`へ追加し、`theme.nix`の`wallpaper`を変更してGitへ保存します。実機のディスク設定とユーザー名は従来どおり`hosts/nixos/base/`と`user.nix`で管理します。
+
 ## 修正の内容
 
 - `flake.lock`を同梱し、Hyprland v0.57.1・XDPH・Mesaを上流の同じ依存集合から取得します。Home Managerはrelease-26.05です。
@@ -104,7 +157,8 @@ sudo nixos-rebuild switch --flake path:.#nocturne
 |---|---|
 | Super+Enter | Kitty |
 | Super+D | アプリ検索 |
-| Super+B / E | Firefox / Thunar |
+| Super+B / E | Google Chrome / Thunar |
+| Super+W | 壁紙選択 |
 | Super+Q | ウィンドウを閉じる |
 | Super+F / Space | 全画面 / フロート |
 | Super+矢印 | フォーカス |
