@@ -47,6 +47,15 @@ XDG_DATA_DIRSに採用dconfパッケージのサービス定義を明示する�
 - 通常の`system-contract`と`application-cli`はビルド成功。Home Manager activation derivationまで評価し、インストールしたCodexとNeofetchのバージョン出力も確認した。swww/Chrome/VS CodeのGUI起動は試していない。
 - 実機でのタッチパッド入力、swww起動・画像表示、壁紙選択UI、VS Code/ChromeのGUIは引き続き確認が必要。`checks.x86_64-linux.wallpaper-tools`にはswwwの実コマンド検証も定義してあり、NixOS上で実行できる。
 
+## 壁紙メニューのサムネイル表示
+
+- 壁紙メニューをrofiのicon row付きグリッドに変更。通常のアプリランチャー、swwwサービス、状態ファイルの形式は維持する。
+- Python/PillowとWayland対応rofiをNixの起動スクリプトに組み込み、ユーザーによるpip等の追加作業は不要。
+- 縮小・キャッシュ再利用・画像更新による無効化・GIF先頭フレーム・不正画像の代替表示・行プロトコルの制御文字を追加テスト。既存の保存/復元・キャンセル等と合わせて7テスト。
+- 通常の`system-contract`を再ビルドして成功。変更したPython/Pillow環境と起動ラッパーもNixでビルドし、7テスト、ShellCheck、rofi 2.0.0でのテーマ読込と3列設定の出力確認が成功した。従来どおり、このコンテナではswww本体のビルドを除外した検証専用式を用いる。
+- rofi 2.0.0の`-rasi-validate`は最小の有効テーマでも終了処理でsegfaultしたため、チェックは通常の`-theme ... -dump-theme`経路で読込エラーがないことと解析結果を確認する方式にした。
+- 実際のWayland画面でのレイアウトとキー・マウス操作は、対象NixOSでの確認が必要。
+
 ## 参照した一次資料
 
 - https://github.com/hyprwm/Hyprland/releases/tag/v0.57.1

@@ -6,7 +6,8 @@
 
 - タッチパッドの3本指左右スワイプでワークスペースを切り替えます。Hyprland 0.57.1の`hl.gesture`を使用します。
 - 壁紙はswww 0.11.2。UWSMセッションの開始時だけdaemonを起動し、終了時に止めます。
-- Super+W、またはアプリ一覧の「Wallpaper」で壁紙の名前一覧を開きます。`~/Pictures/Wallpapers`にPNG/JPEG/WebP/GIF/BMPを置き、Enterで選択、Escapeでキャンセルします。サブフォルダも対象です。現時点のUIは文字一覧で、サムネイルはありません。
+- Super+W、またはアプリ一覧の「Wallpaper」でサムネイル付きの3列グリッドを開きます。`~/Pictures/Wallpapers`にPNG/JPEG/WebP/GIF/BMPを置き、文字入力で検索、矢印キーで移動、Enterで選択、Escapeでキャンセルします。サブフォルダも対象です。壁紙メニューだけWayland対応rofiを使い、通常のアプリ検索は従来どおりです。
+- サムネイルは480×270に縮小して`~/.cache/nocturne/wallpaper-thumbnails/`へ保存します（`XDG_CACHE_HOME`設定時はそちら）。変更した画像は自動で作り直し、GIFは先頭フレームを表示します。適用時は元画像・元GIFをswwwへ渡します。プレビューを作れない画像は代替画像で表示します。
 - 選択を`~/.local/state/nocturne/wallpaper.json`へ保存し、次のログイン時に復元します（`XDG_STATE_HOME`設定時はそちら）。元画像を移動・削除するとNixで指定した既定画像へ戻ります。
 - Codex CLI、VS Code、Google Chrome、オリジナルのNeofetch 7.1.0を導入します。Super+BでChromeを開きます。
 - アプリ一覧の「ChatGPT」は公式サイトをChromeの独立ウィンドウで開きます。Codexはターミナルで`codex`を実行します。
@@ -48,6 +49,7 @@ sudo nixos-rebuild switch --flake path:.#nocturne
 |---|---|
 | `home/programs/development.nix` | Codex・VS Code・Chrome・Neofetch、エディタ設定 |
 | `home/desktop/wallpaper.nix` | swwwサービス、壁紙メニュー登録 |
+| `lib/wallpaper-menu-theme.nix` | サムネイル選択画面の配置・配色 |
 | `home/desktop/hypr/input.lua` | 3本指ジェスチャー |
 | `theme.nix` | 再現する既定壁紙、色、フォント |
 | `assets/` | Gitで管理する既定壁紙の画像 |
