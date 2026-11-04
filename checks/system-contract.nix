@@ -34,10 +34,12 @@ assert hm.dconf.enable;
 assert hm.dconf.settings."org/gnome/desktop/interface".color-scheme == "prefer-dark";
 assert hm.programs.waybar.package.version == desktop.waybar.version;
 assert hm.programs.hyprlock.package.version == desktop.hyprlock.version;
+assert hm.programs.kitty.package.outPath == desktop.kitty.outPath;
 system.pkgs.writeText "nocturne-system-contract.json" (builtins.toJSON {
   hyprland = cfg.programs.hyprland.package.version;
   portal = cfg.programs.hyprland.portalPackage.version;
   mesa = cfg.hardware.graphics.package.version;
+  kitty = hm.programs.kitty.package.version;
   inherit (hm.home) username;
   target = hm.wayland.systemd.target;
   dconfSettings = hm.dconf.settings;

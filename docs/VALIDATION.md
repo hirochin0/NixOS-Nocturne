@@ -27,6 +27,15 @@ Home Managerのソースでは、既存DBUS_SESSION_BUS_ADDRESSがある場合�
 XDG_DATA_DIRSに採用dconfパッケージのサービス定義を明示する。dconf、GTK設定、ダークモードは無効にしない。
 ただし、元のユーザーバスのサービス一覧は未取得なので、既存バスの検索パスが原因だったとの断定はしない。
 
+## 実機からの追加報告とKittyの取得元修正
+
+- バーと壁紙はUWSM経由で表示されたが、Kitty 0.49.1はWayland接続後のEGL初期化で終了した。
+- 実機の`50_mesa.json`はMesa 26.2.6を指し、`ldd`ではその依存先にglibc 2.44が見えた。単体の`ldd`に不足がないことは、Kittyプロセスへの動的ロードの互換性まで保証しない。
+- KittyをHyprlandの固定nixpkgsから取得し、Mesaとビルド時の依存集合を揃える。Home Managerのpackageと生成キー設定の実行パスの両方を変更する。
+- `system-contract`にKittyの実パス一致のassertionと採用バージョンを追加した。
+- 追加後の`checks.x86_64-linux.system-contract`を再ビルドして成功。Kitty 0.49.2、Mesa 26.2.6、Hyprland 0.57.1と、Home Manager activation derivationの評価を確認した。KittyのGUI起動テストではない。
+- この変更で実機のEGL失敗が解消するかは、対象マシンで再確認が必要。元ログに動的ローダの失敗理由までは出ていないため、glibc不整合が唯一の原因だとは断定しない。
+
 ## 参照した一次資料
 
 - https://github.com/hyprwm/Hyprland/releases/tag/v0.57.1

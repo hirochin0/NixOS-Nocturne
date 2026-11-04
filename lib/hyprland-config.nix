@@ -7,7 +7,7 @@ let
       inherit (user) monitors keyboardLayout;
       inherit theme;
       commands = {
-        terminal = command pkgs.kitty "kitty";
+        terminal = command desktop.kitty "kitty";
         browser = command pkgs.firefox "firefox";
         files = command pkgs.thunar "thunar";
         launcher = pkgs.lib.getExe tools.launcher;

@@ -1,6 +1,7 @@
-{ theme, ... }: {
+{ theme, desktop, ... }: {
   programs.kitty = {
     enable = true;
+    package = desktop.kitty;
     font = { name = theme.font; size = theme.fontSize; };
     settings = {
       background = "#${theme.bg}";
