@@ -1,6 +1,7 @@
-{ pkgs, theme, ... }: {
+{ pkgs, theme, desktop, ... }: {
   programs.hyprlock = {
     enable = true;
+    package = desktop.hyprlock;
     settings = {
       general = { hide_cursor = true; };
       background = [{ monitor = ""; path = "${theme.wallpaper}"; blur_passes = 3; blur_size = 7; }];
@@ -37,6 +38,7 @@
   };
   services.hypridle = {
     enable = true;
+    package = desktop.hypridle;
     settings = {
       general = {
         lock_cmd = "nocturne-lock";

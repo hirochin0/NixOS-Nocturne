@@ -1,4 +1,4 @@
-{ pkgs, user, ... }: {
+{ config, pkgs, user, ... }: {
   imports = [
     ./desktop/hyprland.nix
     ./desktop/panel.nix
@@ -6,6 +6,7 @@
     ./desktop/notifications.nix
     ./desktop/lock.nix
     ./desktop/theme.nix
+    ./desktop/dconf.nix
     ./programs/terminal.nix
     ./programs/shell.nix
     ./scripts.nix
@@ -15,16 +16,13 @@
     homeDirectory = "/home/${user.name}";
     stateVersion = user.homeStateVersion;
     packages = with pkgs; [
-      firefox xfce.thunar pavucontrol networkmanagerapplet blueman
+      firefox thunar pavucontrol networkmanagerapplet blueman
       wl-clipboard grim slurp swappy playerctl brightnessctl
-      libnotify jq ripgrep fd unzip
+      libnotify jq ripgrep fd unzip nano
     ];
     sessionVariables = { NIXOS_OZONE_WL = "1"; EDITOR = "nano"; };
   };
   xdg.enable = true;
   programs.home-manager.enable = true;
-  xdg.configFile."uwsm/env".text = ''
-    export NIXOS_OZONE_WL=1
-    export XCURSOR_SIZE=24
-  '';
+  xdg.configFile."uwsm/env".source = "${config.home.sessionVariablesPackage}/etc/profile.d/hm-session-vars.sh";
 }

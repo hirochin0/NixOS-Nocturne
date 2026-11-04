@@ -1,170 +1,126 @@
-# NOCTURNE — NixOS × Hyprland
+# NOCTURNE — NixOS 26.05 / Hyprland 0.57.1
 
-濃紺の背景、青紫とシアンのアクセント、浮いた3分割バー、柔らかい角丸と影。
-静止画壁紙付き。Waybar / Fuzzel / Mako / Kitty / Hyprlock を揃えたモジュール構成です。
-日本語キーボード・Mozc・Fish を標準にしています。
+濃紺・青紫・シアンのHyprland環境。NixOSの土台は26.05のまま、Hyprlandは公式リリースv0.57.1とその依存リビジョンに固定しています。
 
-## 対象と前提
+## 修正の内容
 
-- **既にインストール済みの NixOS x86_64-linux** 向け。CachyOSへそのまま適用する設定ではありません。
-- 入力は **nixos-26.05 / Home Manager release-26.05**。Hyprland **0.55系のLua API** を使用し、範囲外なら評価を止めます。
-- 以後のHyprland更新時はLua APIの互換性を確認してください。
-- ハードウェア・ブートローダー・ディスク・Secure Bootは、コピーした元の設定を使います。
-- 元からあるユーザーを利用してください。この一式にはパスワード設定は含みません。
-- 既存 Home Manager / Caelestia / Waybar / 他デスクトップ設定との併用・統合は、重複モジュールと自動起動の整理が必要です。
-- Nixのない作成環境のため **Nix評価・ビルド・実機起動は未検証**。下記のbuildとtestを通してからswitchしてください。
+- `flake.lock`を同梱し、Hyprland v0.57.1・XDPH・Mesaを上流の同じ依存集合から取得します。Home Managerはrelease-26.05です。
+- 配色やモニタはNixの値から`lib.generators.toLua`で生成します。Luaの文字列へNixの式を手入力する必要はありません。
+- グラデーションはLuaのテーブル、タッチパッドは`tap_to_click`を使い、削除された`dwindle.pseudotile`は設定しません。
+- キーバインドを装飾より先に登録します。ターミナル等のコマンドはNix storeの絶対パスで指定します。
+- 生成ファイルはビルド時に`luac -p`と、採用したHyprland自身の`--verify-config`を通します。設定キーやdispatcherが無効なら適用前のビルドで停止します。
+- UWSMの起動入口を`hyprland.desktop`に揃え、バー・壁紙・idle・通知・polkitを`wayland-session@hyprland.desktop.target`へ結び付けます。別DEでの二重起動を避けます。
+- Home Managerのセッション変数を`uwsm/env`から読み込みます。
+- dconfを無効にしません。HMの設定適用だけは既存バスを引き継がず、標準の`dbus-run-session`経路を利用します。古いユーザーセッションのサービス検索パスへの依存を避け、GTKのフォント・アイコン・カーソル・ダークモードを反映します。
 
-## ファイルの役割
+## 管理するファイル
 
-| ファイル / ディレクトリ | 変更する内容 |
+| ファイル | 用途 |
 |---|---|
-| `user.nix` | ユーザー名、キーボード、モニタ、ログイン画面の利用 |
-| `theme.nix` | 主な配色、角丸、フォント、壁紙へのパス |
-| `flake.nix` | Nixpkgs・Home Managerの入力とホスト定義 |
-| `hosts/nixos/base/` | 現在の `/etc/nixos/` 一式を置く場所 |
-| `modules/nixos/desktop.nix` | Hyprland、音声、Bluetooth、権限 |
-| `modules/nixos/japanese.nix` | Fcitx5 + Mozc |
-| `home/desktop/hypr/binds.lua` | キーバインド |
-| `home/desktop/` | ウィンドウ、バー、通知、ランチャー、ロック |
-| `home/programs/` | Kitty、Fish、Starship |
-| `home/scripts.nix` | スクリーンショット、ロック、電源メニュー |
-| `assets/wallpaper.png` | 同梱する幾何学の静止画壁紙 |
+| `user.nix` | ログイン名、モニタ、キーボード、Home Manager初期バージョン |
+| `theme.nix` | 配色、フォント、壁紙、角丸 |
+| `flake.nix` / `flake.lock` | パッケージと固定リビジョン |
+| `lib/desktop-packages.nix` | Hyprland、XDPH、Mesa、Waybar等の取得元 |
+| `home/desktop/hypr/` | メインLua、外観、入力、キーバインド |
+| `lib/hyprland-config.nix` | 型付きLua生成とHyprlandによる実検証 |
+| `home/desktop/dconf.nix` | 設定適用時のD-Busライフサイクル |
+| `hosts/nixos/base/` | 実機の既存NixOS設定。公開前に機密を確認 |
+| `checks/` | モジュール連携評価、D-Bus設定反映のテスト |
 
-色は `theme.nix` を変更すると各UIへ反映します。GTKアプリはadw-gtk3-dark、壁紙は静止画なので、色の変更に合わせて自動生成しません。
+## 既存のNOCTURNEから更新
 
-## 導入
-
-展開した `nixos-nocturne` をホームディレクトリに置いてください。
-以下はbashで実行する例です（Fishなら先に `bash` を起動）。
-
-### 1. 元の設定を保存し、この構成に取り込む
+手元には修正途中のファイルがあるため、既存フォルダを残し、新しいフォルダへcloneする方法を推奨します。
+既存の`~/NixOS-Nocturne`内で、次を順に実行します。
 
 ```bash
-cd ~/nixos-nocturne
-sudo cp -a /etc/nixos "/etc/nixos.backup-$(date +%Y%m%d-%H%M%S)"
-sudo cp -a /etc/nixos/. hosts/nixos/base/
-sudo chown -R "$(id -u):$(id -g)" hosts/nixos/base
+git clone https://github.com/hirochin0/NixOS-Nocturne.git ../NixOS-Nocturne-0571
+cp user.nix ../NixOS-Nocturne-0571/user.nix
+cp -a hosts/nixos/base/. ../NixOS-Nocturne-0571/hosts/nixos/base/
+cd ../NixOS-Nocturne-0571
 ```
 
-`base/configuration.nix` の案内用 `throw` が元ファイルで置き換わったことを確認します。
-`hardware-configuration.nix` や相対参照先も、同じディレクトリ構造でコピーされます。
-元設定に `/etc/nixos/...` の絶対参照がある場合は、この構成内への相対参照へ修正してください。
-元がFlakeだけで構成され、configuration.nix単体では完結しない場合は、元Flakeのinputs・specialArgs・modulesも統合する必要があります。
-シークレットや鍵を含むbaseディレクトリは公開しないでください。
+新しいcloneには、現在のユーザー・モニタ設定と実機のbase設定だけを取り込みます。
+古いリポジトリはそのままバックアップとして残ります。`NixOS-Nocturne-0571`が既にある場合、別の新しいフォルダ名を使ってください。
 
-### 2. 最低限の変更
+この後、下記の「ビルドと確認」を進めます。`user.nix`とbase以外に独自の設定がある場合は、元フォルダと差分を確認して移してください。
 
-`user.nix` の `name` を **現在使っているログイン名** に変更します。`id -un` で確認できます。
-既存のHome Manager利用者は `homeStateVersion` を元の値へ変更します。
-`system.stateVersion` はコピーした元設定の値をそのまま維持してください。
+## 初回導入の準備
 
-モニタは自動認識が初期値です。個別指定する場合は `hyprctl monitors` で名前を調べ、`monitors` を編集します。
-US配列なら `keyboardLayout = "us";` に変更します。
-VRRは初期値で無効です。必要なら `hyprland.nix` の `vrr` を変更します。
+NixOSをインストール済みの環境が対象です。UEFI、Windowsとのデュアルブート、ディスク、カーネル等は既存設定を引き継ぎます。
 
-元設定の次の重複を確認します。
+1. リポジトリをcloneし、そのディレクトリへ移動します。
+2. 既存`/etc/nixos`全体を別の場所へバックアップします。
+3. `/etc/nixos/.`を`hosts/nixos/base/`へディレクトリ構造ごとコピーします。既存のconfiguration.nixで案内用throwを置き換えます。
+4. `user.nix`の`name`を現在のログイン名へ変更します。このリポジトリの既定値は`hiroto`です。
+5. 既存利用者はHome ManagerのstateVersionを維持します。system.stateVersionも元の値を変えません。
+6. 元設定のHome Manager、Hyprland、通知、PulseAudio単体などの重複を整理します。既存DMは利用できます。`enableGreetd`は既存DMがない場合だけ有効にします。
 
-- 既存のHome Managerモジュール・設定は今回の `home/` と統合する。
-- PulseAudio単体を使っていたら、その有効化を外してPipeWireと競合しないようにする。
-- 既存のHyprlandやCaelestiaの起動設定・パネル・通知サーバーの二重起動を取り除く。
-- 既存 `~/.config/hypr/hyprland.conf` がある場合はバックアップへ移す。この構成は `hyprland.lua` を使う。
-- 既存のHome Manager管理対象ファイルはバックアップしてから整理する。管理外の同名ファイルがあると有効化を止める場合がある。
+既存設定がFlakeのinputsやspecialArgsに依存する場合は、その依存も統合する必要があります。公開リポジトリには実機のbase設定が含まれていないため、こちらでは実機のシステム全体は検証できません。
 
-### 3. 入力の固定とビルド
+## ビルドと確認
+
+TTYまたは現在のKDE/GNOMEから、リポジトリ内で実行します。初回だけ、公式Hyprlandバイナリキャッシュの設定も読み込むためrootでビルドします。
 
 ```bash
-nix --extra-experimental-features 'nix-command flakes' flake lock
-nix --extra-experimental-features 'nix-command flakes' flake check path:.
-nix --extra-experimental-features 'nix-command flakes' build path:.#nixosConfigurations.nocturne.config.system.build.toplevel
+sudo nix --extra-experimental-features 'nix-command flakes' --accept-flake-config build path:.#checks.x86_64-linux.hyprland-config --out-link config-result
+sudo nix --extra-experimental-features 'nix-command flakes' --accept-flake-config build path:.#checks.x86_64-linux.dconf-activation --out-link dconf-result
+sudo nix --extra-experimental-features 'nix-command flakes' --accept-flake-config build path:.#nixosConfigurations.nocturne.config.system.build.toplevel
+sudo ./result/bin/switch-to-configuration test
 ```
 
-`hostName` を変えた場合は、コマンドの `nocturne` も変更します。
-初回の `flake.lock` は利用するマシンで生成します。検証した `flake.lock` を設定と一緒に保存すると、入力リビジョンを再現できます。
-この配布には、取得できていないリビジョンを埋めたlockは含めません。
-ビルド時のエラーを解消してから次へ進みます。
+最後まで成功したら作業を保存し、ログアウトして`Hyprland (uwsm-managed)`を選びます。既存の古いHyprlandプロセスへ`reload`するだけでは、パッケージやUWSM環境は更新されません。
 
-### 4. 一時適用 → 永続適用
+TTYから直接起動する場合は、他のグラフィカルセッションを終了してから次を実行します。
 
 ```bash
-sudo nixos-rebuild test --flake path:.#nocturne
+uwsm start -e -D Hyprland hyprland.desktop
 ```
 
-一度ログアウトし、ログイン画面で **Hyprland (uwsm-managed)** を選びます。
-既存ログイン画面がない場合はTTYログイン後に次を実行します。
+`uwsm start hyprland-uwsm.desktop`は使いません。そのdesktop entry自体がUWSMを起動するラッパーだからです。
+
+ログイン後に確認します。
 
 ```bash
-uwsm start hyprland-uwsm.desktop
+Hyprland --version
+hyprctl configerrors
+systemctl --user status wayland-session@hyprland.desktop.target --no-pager
+systemctl --user --failed
+systemctl status home-manager-hiroto.service --no-pager
+dconf read /org/gnome/desktop/interface/color-scheme
 ```
 
-画面・キーボード・ネットワーク・音声・日本語入力・ロック解除を確認してから、永続適用します。
+`configerrors`が空で、Super+Enter、Super+D、バー、壁紙、音声、Wi-Fi、日本語入力、ロックと解除を確認できたら永続適用します。
 
 ```bash
 sudo nixos-rebuild switch --flake path:.#nocturne
 ```
 
-`test` は次回起動の既定を変更しません。ただし、Home Managerのファイル変更はホーム側に残る場合があります。
-設定エラー時はTTY（Ctrl+Alt+F3）から修正できます。`switch` 後の問題では `sudo nixos-rebuild switch --rollback` またはブートメニューから以前の世代へ戻れます。
-
-### ログイン画面が必要な場合
-
-`enableGreetd = true;` にします。既存SDDM/GDMなどは、コピーしたbase設定で無効化してから有効にしてください。
-自動ログインは設定していません。
+`test`はブートの既定を変更しませんが、Home Managerのホーム内ファイルは変更されます。バックアップは残してください。
 
 ## 操作
 
 | キー | 動作 |
 |---|---|
-| Super + Enter | Kitty |
-| Super + B / E | Firefox / ファイル管理 |
-| Super + D | アプリ検索 |
-| Super + Q | ウィンドウを閉じる |
-| Super + F / Space | 全画面 / フロート切替 |
-| Super + 矢印 | フォーカス移動 |
-| Super + Shift + 矢印 | ウィンドウ移動 |
-| Super + 1〜9 | ワークスペース移動 |
-| Super + Shift + 1〜9 | ウィンドウを指定ワークスペースへ移動 |
-| Super + 左ドラッグ / 右ドラッグ | 移動 / リサイズ |
-| Super + L | ロック |
-| Super + Shift + E | セッション・電源メニュー |
-| Print / Super + Shift + S | 範囲選択スクリーンショット・クリップボードへコピー |
-| Super + Shift + R | Hyprland設定の再読み込み |
-
-日本語入力はFcitx5設定画面でMozcを選び、切替キーを確認してください。アプリによってWayland IME対応に差があります。
-5分無操作でロック、10分で画面オフ。自動サスペンドは設定していません。
-画面キャプチャは `~/Pictures/Screenshots/` に保存します。
-
-## 日々の編集
-
-`user.nix` / `theme.nix` / モジュールを編集し、`nix build` → `nixos-rebuild test` → 確認 → `switch` の順で適用します。
-Home ManagerはNixOSに統合しているため、別途 `home-manager switch` は不要です。
-`hyprctl reload` だけではNixソースの変更は反映しません。
-更新する際だけ `nix flake update` を実行し、再ビルドして確認してください。
-
-## Git管理
-
-通常のGit管理を始める場合は、評価に必要なコピー済みbaseファイルも追加する必要があります。
-`.gitignore` では意図的にbaseの大部分を除外しているため、機密がないと確認した設定ファイルを `git add -f` で追加します。
-未追跡ファイルは通常のGit Flake評価から見えません。上の手順では `path:.` を使って作業ツリーを参照しています。
-
-## 調査用
-
-```bash
-hyprctl version
-hyprctl configerrors
-systemctl --user --failed
-journalctl --user -b -u waybar
-journalctl --user -b -u hypridle
-```
-
-## 公式資料
-
-- https://nixos.org/blog/announcements/2026/nixos-2605/
-- https://wiki.hypr.land/nix/installing-hyprland-on-nixos/
-- https://wiki.hypr.land/useful-utilities/uwsm/
-- https://wiki.hypr.land/0.55.0/Configuring/Basics/Dispatchers/
+| Super+Enter | Kitty |
+| Super+D | アプリ検索 |
+| Super+B / E | Firefox / Thunar |
+| Super+Q | ウィンドウを閉じる |
+| Super+F / Space | 全画面 / フロート |
+| Super+矢印 | フォーカス |
+| Super+Shift+矢印 | ウィンドウ移動 |
+| Super+1〜9 | ワークスペース |
+| Super+Shift+1〜9 | 指定ワークスペースへ移動 |
+| Super+左/右ドラッグ | 移動 / リサイズ |
+| Super+L | ロック |
+| Super+Shift+E | 電源メニュー |
+| Print / Super+Shift+S | 範囲スクリーンショット |
 
 ## 検証範囲
 
-同梱前にNixの区切り記号、ローカル参照、スクリプトのbash構文、Lua構文、壁紙の読み込み、ZIP整合性を静的確認しています。
-この確認はNixの構文解析・オプション評価・パッケージ取得・Hyprlandの実起動を代替しません。
-Nixがないため `flake.lock` 生成・`nix flake check`・`nix build` は利用マシン側の作業です。
+詳細は`docs/VALIDATION.md`を参照してください。GPU・画面・実機のログイン・Windowsとの起動切替は対象マシンで確認が必要です。
+
+## Git管理
+
+`.gitignore`はbaseのハードウェア設定等を意図的に除外しています。Git Flakeには追跡済みファイルしか含まれないため、ローカル全体の検証では`path:.`を使います。
+
+公開するのは機密がないと確認したファイルだけにしてください。`flake.lock`は生成済みのものを保存し、更新時だけ意図的に変更します。

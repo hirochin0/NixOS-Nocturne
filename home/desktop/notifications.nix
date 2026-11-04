@@ -1,4 +1,13 @@
-{ theme, ... }: {
+{ config, pkgs, theme, ... }: {
+  systemd.user.services.mako = {
+    Unit = {
+      Description = "NOCTURNE notifications";
+      PartOf = [ config.wayland.systemd.target ];
+      After = [ config.wayland.systemd.target ];
+    };
+    Service = { ExecStart = "${pkgs.mako}/bin/mako"; Restart = "on-failure"; };
+    Install.WantedBy = [ config.wayland.systemd.target ];
+  };
   services.mako = {
     enable = true;
     settings = {

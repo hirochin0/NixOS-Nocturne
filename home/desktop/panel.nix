@@ -1,6 +1,9 @@
-{ theme, ... }: {
+{ lib, config, theme, desktop, ... }: {
+  # HMはtray.targetもWantedByに追加するため、他DEでの二重起動を防ぐ。
+  systemd.user.services.waybar.Install.WantedBy = lib.mkForce [ config.wayland.systemd.target ];
   programs.waybar = {
     enable = true;
+    package = desktop.waybar;
     systemd.enable = true;
     settings.main = {
       layer = "top";

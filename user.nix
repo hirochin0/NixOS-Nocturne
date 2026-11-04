@@ -1,6 +1,6 @@
 {
   # 必ず現在の NixOS のログイン名に変更する。
-  name = "yuto";
+  name = "hiroto";
   hostName = "nocturne";
   system = "x86_64-linux";
   keyboardLayout = "jp";
