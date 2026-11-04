@@ -1,6 +1,7 @@
 { pkgs, desktop, user, theme }:
 let
   tools = import ./tools.nix { inherit pkgs desktop; };
+  brightness = import ./brightness.nix { inherit pkgs; };
   wallpaper = import ./wallpaper-tools.nix { inherit pkgs desktop theme; };
   command = package: executable: "${package}/bin/${executable}";
   generated = pkgs.writeText "nocturne-generated.lua" (
@@ -17,7 +18,8 @@ let
         power = pkgs.lib.getExe tools.power;
         screenshot = pkgs.lib.getExe tools.screenshot;
         volume = command pkgs.wireplumber "wpctl";
-        brightness = command pkgs.brightnessctl "brightnessctl";
+        brightnessUp = brightness.up;
+        brightnessDown = brightness.down;
         media = command pkgs.playerctl "playerctl";
       };
     }

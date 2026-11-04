@@ -171,6 +171,13 @@ sudo nixos-rebuild switch --flake path:.#nocturne
 | Super+L | ロック |
 | Super+Shift+E | 電源メニュー |
 | Print / Super+Shift+S | 範囲スクリーンショット |
+| 明るさキー / Super+F5・F6 | 内蔵画面を5%ずつ暗く / 明るく |
+
+Waybarの太陽アイコンには内蔵画面の明るさ（%）を表示します。アイコン上で上スクロールすると明るく、下スクロールすると暗くなり、キー操作による変更も表示に反映されます。ThinkPadのF5/F6はFn Lockの状態によりFnとの同時押しが必要です。Super+F5/F6でも操作できます。
+
+キー操作とバーは`lib/brightness.nix`の同じコマンドを使用し、`backlight`クラスを自動選択します。デバイス名を固定せず、キーボード照明は変更しません。最低値はハードウェアの1段階です。権限はNixOSのudevルールと`video`グループで管理するため、毎回sudoを使う必要はありません。外部HDMI/DisplayPortモニターの明るさは別途DDC/CI対応が必要です。
+
+既存環境に初めて適用した際は、rebuild後に`sudo udevadm trigger --subsystem-match=backlight --action=add`を実行すると、接続済みバックライトにも権限を反映できます。以後の起動時は自動適用されます。
 
 ## 検証範囲
 

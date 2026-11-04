@@ -17,6 +17,8 @@
     package32 = lib.mkIf config.hardware.graphics.enable32Bit desktop.mesa32;
   };
   security.polkit.enable = true;
+  # brightnessctl ships the udev rules granting backlight access to video.
+  services.udev.packages = [ pkgs.brightnessctl ];
   security.pam.services.hyprlock = {};
   services.gnome.gnome-keyring.enable = true;
   services.gvfs.enable = true;

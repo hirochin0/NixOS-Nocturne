@@ -1,4 +1,7 @@
-{ lib, config, theme, desktop, ... }: {
+{ lib, config, pkgs, theme, desktop, ... }:
+let
+  brightness = import ../../lib/brightness.nix { inherit pkgs; };
+in {
   # HMはtray.targetもWantedByに追加するため、他DEでの二重起動を防ぐ。
   systemd.user.services.waybar.Install.WantedBy = lib.mkForce [ config.wayland.systemd.target ];
   programs.waybar = {
@@ -15,7 +18,7 @@
       spacing = 6;
       modules-left = [ "custom/launcher" "hyprland/workspaces" ];
       modules-center = [ "clock" ];
-      modules-right = [ "network" "pulseaudio" "battery" "tray" "custom/power" ];
+      modules-right = [ "network" "pulseaudio" "backlight" "battery" "tray" "custom/power" ];
       "custom/launcher" = { format = "󱄅"; tooltip-format = "Applications"; on-click = "nocturne-launcher"; };
       "hyprland/workspaces" = {
         format = "{name}";
@@ -36,6 +39,13 @@
         on-click = "pavucontrol";
         on-click-right = "wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle";
         scroll-step = 5;
+      };
+      backlight = {
+        format = "󰃠  {percent}%";
+        tooltip-format = "画面の明るさ: {percent}%\nスクロール: 5%ずつ調整\nSuper+F5 / F6: 暗く / 明るく";
+        interval = 1;
+        on-scroll-up = brightness.up;
+        on-scroll-down = brightness.down;
       };
       battery = {
         format = "{icon}  {capacity}%";
@@ -59,8 +69,9 @@
       #workspaces button:hover { background: #${theme.elevated}; color: #${theme.text}; }
       #workspaces button.urgent, #battery.critical { color: #${theme.red}; }
       #clock { padding: 0 16px; color: #${theme.text}; }
-      #network, #pulseaudio, #battery, #tray { padding: 0 9px; }
+      #network, #pulseaudio, #backlight, #battery, #tray { padding: 0 9px; }
       #network { color: #${theme.cyan}; }
+      #backlight { color: #${theme.yellow}; }
       #battery.charging { color: #${theme.green}; }
       #battery.warning { color: #${theme.yellow}; }
       #custom-power { color: #${theme.accent}; padding: 0 8px; }
