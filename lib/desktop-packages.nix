@@ -2,7 +2,7 @@
 let
   upstream = import hyprland.inputs.nixpkgs {
     inherit system;
-    config.allowUnfreePredicate = pkg: builtins.elem (upstream.lib.getName pkg) [ "vscode" "google-chrome" "spotify" "discord" ];
+    config.allowUnfreePredicate = pkg: builtins.elem (upstream.lib.getName pkg) [ "vscode" "google-chrome" "spotify" "discord" "discord-unwrapped" ];
   };
 in {
   hyprland = hyprland.packages.${system}.hyprland;
