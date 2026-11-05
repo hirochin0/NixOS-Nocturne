@@ -85,3 +85,18 @@ XDG_DATA_DIRSに採用dconfパッケージのサービス定義を明示する�
 - https://quickshell.org/docs/v0.3.2/types/Quickshell.Wayland/WlrLayershell/
 - https://github.com/NixOS/nixpkgs/blob/nixos-26.05/nixos/modules/services/hardware/power-profiles-daemon.nix
 - https://github.com/NixOS/nixpkgs/blob/0bb2eedc20e4739f29e8045034f2828ad7054f8f/pkgs/by-name/qu/quickshell/package.nix
+
+## Spotify / Spicetifyの宣言的管理（2026-11-05）
+
+- Spicetify公式の導入案内に従い、spicetify-nixの`homeManagerModules.spicetify`を使用。リビジョン`13e6fed4eb99f809d390fb50f591bed6cb716dc0`をlockに追加し、nixpkgsはHyprlandの固定集合をfollowする。既存lock nodeが変わっていないことを確認した。
+- Spotify 1.2.95.453.g0eeebbedとSpicetify CLI 2.46.1を同じ固定集合から取得する。生のSpotifyをhome.packagesから外し、モジュールが作成したSpicetify適用済みSpotifyだけを導入する。CLIもhome.packagesに含める。
+- `system-contract`のビルド成功。Spicetify有効化・元のSpotifyパス・二重導入の不存在とHome Manager activation derivationを検証した。dconfの単体チェックも新しい引数を受け取ってderivationまで評価できた。
+- 通常のSpicetify適用ビルドはこの単一UIDコンテナのroot判定で停止する。検証専用式で、隔離したビルドのCLI呼び出しだけに`--bypass-admin`を付けてビルド完了を確認した。生成された`Apps/xpui/colors.css`にNocturneのシアン色があることも確認。リポジトリ内の設定とインストールするCLIにはこの回避指定を含めない。
+- 実機でのGUI表示・ログイン・音楽再生は対象NixOSでの確認が必要。手動の`spicetify apply`やストアの権限変更は不要。
+
+参照した一次資料:
+
+- https://github.com/spicetify/docs/blob/main/docs/getting-started.md
+- https://gerg-l.github.io/spicetify-nix/usage.html
+- https://github.com/Gerg-L/spicetify-nix/blob/13e6fed4eb99f809d390fb50f591bed6cb716dc0/modules/options.nix
+- https://github.com/Gerg-L/spicetify-nix/blob/13e6fed4eb99f809d390fb50f591bed6cb716dc0/modules/homeManager.nix

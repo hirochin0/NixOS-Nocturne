@@ -1,4 +1,4 @@
-{ nixpkgs, home-manager, user, theme, desktop }:
+{ nixpkgs, home-manager, user, theme, desktop, spicetify-nix }:
 let
   lib = nixpkgs.lib;
   system = nixpkgs.lib.nixosSystem {
@@ -16,7 +16,7 @@ let
         home-manager = {
           useGlobalPkgs = true;
           useUserPackages = true;
-          extraSpecialArgs = { inherit user theme desktop; };
+          extraSpecialArgs = { inherit user theme desktop spicetify-nix; };
           users.${user.name} = import ../home;
         };
       }
@@ -36,6 +36,9 @@ assert hm.programs.waybar.package.version == desktop.waybar.version;
 assert hm.programs.hyprlock.package.version == desktop.hyprlock.version;
 assert hm.programs.kitty.package.outPath == desktop.kitty.outPath;
 assert hm.programs.vscode.package.outPath == desktop.vscode.outPath;
+assert hm.programs.spicetify.enable;
+assert hm.programs.spicetify.spotifyPackage.outPath == desktop.spotify.outPath;
+assert !lib.elem desktop.spotify hm.home.packages;
 assert hm.systemd.user.services.nocturne-wallpaper.Service.ExecStart == [ "${desktop.swww}/bin/swww-daemon --no-cache" ];
 assert cfg.services.power-profiles-daemon.enable;
 assert !cfg.services.tlp.enable && !cfg.services.auto-cpufreq.enable && !cfg.powerManagement.powertop.enable;
@@ -54,11 +57,13 @@ system.pkgs.writeText "nocturne-system-contract.json" (builtins.toJSON {
     swww = desktop.swww.version;
     quickshell = desktop.quickshell.version;
     spotify = desktop.spotify.version;
+    spicetify = desktop.spicetify-cli.version;
   };
   inherit (hm.home) username;
   target = hm.wayland.systemd.target;
   dconfSettings = hm.dconf.settings;
   powerProfiles = cfg.services.power-profiles-daemon.enable;
+  spicedSpotify = builtins.unsafeDiscardStringContext hm.programs.spicetify.spicedSpotify.drvPath;
   # forcing the HM activation script also checks module option generation.
   activation = builtins.unsafeDiscardStringContext hm.home.activationPackage.drvPath;
   services = builtins.attrNames hm.systemd.user.services;

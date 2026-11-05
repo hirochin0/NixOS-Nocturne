@@ -1,0 +1,4 @@
+/* Colors come from theme.nix via Spicetify's generated color.ini. */
+.Root__main-view {
+  background-color: var(--spice-main);
+}

@@ -11,7 +11,7 @@ in {
   inherit (upstream) mesa kitty waybar hypridle hyprlock rofi quickshell;
   inherit (upstream.qt6) qtdeclarative;
   # GUI clients share Mesa's package set (including libc/libglvnd).
-  inherit (upstream) vscode google-chrome codex spotify;
+  inherit (upstream) vscode google-chrome codex spotify spicetify-cli;
   swww = swww.packages.${system}.swww;
   neofetch = upstream.callPackage ./neofetch.nix { src = neofetch-src; };
   mesa32 = upstream.pkgsi686Linux.mesa;

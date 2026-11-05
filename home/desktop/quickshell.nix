@@ -3,7 +3,7 @@ let
   bundle = import ../../lib/quickshell-config.nix { inherit pkgs desktop theme user; };
   target = config.wayland.systemd.target;
 in {
-  home.packages = [ desktop.quickshell desktop.spotify ];
+  home.packages = [ desktop.quickshell ];
   xdg.configFile."quickshell/nocturne".source = bundle;
   systemd.user.services.nocturne-widgets = {
     Unit = {

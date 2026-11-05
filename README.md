@@ -49,6 +49,8 @@ sudo nixos-rebuild switch --flake path:.#nocturne
 | 編集先 | 管理するもの |
 |---|---|
 | `home/programs/development.nix` | Codex・VS Code・Chrome・Neofetch、エディタ設定 |
+| `home/programs/spotify.nix` | Spotify・Spicetify・テーマ・拡張機能 |
+| `home/programs/spicetify/Nocturne/` | Spotify用の追加CSS |
 | `home/desktop/wallpaper.nix` | swwwサービス、壁紙メニュー登録 |
 | `home/desktop/quickshell/` | Spotifyカード・電源モードメニューのQML |
 | `home/desktop/quickshell.nix` | ウィジェットのインストール・UWSM連携 |
@@ -186,12 +188,31 @@ Waybarの太陽アイコンには内蔵画面の明るさ（%）を表示しま�
 
 ## Spotifyウィジェットと電源モード
 
-`spotify`を起動してログインすると、ネイティブ版Spotifyの曲情報をQuickshell標準MPRIS機能で取得します。Spicetifyでのテーマ変更とは独立して動作し、Spotifyのファイルを書き換えません。Spicetify自体の導入・テーマ設定は今回の管理対象には含みません。ブラウザ版Spotifyはこのカードの対象外です。
+`spotify`を起動してログインすると、ネイティブ版Spotifyの曲情報をQuickshell標準MPRIS機能で取得します。カードはSpicetifyのテーマとは独立して動作します。ブラウザ版Spotifyはこのカードの対象外です。
+
+### SpotifyとSpicetifyの管理
+
+`home/programs/spotify.nix`でSpicetify適用済みのSpotifyと`spicetify` CLIを導入します。公式が案内する`spicetify-nix`のHome Managerモジュールを使い、通常のSpotifyは重複してインストールしません。SpotifyとCLIはMesaと同じ固定nixpkgsから取得し、`spicetify-nix`自身も`flake.lock`に固定しています。
+
+Nocturneテーマの配色は`theme.nix`に連動します。CSSは`home/programs/spicetify/Nocturne/user.css`、拡張機能・カスタムアプリは`home/programs/spotify.nix`の`enabledExtensions`・`enabledCustomApps`で管理します。初期状態では追加拡張を有効にしていません。
+
+変更したら`sudo nixos-rebuild switch --flake path:.#nocturne`でビルドし、Spotifyを終了して起動し直します。`sudo spicetify`やNixストアへの`chmod`、手動の`spicetify backup apply`は不要です。Nixで適用済みのパッケージを生成するため、永続的な変更は`.nix`やCSSに保存してください。Spotifyのログイン情報はユーザーのホームに保存され、Gitには含めません。
+
+```bash
+spotify
+spicetify --version
+```
+
+参照: [Spicetify公式のNix導入案内](https://github.com/spicetify/docs/blob/main/docs/getting-started.md)、[spicetify-nixの設定](https://gerg-l.github.io/spicetify-nix/usage.html)。
+
+### Spotifyカード
 
 - ジャケット・曲名・アーティスト・再生時間、再生/停止・前/次・シャッフル・リピート・シークに対応。Spotifyが公開しない機能は無効表示にします。
 - Spotifyを終了するとカードを隠します。一時停止中はカードを残し、時間更新タイマーを停止します。Super+Mで手動表示切替できます。
 - カードは通常のウィンドウの下にあり、タイル配置の領域を予約しません。内蔵画面を優先します。配置先は`user.nix`の`musicWidgetOutput`で指定でき、指定画面が外れた場合は接続中の画面へ戻します。
 - 常時のシェルコマンド呼び出しや毎フレームの更新は使いません。メタデータはD-Busイベント、再生時間だけ表示中かつ再生中に1秒間隔で更新します。
+
+### 電源モード
 
 Waybarのバッテリーをクリックすると、Quickshellの電源メニューが開きます。選択中のモードにチェックが付き、Esc・外側クリック・閉じるボタンで閉じます。
 

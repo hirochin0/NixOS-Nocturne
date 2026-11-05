@@ -12,13 +12,17 @@
     };
     # 最新安定版を明示。nixpkgsは上流のlockに従い、Mesa/XDPHも同じ集合を使う。
     hyprland.url = "github:hyprwm/Hyprland/v0.57.1";
+    spicetify-nix = {
+      url = "github:Gerg-L/spicetify-nix";
+      inputs.nixpkgs.follows = "hyprland/nixpkgs";
+    };
     swww.url = "github:LGFae/swww/v0.11.2";
     neofetch-src = {
       url = "github:dylanaraps/neofetch/7.1.0";
       flake = false;
     };
   };
-  outputs = { nixpkgs, home-manager, hyprland, swww, neofetch-src, ... }:
+  outputs = { nixpkgs, home-manager, hyprland, swww, neofetch-src, spicetify-nix, ... }:
     let
       user = import ./user.nix;
       theme = import ./theme.nix;
@@ -31,10 +35,10 @@
       checks.${user.system} = {
         hyprland-config = import ./lib/hyprland-config.nix { inherit pkgs desktop user theme; };
         system-contract = import ./checks/system-contract.nix {
-          inherit nixpkgs home-manager user theme desktop;
+          inherit nixpkgs home-manager user theme desktop spicetify-nix;
         };
         dconf-activation = import ./checks/dconf-activation.nix {
-          inherit pkgs home-manager desktop user theme;
+          inherit pkgs home-manager desktop user theme spicetify-nix;
         };
         wallpaper-tools = import ./checks/wallpaper-tools.nix { inherit pkgs desktop theme; };
         quickshell = import ./checks/quickshell.nix { inherit pkgs desktop theme user; };
@@ -62,7 +66,7 @@
             home-manager = {
               useGlobalPkgs = true;
               useUserPackages = true;
-              extraSpecialArgs = { inherit user theme desktop; };
+              extraSpecialArgs = { inherit user theme desktop spicetify-nix; };
               users.${user.name} = import ./home;
             };
           }

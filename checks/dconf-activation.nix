@@ -1,8 +1,8 @@
-{ pkgs, home-manager, desktop, user, theme }:
+{ pkgs, home-manager, desktop, user, theme, spicetify-nix }:
 let
   hm = (home-manager.lib.homeManagerConfiguration {
     inherit pkgs;
-    extraSpecialArgs = { inherit desktop user theme; };
+    extraSpecialArgs = { inherit desktop user theme spicetify-nix; };
     modules = [ ../home ];
   }).config;
   # ビルド環境にはNixOSの/etc/dbus-1/session.confがないため、同じ

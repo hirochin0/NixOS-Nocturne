@@ -10,6 +10,7 @@
     ./desktop/wallpaper.nix
     ./desktop/quickshell.nix
     ./programs/development.nix
+    ./programs/spotify.nix
     ./programs/terminal.nix
     ./programs/shell.nix
     ./scripts.nix
