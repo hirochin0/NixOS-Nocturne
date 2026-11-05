@@ -64,3 +64,24 @@ XDG_DATA_DIRSに採用dconfパッケージのサービス定義を明示する�
 - https://wiki.hypr.land/nix/cachix/
 - https://github.com/nix-community/home-manager/blob/release-26.05/modules/misc/dconf.nix
 - https://github.com/Vladimir-csp/uwsm
+
+## Quickshell音楽カード・電源モード（2026-11-05）
+
+- 公式の現行安定版Quickshell v0.3.2と、固定済みHyprlandのnixpkgsに含まれる同じバージョンのパッケージを確認。lockの更新は不要。Qt/Mesaの集合を揃える。
+- MPRISの`trackArtist`・機能可否フラグ・秒単位のpositionを使用。1秒のTimerはカードの表示中かつ再生中だけ動かす。毎フレーム更新やCLIポーリングは使わない。
+- `PowerProfiles.profile`と`hasPerformanceProfile`を使用し、非対応機器ではPowerを無効化。Waybarのバッテリークリックから、サービスと同じ設定パスのQuickshell IPCへ接続する。
+- `system-contract`でpower-profiles-daemonの有効化と競合サービスの無効化、Waybarとの接続、UWSMターゲットとの連携を評価する。
+- `checks.x86_64-linux.quickshell`はQML構文、Spotify以外の隔離、複数プレイヤー・切断、画面の選択・取り外し時のフォールバック、シークの範囲を検証する。QtのoffscreenでMusicCardをインスタンス化し、長いタイトル・機能未対応・プレイヤー消失時の状態も確認する。
+- 上記のsystem-contractとquickshellチェックはNixでビルド成功。操作用nocturne-widgetsラッパーもShellCheckを含めてビルド成功。offscreenでカードの描画も確認した。
+- 実機のWaylandレイヤー表示・クリック/シーク・Spotifyの実MPRIS・電源モード変更・消費電力の測定は実機で確認が必要。このコンテナではUnixソケット作成が制限され、Quickshell IPCへの接続も実証できない。画面の起動確認はoffscreenでのカード描画に限定する。
+
+参照した一次資料:
+
+- https://github.com/quickshell-mirror/quickshell/releases/tag/v0.3.2
+- https://quickshell.org/docs/v0.3.2/types/Quickshell.Services.Mpris/MprisPlayer/
+- https://quickshell.org/docs/v0.3.2/types/Quickshell.Services.UPower/PowerProfiles/
+- https://quickshell.org/docs/v0.3.2/types/Quickshell.Services.UPower/PowerProfile/
+- https://quickshell.org/docs/v0.3.2/types/Quickshell.Io/IpcHandler/
+- https://quickshell.org/docs/v0.3.2/types/Quickshell.Wayland/WlrLayershell/
+- https://github.com/NixOS/nixpkgs/blob/nixos-26.05/nixos/modules/services/hardware/power-profiles-daemon.nix
+- https://github.com/NixOS/nixpkgs/blob/0bb2eedc20e4739f29e8045034f2828ad7054f8f/pkgs/by-name/qu/quickshell/package.nix

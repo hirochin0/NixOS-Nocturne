@@ -37,6 +37,10 @@ assert hm.programs.hyprlock.package.version == desktop.hyprlock.version;
 assert hm.programs.kitty.package.outPath == desktop.kitty.outPath;
 assert hm.programs.vscode.package.outPath == desktop.vscode.outPath;
 assert hm.systemd.user.services.nocturne-wallpaper.Service.ExecStart == [ "${desktop.swww}/bin/swww-daemon --no-cache" ];
+assert cfg.services.power-profiles-daemon.enable;
+assert !cfg.services.tlp.enable && !cfg.services.auto-cpufreq.enable && !cfg.powerManagement.powertop.enable;
+assert hm.programs.waybar.settings.main.battery.on-click == "nocturne-widgets power";
+assert hm.systemd.user.services.nocturne-widgets.Unit.PartOf == [ hm.wayland.systemd.target ];
 system.pkgs.writeText "nocturne-system-contract.json" (builtins.toJSON {
   hyprland = cfg.programs.hyprland.package.version;
   portal = cfg.programs.hyprland.portalPackage.version;
@@ -48,10 +52,13 @@ system.pkgs.writeText "nocturne-system-contract.json" (builtins.toJSON {
     codex = desktop.codex.version;
     neofetch = desktop.neofetch.version;
     swww = desktop.swww.version;
+    quickshell = desktop.quickshell.version;
+    spotify = desktop.spotify.version;
   };
   inherit (hm.home) username;
   target = hm.wayland.systemd.target;
   dconfSettings = hm.dconf.settings;
+  powerProfiles = cfg.services.power-profiles-daemon.enable;
   # forcing the HM activation script also checks module option generation.
   activation = builtins.unsafeDiscardStringContext hm.home.activationPackage.drvPath;
   services = builtins.attrNames hm.systemd.user.services;

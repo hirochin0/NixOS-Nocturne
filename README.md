@@ -11,8 +11,9 @@
 - 選択を`~/.local/state/nocturne/wallpaper.json`へ保存し、次のログイン時に復元します（`XDG_STATE_HOME`設定時はそちら）。元画像を移動・削除するとNixで指定した既定画像へ戻ります。
 - Codex CLI、VS Code、Google Chrome、オリジナルのNeofetch 7.1.0を導入します。Super+BでChromeを開きます。
 - アプリ一覧の「ChatGPT」は公式サイトをChromeの独立ウィンドウで開きます。Codexはターミナルで`codex`を実行します。
+- Quickshell 0.3.2のSpotifyカードを右下に表示します。Super+Mで表示切替、WaybarのバッテリーをクリックするとSave / Balanced / Powerを選べます。
 
-VS Codeは公式Marketplaceの拡張機能を使いやすいため採用しました。エディタ本体はNixで更新し、テレメトリはオフにしています。VS CodeとChromeの非自由ライセンス許可は、この2パッケージに限定しています。
+VS Codeは公式Marketplaceの拡張機能を使いやすいため採用しました。エディタ本体はNixで更新し、テレメトリはオフにしています。非自由ライセンスの許可はVS Code・Chrome・Spotifyの3パッケージに限定しています。
 
 `neofetch`は現在のnixpkgsから削除されているため、上流の最終公開版を`flake.lock`で固定して独自パッケージ化しました。また現在のnixpkgsの`swww`は`awww`への別名なので、指定どおり元のswwwを使うため公式v0.11.2を固定しています。
 
@@ -49,6 +50,9 @@ sudo nixos-rebuild switch --flake path:.#nocturne
 |---|---|
 | `home/programs/development.nix` | Codex・VS Code・Chrome・Neofetch、エディタ設定 |
 | `home/desktop/wallpaper.nix` | swwwサービス、壁紙メニュー登録 |
+| `home/desktop/quickshell/` | Spotifyカード・電源モードメニューのQML |
+| `home/desktop/quickshell.nix` | ウィジェットのインストール・UWSM連携 |
+| `modules/nixos/power.nix` | 省電力サービスと競合回避 |
 | `lib/wallpaper-menu-theme.nix` | サムネイル選択画面の配置・配色 |
 | `home/desktop/hypr/input.lua` | 3本指ジェスチャー |
 | `theme.nix` | 再現する既定壁紙、色、フォント |
@@ -161,6 +165,7 @@ sudo nixos-rebuild switch --flake path:.#nocturne
 | Super+D | アプリ検索 |
 | Super+B / E | Google Chrome / Thunar |
 | Super+W | 壁紙選択 |
+| Super+M | Spotifyカードの表示切替 |
 | Super+Q | ウィンドウを閉じる |
 | Super+F / Space | 全画面 / フロート |
 | Super+矢印 | フォーカス |
@@ -178,6 +183,47 @@ Waybarの太陽アイコンには内蔵画面の明るさ（%）を表示しま�
 キー操作とバーは`lib/brightness.nix`の同じコマンドを使用し、`backlight`クラスを自動選択します。デバイス名を固定せず、キーボード照明は変更しません。最低値はハードウェアの1段階です。権限はNixOSのudevルールと`video`グループで管理するため、毎回sudoを使う必要はありません。外部HDMI/DisplayPortモニターの明るさは別途DDC/CI対応が必要です。
 
 既存環境に初めて適用した際は、rebuild後に`sudo udevadm trigger --subsystem-match=backlight --action=add`を実行すると、接続済みバックライトにも権限を反映できます。以後の起動時は自動適用されます。
+
+## Spotifyウィジェットと電源モード
+
+`spotify`を起動してログインすると、ネイティブ版Spotifyの曲情報をQuickshell標準MPRIS機能で取得します。Spicetifyでのテーマ変更とは独立して動作し、Spotifyのファイルを書き換えません。Spicetify自体の導入・テーマ設定は今回の管理対象には含みません。ブラウザ版Spotifyはこのカードの対象外です。
+
+- ジャケット・曲名・アーティスト・再生時間、再生/停止・前/次・シャッフル・リピート・シークに対応。Spotifyが公開しない機能は無効表示にします。
+- Spotifyを終了するとカードを隠します。一時停止中はカードを残し、時間更新タイマーを停止します。Super+Mで手動表示切替できます。
+- カードは通常のウィンドウの下にあり、タイル配置の領域を予約しません。内蔵画面を優先します。配置先は`user.nix`の`musicWidgetOutput`で指定でき、指定画面が外れた場合は接続中の画面へ戻します。
+- 常時のシェルコマンド呼び出しや毎フレームの更新は使いません。メタデータはD-Busイベント、再生時間だけ表示中かつ再生中に1秒間隔で更新します。
+
+Waybarのバッテリーをクリックすると、Quickshellの電源メニューが開きます。選択中のモードにチェックが付き、Esc・外側クリック・閉じるボタンで閉じます。
+
+| 表示 | power-profiles-daemonのプロファイル | 用途 |
+|---|---|---|
+| Save | `power-saver` | バッテリー優先 |
+| Balanced | `balanced` | 通常利用 |
+| Power | `performance` | 性能優先。消費電力が増えます |
+
+Powerはハードウェア/ドライバが対応する場合だけ選べます。実際に制御されるCPU・プラットフォーム設定はカーネルと機器の対応に従います。モード選択をAC接続やログインのたびに上書きする独自スクリプトは入れていません。
+
+`modules/nixos/power.nix`でpower-profiles-daemonを有効にし、競合するTLP・auto-cpufreq・powertop自動調整を無効にします。`home/desktop/lock.nix`では5分でロック、6分で画面オフ。再生アプリ等のidle inhibitorが有効な場合は、それに従います。自動サスペンドは追加しません。電池の実測持続時間は、画面の明るさ・アプリ・ファームウェア・選択モードによって変わります。
+
+更新後は以下を1行ずつ実行します。設定は`quickshell/nocturne/`にまとめ、サービスと操作コマンドは同じパスを明示します。別のQuickshell設定がある場合も、その設定を変更しません。
+
+```bash
+cd ~/NixOS-Nocturne-0571
+git pull --ff-only
+sudo nixos-rebuild switch --flake path:.#nocturne
+hyprctl reload
+systemctl --user restart nocturne-widgets.service waybar.service hypridle.service
+spotify
+```
+
+状態確認とログ:
+
+```bash
+powerprofilesctl get
+powerprofilesctl list
+systemctl status power-profiles-daemon.service --no-pager
+journalctl --user -b -u nocturne-widgets.service -n 100 --no-pager
+```
 
 ## 検証範囲
 

@@ -52,6 +52,8 @@ in {
         format-charging = "󰂄  {capacity}%";
         format-icons = [ "󰁺" "󰁼" "󰁾" "󰂀" "󰁹" ];
         states = { warning = 25; critical = 12; };
+        on-click = "nocturne-widgets power";
+        tooltip-format = "バッテリー: {capacity}%\nクリック: Save / Balanced / Power";
       };
       tray.spacing = 10;
       "custom/power" = { format = "󰐥"; tooltip-format = "Session"; on-click = "nocturne-power"; };

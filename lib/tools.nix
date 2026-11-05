@@ -6,6 +6,14 @@ let
   '';
 in {
   inherit lock;
+  widgets = script "nocturne-widgets" [ desktop.quickshell ] ''
+    config_path="''${XDG_CONFIG_HOME:-$HOME/.config}/quickshell/nocturne"
+    case "''${1:-music}" in
+      music) exec quickshell --path "$config_path" ipc call widgets toggleMusic ;;
+      power) exec quickshell --path "$config_path" ipc call widgets togglePower ;;
+      *) printf 'Usage: nocturne-widgets [music|power]\n' >&2; exit 2 ;;
+    esac
+  '';
   launcher = script "nocturne-launcher" [ pkgs.fuzzel ] ''
     exec fuzzel
   '';

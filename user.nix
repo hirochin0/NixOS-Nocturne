@@ -10,4 +10,6 @@
   enableGreetd = false;
   # 初めて Home Manager を使う場合の初期値。既存環境では元の値を維持。
   homeStateVersion = "26.05";
+  # 空なら内蔵画面を優先し、なければ最初の画面。例: "HDMI-A-1"
+  musicWidgetOutput = "";
 }

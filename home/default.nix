@@ -8,6 +8,7 @@
     ./desktop/theme.nix
     ./desktop/dconf.nix
     ./desktop/wallpaper.nix
+    ./desktop/quickshell.nix
     ./programs/development.nix
     ./programs/terminal.nix
     ./programs/shell.nix

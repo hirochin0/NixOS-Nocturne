@@ -14,6 +14,7 @@ let
         files = command pkgs.thunar "thunar";
         launcher = pkgs.lib.getExe tools.launcher;
         wallpaper = "${wallpaper}/bin/nocturne-wallpaper pick";
+        widgets = "${pkgs.lib.getExe tools.widgets} music";
         lock = pkgs.lib.getExe tools.lock;
         power = pkgs.lib.getExe tools.power;
         screenshot = pkgs.lib.getExe tools.screenshot;

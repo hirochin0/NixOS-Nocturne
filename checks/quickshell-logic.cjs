@@ -1,0 +1,28 @@
+const fs = require('node:fs');
+const vm = require('node:vm');
+const assert = require('node:assert/strict');
+const logic = {};
+vm.createContext(logic);
+vm.runInContext(fs.readFileSync(process.argv[2], 'utf8').replace(/^\.pragma library\s*/, ''), logic);
+
+const chrome = {dbusName: 'org.mpris.MediaPlayer2.chromium.instance1', isPlaying: true};
+const spotify = {dbusName: 'org.mpris.MediaPlayer2.spotify', isPlaying: false};
+const playing = {dbusName: 'org.mpris.MediaPlayer2.spotify.instance42', isPlaying: true};
+assert.equal(logic.spotifyPlayer([]), null);
+assert.equal(logic.spotifyPlayer([chrome]), null);
+assert.equal(logic.spotifyPlayer([chrome, spotify]), spotify);
+assert.equal(logic.spotifyPlayer([spotify, playing, chrome]), playing);
+assert.equal(logic.spotifyPlayer([{dbusName: 'org.mpris.MediaPlayer2.spotifyImpostor'}]), null);
+const external = {name: 'HDMI-A-1'}, internal = {name: 'eDP-1'};
+assert.equal(logic.musicScreen([external, internal], ''), internal);
+assert.equal(logic.musicScreen([external, internal], 'HDMI-A-1'), external);
+assert.equal(logic.musicScreen([external], 'missing'), external);
+assert.equal(logic.musicScreen([], ''), null);
+assert.equal(logic.timeText(102.8), '1:42');
+assert.equal(logic.timeText(NaN), '--:--');
+assert.equal(logic.timeText(-1), '--:--');
+assert.equal(logic.seekPosition(0.5, 258), 129);
+assert.equal(logic.seekPosition(5, 258), 258);
+assert.equal(logic.seekPosition(-5, 258), 0);
+assert.equal(logic.seekPosition(0.5, 0), 0);
+console.log('Spotify isolation, player removal, monitor fallback, time and seek bounds: passed');

@@ -47,7 +47,7 @@
       };
       listener = [
         { timeout = 300; on-timeout = "${pkgs.systemd}/bin/loginctl lock-session"; }
-        { timeout = 600; on-timeout = "hyprctl dispatch 'hl.dsp.dpms({ action = \"disable\" })'"; on-resume = "hyprctl dispatch 'hl.dsp.dpms({ action = \"enable\" })'"; }
+        { timeout = 360; on-timeout = "hyprctl dispatch 'hl.dsp.dpms({ action = \"disable\" })'"; on-resume = "hyprctl dispatch 'hl.dsp.dpms({ action = \"enable\" })'"; }
       ];
     };
   };

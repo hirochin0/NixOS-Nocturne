@@ -37,6 +37,7 @@
           inherit pkgs home-manager desktop user theme;
         };
         wallpaper-tools = import ./checks/wallpaper-tools.nix { inherit pkgs desktop theme; };
+        quickshell = import ./checks/quickshell.nix { inherit pkgs desktop theme user; };
         application-cli = pkgs.runCommand "nocturne-application-cli" {
           nativeBuildInputs = [ desktop.codex desktop.neofetch ];
         } ''
