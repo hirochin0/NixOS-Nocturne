@@ -16,10 +16,30 @@ VS Codeの既存プロセスが環境を引き継がない場合は全ウィン�
 
 NixpkgsはNocturneの固定済み26.05リビジョン `7dcdd87373d72e7a2173e4db02e20d3d7f495cfd` と一致させた。Nocturneのlock変更は不要。VitaSDKはこのNixpkgsのpkgs/lib内を検索して定義がないことを確認し、公式core 2026.08.1-1をハッシュ固定してNix用にパッケージ化する。
 
-再現に必要なソースはアプリ側、環境管理の方針は両方のAGENTS.mdに保存する。アプリのGitHub保存先はユーザー未作成。APKやゲームの素材はこのdotfilesへ置かない。現段階のアプリはSDK検証用でありGrow Castleの移植完了ではない。
+再現に必要なソースはアプリ側、環境管理の方針は両方のAGENTS.mdに保存する。アプリのGitHub保存先はユーザー未作成。APKやゲームの素材はこのdotfilesへ置かない。現段階のアプリは基本戦闘の試作でありGrow Castle全体の移植完了ではない。
 
 この文書とAGENTS.mdのみの反映にはnixos-rebuildは不要。今後システム設定を変えた場合は、検証後 `sudo nixos-rebuild switch --flake path:$HOME/NixOS-Nocturne-0571#nocturne` で適用する。実ホスト名nixosとflake構成名nocturneは異なるため混同しない。
 
 ## 検証結果（2026-11-05 JST）
 
 Nix 2.34.9でアプリのnix buildとnix develop経由のCMakeビルドが成功。GCC 15.2.0、ELF32 ARM EABI5 hard-float、SELF、VPK生成とunzip -tを確認。実機動作は未確認。dotfilesは文書のみの変更であり、既存lockとシステム設定は変更しない。既存のhosts/nixos/base/configuration.nixの未commit変更は含めない。
+
+## Grow Castle再実装と素材抽出（2026-11-05 JST）
+
+アプリ側にVitaSDK製の基本戦闘（敵の接近・弓兵の射撃・勝敗・強化・HP/MP・セーブ）と、ユーザーのXAPKから元画像をローカル生成する仕組みを追加した。原作全体の移植完了ではない。
+
+追加した開発依存はプロジェクト固有のため、アプリ側の `nix/asset-tools.nix` と `nix/unitypy-wheels.json` にUnityPy 1.23.0および全11 wheelのURL・バージョン・SHA-256を固定した。ホスト用GCC、CMake、PythonもアプリのdevShellで管理する。手動pip導入、グローバルPATH変更、サービスや権限の追加は行わない。このdotfilesの既存flake.lockとシステム設定は変更不要。
+
+```bash
+cd ~/work/vita/growcastle
+nix develop path:. --command python tools/build_local.py \
+  '/home/hiroto/Downloads/Grow+Castle+-+Tower+Defense_1.51.10_APKPure.xapk'
+# 元画像入り成果物: local/growcastle.vpk
+nix build path:.#checks.x86_64-linux.game-logic --out-link local/check-result
+```
+
+通常の `nix build path:.` は元画像を含まないコードのVPKを作る。ゲーム画像入りVPKは上記のローカル手順を使用する。入力XAPKのハッシュを検証し、抽出素材・元データ・画像入りVPKはGitから除外する。Vita上のセーブ先は `ux0:data/growcastle/save.dat`。操作はアプリREADME参照。Vita向けクロスビルド、PCで同じ描画コードによるプレビュー、AddressSanitizer/UndefinedBehaviorSanitizer付きのゲーム・画像ローダ検査に成功した。実機の起動/入力/描画速度/セーブは未確認。
+
+解析で確認した原作の値と仮の仕様はアプリ側 `docs/REIMPLEMENTATION.md` に区別して記録する。城の基礎HP/MPは実APKのARMコードから確認した式を反映。強化費用・ウェーブ編成・多数のヒーロー/スキル等はまだ原作と一致しない。
+
+この変更もプロジェクト定義と手順の追加のみで、システム適用のrebuildは不要。アプリ側GitHubリポジトリは未作成であり、ソースはローカルGitへ保存する。
