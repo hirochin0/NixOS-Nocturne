@@ -1,5 +1,13 @@
-{ desktop, ... }: {
-  home.packages = [ desktop.codex desktop.google-chrome desktop.neofetch desktop.discord ];
+{ pkgs, desktop, ... }: {
+  home.packages = [
+    desktop.codex
+    desktop.google-chrome
+    desktop.neofetch
+    desktop.discord
+    pkgs.htop
+    pkgs.cmatrix
+    pkgs.cava
+  ];
   programs.vscode = {
     enable = true;
     package = desktop.vscode;
