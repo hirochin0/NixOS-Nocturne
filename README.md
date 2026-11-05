@@ -9,11 +9,11 @@
 - Super+W、またはアプリ一覧の「Wallpaper」でサムネイル付きの3列グリッドを開きます。`~/Pictures/Wallpapers`にPNG/JPEG/WebP/GIF/BMPを置き、文字入力で検索、矢印キーで移動、Enterで選択、Escapeでキャンセルします。サブフォルダも対象です。壁紙メニューだけWayland対応rofiを使い、通常のアプリ検索は従来どおりです。
 - サムネイルは480×270に縮小して`~/.cache/nocturne/wallpaper-thumbnails/`へ保存します（`XDG_CACHE_HOME`設定時はそちら）。変更した画像は自動で作り直し、GIFは先頭フレームを表示します。適用時は元画像・元GIFをswwwへ渡します。プレビューを作れない画像は代替画像で表示します。
 - 選択を`~/.local/state/nocturne/wallpaper.json`へ保存し、次のログイン時に復元します（`XDG_STATE_HOME`設定時はそちら）。元画像を移動・削除するとNixで指定した既定画像へ戻ります。
-- Codex CLI、VS Code、Google Chrome、オリジナルのNeofetch 7.1.0を導入します。Super+BでChromeを開きます。
+- Codex CLI、VS Code、Google Chrome、Discord、オリジナルのNeofetch 7.1.0を導入します。Super+BでChromeを開きます。
 - アプリ一覧の「ChatGPT」は公式サイトをChromeの独立ウィンドウで開きます。Codexはターミナルで`codex`を実行します。
 - Quickshell 0.3.2のSpotifyカードを右下に表示します。Super+Mで表示切替、WaybarのバッテリーをクリックするとSave / Balanced / Powerを選べます。
 
-VS Codeは公式Marketplaceの拡張機能を使いやすいため採用しました。エディタ本体はNixで更新し、テレメトリはオフにしています。非自由ライセンスの許可はVS Code・Chrome・Spotifyの3パッケージに限定しています。
+VS Codeは公式Marketplaceの拡張機能を使いやすいため採用しました。エディタ本体はNixで更新し、テレメトリはオフにしています。非自由ライセンスの許可はVS Code・Chrome・Spotify・Discordの4パッケージに限定しています。
 
 `neofetch`は現在のnixpkgsから削除されているため、上流の最終公開版を`flake.lock`で固定して独自パッケージ化しました。また現在のnixpkgsの`swww`は`awww`への別名なので、指定どおり元のswwwを使うため公式v0.11.2を固定しています。
 
@@ -48,7 +48,7 @@ sudo nixos-rebuild switch --flake path:.#nocturne
 
 | 編集先 | 管理するもの |
 |---|---|
-| `home/programs/development.nix` | Codex・VS Code・Chrome・Neofetch、エディタ設定 |
+| `home/programs/development.nix` | Codex・VS Code・Chrome・Discord・Neofetch、エディタ設定 |
 | `home/programs/spotify.nix` | Spotify・Spicetify・テーマ・拡張機能 |
 | `home/programs/spicetify/Nocturne/` | Spotify用の追加CSS |
 | `home/desktop/wallpaper.nix` | swwwサービス、壁紙メニュー登録 |
