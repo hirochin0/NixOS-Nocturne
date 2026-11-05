@@ -192,18 +192,26 @@ Waybarの太陽アイコンには内蔵画面の明るさ（%）を表示しま�
 
 ### SpotifyとSpicetifyの管理
 
-`home/programs/spotify.nix`でSpicetify適用済みのSpotifyと`spicetify` CLIを導入します。公式が案内する`spicetify-nix`のHome Managerモジュールを使い、通常のSpotifyは重複してインストールしません。SpotifyとCLIはMesaと同じ固定nixpkgsから取得し、`spicetify-nix`自身も`flake.lock`に固定しています。
+`home/programs/spotify.nix`でSpotify、Spicetify CLI、Marketplaceのソースを固定し、ユーザー所有のSpotifyコピーへ起動時に適用します。通常のSpotifyは重複してインストールしません。GUIとCLIはMesaと同じnixpkgsを使用します。Nixストアの権限変更や`sudo spicetify`は不要です。
 
-Nocturneテーマの配色は`theme.nix`に連動します。CSSは`home/programs/spicetify/Nocturne/user.css`、拡張機能・カスタムアプリは`home/programs/spotify.nix`の`enabledExtensions`・`enabledCustomApps`で管理します。初期状態では追加拡張を有効にしていません。
+1. rebuild前にSpotifyを完全に終了してください。
+2. rebuild後、アプリ一覧のSpotify、または`spotify`で起動します。
+3. 初回でSpotifyの設定が存在しない場合は、ログイン後にSpotifyを完全終了してもう一度起動してください。
+4. Spotify内のMarketplaceからテーマ・拡張機能・スニペットを選べます。
 
-変更したら`sudo nixos-rebuild switch --flake path:.#nocturne`でビルドし、Spotifyを終了して起動し直します。`sudo spicetify`やNixストアへの`chmod`、手動の`spicetify backup apply`は不要です。Nixで適用済みのパッケージを生成するため、永続的な変更は`.nix`やCSSに保存してください。Spotifyのログイン情報はユーザーのホームに保存され、Gitには含めません。
+初期テーマはNocturneです。その後の選択はユーザー側で管理し、通常のrebuildで上書きしません。Spotify・CLI・Marketplaceの固定ソースが更新されたときは、次回起動時にコピーを作り直して再適用します。再適用中のエラーは起動したターミナルに表示されます。
 
-```bash
-spotify
-spicetify --version
-```
+| 保存場所 | 内容 |
+|---|---|
+| `${XDG_DATA_HOME:-~/.local/share}/nocturne/spotify/` | 書き換え可能なSpotify本体・適用済みソースの記録 |
+| `${XDG_CONFIG_HOME:-~/.config}/spicetify-nocturne/` | 編集可能なSpicetify設定・テーマ・Marketplace |
+| `${XDG_CONFIG_HOME:-~/.config}/spotify/` | Spotifyのログインやユーザーデータ |
 
-参照: [Spicetify公式のNix導入案内](https://github.com/spicetify/docs/blob/main/docs/getting-started.md)、[spicetify-nixの設定](https://gerg-l.github.io/spicetify-nix/usage.html)。
+Marketplaceで選んだ内容は自動でGitには保存されません。別PCへ移行するときはSpotifyのユーザーデータ（Marketplaceが使うlocalStorageを含む）とSpicetify設定を別途バックアップしてください。ログイン情報はGitへ追加しないでください。
+
+`spicetify --version`や`spicetify apply`は、この構成専用のラッパーから同じ設定を参照します。適用はSpotifyを終了してから行ってください。テーマを選び直す場合はMarketplaceを利用できます。
+
+参照: [Marketplace公式](https://github.com/spicetify/marketplace)、[SpicetifyのCLI](https://spicetify.app/docs/cli/commands)。
 
 ### Spotifyカード
 

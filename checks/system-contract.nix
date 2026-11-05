@@ -36,8 +36,9 @@ assert hm.programs.waybar.package.version == desktop.waybar.version;
 assert hm.programs.hyprlock.package.version == desktop.hyprlock.version;
 assert hm.programs.kitty.package.outPath == desktop.kitty.outPath;
 assert hm.programs.vscode.package.outPath == desktop.vscode.outPath;
-assert hm.programs.spicetify.enable;
-assert hm.programs.spicetify.spotifyPackage.outPath == desktop.spotify.outPath;
+assert !hm.programs.spicetify.enable;
+assert lib.any (p: p.name == "nocturne-spotify") hm.home.packages;
+assert lib.hasSuffix "/bin/spotify %U" hm.xdg.desktopEntries.spotify.exec;
 assert !lib.elem desktop.spotify hm.home.packages;
 assert hm.systemd.user.services.nocturne-wallpaper.Service.ExecStart == [ "${desktop.swww}/bin/swww-daemon --no-cache" ];
 assert cfg.services.power-profiles-daemon.enable;
@@ -63,7 +64,7 @@ system.pkgs.writeText "nocturne-system-contract.json" (builtins.toJSON {
   target = hm.wayland.systemd.target;
   dconfSettings = hm.dconf.settings;
   powerProfiles = cfg.services.power-profiles-daemon.enable;
-  spicedSpotify = builtins.unsafeDiscardStringContext hm.programs.spicetify.spicedSpotify.drvPath;
+  spotifyLauncher = hm.xdg.desktopEntries.spotify.exec;
   # forcing the HM activation script also checks module option generation.
   activation = builtins.unsafeDiscardStringContext hm.home.activationPackage.drvPath;
   services = builtins.attrNames hm.systemd.user.services;
