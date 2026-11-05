@@ -43,3 +43,20 @@ nix build path:.#checks.x86_64-linux.game-logic --out-link local/check-result
 解析で確認した原作の値と仮の仕様はアプリ側 `docs/REIMPLEMENTATION.md` に区別して記録する。城の基礎HP/MPは実APKのARMコードから確認した式を反映。強化費用・ウェーブ編成・多数のヒーロー/スキル等はまだ原作と一致しない。
 
 この変更もプロジェクト定義と手順の追加のみで、システム適用のrebuildは不要。アプリ側GitHubリポジトリは未作成であり、ソースはローカルGitへ保存する。
+
+## タッチ操作・素材入りVPKの既定化（2026-11-06 JST）
+
+Grow Castleの基本操作をVita前面タッチへ統一。SceTouch APIは固定SDKに含まれるものを使用するため、ホストのパッケージや権限追加は不要。プロジェクトのsrc/ui.cで操作可能状態・モーダル・タッチ領域を描画と共有する。
+
+以前のresult/growcastle.vpkをユーザーがインストールし、素材がないエラーになったと確認できた。VS Codeの既定タスクを、アプリ側tools/build_local.pyによる元画像入りlocal/growcastle.vpkの生成へ変更した。CMakeのゲームVPKは素材パックの指定が必須。生成した最終VPKから素材を抽出し、Vitaと同じCローダで必須画像を検証する。
+
+通常のnix buildは今後 `result/growcastle-code-check.vpk` を生成し、アプリ名Grow Castle Code Check・タイトルID HROT00003でゲームHROT00002と分離する。元画像入りゲームは従来と同じ下記の方法で生成して上書きインストールする。セーブ先は維持する。
+
+```bash
+cd ~/work/vita/growcastle
+nix develop path:. --command python tools/build_local.py \
+  '/home/hiroto/Downloads/Grow+Castle+-+Tower+Defense_1.51.10_APKPure.xapk'
+# インストールするもの: local/growcastle.vpk
+```
+
+変更箇所はアプリ側のNix/CMake定義・ビルドタスク・コードと手順。既存flake.lock、Home Manager、システム設定の変更やnixos-rebuildは不要。タッチの座標変換・長押し・ドラッグ・複数指・強化・戦闘・pause・終了メニューと素材欠落のテストを追加した。Vita上のタッチ位置と素材読み込みの最終確認は実機で行う。読込診断はux0:data/growcastle/assets-load.logへ保存する。
