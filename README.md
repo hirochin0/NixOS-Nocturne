@@ -12,7 +12,7 @@
 - Codex CLI、VS Code、Google Chrome、Discord、オリジナルのNeofetch 7.1.0を導入します。Super+BでChromeを開きます。
 - ターミナル用にNeofetch・htop・cmatrix・cavaを導入します。Kittyでそれぞれ`neofetch`・`htop`・`cmatrix`・`cava`を実行してください。cavaは音楽などの再生中に音声を可視化します。
 - アプリ一覧の「ChatGPT」は公式サイトをChromeの独立ウィンドウで開きます。Codexはターミナルで`codex`を実行します。
-- 起動時はReGreetのGUIログイン画面。Nocturneの壁紙・濃紺カード・青紫からシアンへのログインボタン・時計を表示し、ログイン後はUWSM経由でHyprlandを起動します。
+- 起動時はReGreetのGUIログイン画面。ロック画面に合わせたぼかし壁紙・大きな中央時計・ユーザー名・シンプルな入力欄を表示し、ログイン後はUWSM経由でHyprlandを起動します。
 - Quickshell 0.3.2のSpotifyカードを右下に表示します。Super+Mで表示切替、WaybarのバッテリーをクリックするとSave / Balanced / Powerを選べます。
 
 VS Codeは公式Marketplaceの拡張機能を使いやすいため採用しました。エディタ本体はNixで更新し、テレメトリはオフにしています。非自由ライセンスの許可はVS Code・Chrome・Spotify・Discordの4パッケージに限定しています。
@@ -198,12 +198,14 @@ Waybarの太陽アイコンには内蔵画面の明るさ（%）を表示しま�
 
 `user.nix`の`enableGreetd = true;`でgreetd + ReGreetを使用します。CageとReGreetはMesaと同じ固定パッケージ集合から導入します。認証にはgreetdのPAMを使用し、ユーザー名やパスワードをコードに埋め込みません。
 
-- 中央に角丸の濃紺カード、上部に日本時間の時計、下部に再起動・電源オフを配置します。
-- `theme.nix`の配色・壁紙を参照します。静止画はGTK CSSで表示し、動画の常駐処理を追加しません。
+- 大きな中央時計、`NOCTURNE / ユーザー名`、角丸のパスワード欄を中心にした、ロック画面風のデザインです。大きなカード枠は表示せず、再起動・電源オフは下部に小さく配置します。
+- `theme.nix`の配色・壁紙を参照します。壁紙のぼかしはビルド時に静止画として生成し、動画やリアルタイムぼかしの常駐処理を追加しません。
 - 日本語キーボードは`user.keyboardLayout`から設定します。
 - セッション選択は`NOCTURNE (Hyprland)`のみです。内部では従来と同じ`uwsm start -e -D Hyprland hyprland.desktop`を使用し、WaybarやQuickshellのsystemdターゲットを維持します。
-- 最初はユーザーを選んでLogin、続けてパスワードを入力します。Enterでも操作できます。
+- 初回はユーザーを選んで「ログイン」、続けてパスワードを入力します。次回以降は記憶したユーザー・セッションでパスワード入力から始めます。「戻る」でユーザーを選び直せます。Enterでも操作できます。
 - SDDM/GDM/LightDM/lyとの同時起動と、自動ログインを無効化します。ロック画面（Hyprlock）の設定は別です。
+
+レイアウトは`assets/regreet/lock-layout.patch`でReGreet 0.5.0のGTKテンプレートと表示状態だけを調整しています。PAM・greetd IPC・セッション開始処理は上流のままです。初回はカスタマイズ版ReGreetのコンパイルに時間がかかります。
 
 ログイン方式の変更は、現在の作業を継続したまま次回起動へ適用できます。
 

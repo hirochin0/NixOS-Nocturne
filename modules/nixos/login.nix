@@ -47,14 +47,14 @@ in {
       theme.name = "Adwaita-dark";
       extraCss = import ../../lib/login-style.nix { inherit pkgs theme; };
       settings = {
-        skip_selection = false;
+        skip_selection = true;
         GTK.application_prefer_dark_theme = true;
-        appearance.greeting_msg = "N O C T U R N E\nWelcome back";
+        appearance.greeting_msg = "NOCTURNE";
         widget.clock = {
-          format = "%H:%M  ·  %Y / %m / %d";
+          format = "%H:%M";
           resolution = "30s";
           timezone = "Asia/Tokyo";
-          label_width = 320;
+          label_width = 400;
         };
         commands = {
           reboot = [ "${pkgs.systemd}/bin/systemctl" "reboot" ];

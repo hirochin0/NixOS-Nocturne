@@ -119,3 +119,13 @@ XDG_DATA_DIRSに採用dconfパッケージのサービス定義を明示する�
 - https://github.com/rharish101/ReGreet/blob/0.5.0/src/gui/templates.rs
 - https://github.com/NixOS/nixpkgs/blob/7dcdd87373d72e7a2173e4db02e20d3d7f495cfd/nixos/modules/programs/regreet.nix
 - https://github.com/NixOS/nixpkgs/blob/7dcdd87373d72e7a2173e4db02e20d3d7f495cfd/nixos/modules/services/display-managers/greetd.nix
+
+
+## ロック画面風のシンプルなログイン（2026-11-06）
+
+- `home/desktop/lock.nix`の構成に合わせて、大きな中央時計、ユーザー名、シアン／青紫の枠の入力欄を配置した。カード枠とセッション選択表示を外し、電源操作は下部の小さなテキストボタンにした。
+- ReGreet 0.5.0へ`assets/regreet/lock-layout.patch`を適用して実ビルド成功。変更対象はGTKテンプレートと表示制御のみ。`src/client.rs`、PAM、認証モデル、セッション開始処理は変更していない。Cargoの書き込み先はビルド用一時ディレクトリに限定した。
+- 最終構成の`system-contract`ビルド成功。時計の`%H:%M`、ユーザー／セッションを記憶する`skip_selection = true`を生成結果から確認した。
+- ぼかし壁紙をビルド時に生成し、最終構成のCSSと同一のCSSをデモで読み込んで描画確認した。実際のNoto Sans CJK JPとJetBrainsMono Nerd Fontで日本語ボタンと時計を確認した。
+- 最終ビルドのReGreetを使い、検証専用AccountsServiceと`/bin/true`のセッションで、Enterによるユーザー選択→デモOTP→Passwordの表示遷移、誤入力時のエラー／認証キャンセル、正しいデモ入力後のセッション開始成功まで確認した。秘密入力はプロンプトごとに選択して置き換えた。これらはデモ認証であり、実機のPAM検証ではない。
+- `docs/login-preview.png`はデモのPassword入力画面。実機のWayland・PAM・Hyprland起動の確認は対象端末で必要。適用方法は引き続き`nixos-rebuild boot`後の再起動。

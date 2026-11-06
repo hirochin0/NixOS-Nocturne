@@ -1,0 +1,370 @@
+--- a/src/gui/templates.rs
++++ b/src/gui/templates.rs
+@@ -1,151 +1,79 @@
+ // SPDX-FileCopyrightText: 2022 The ReGreet Authors
+-//
+ // SPDX-License-Identifier: GPL-3.0-or-later
+-
+-//! Templates for various GUI components
+-#![allow(dead_code)] // Silence dead code warnings for UI code that isn't dead
++// NOCTURNE: layout-only customization; authentication stays in ReGreet.
++#![allow(dead_code)]
+ 
+ use gtk::prelude::*;
+ use relm4::{RelmWidgetExt, WidgetTemplate, gtk};
+ 
+-/// Button that ends the greeter (eg. Reboot)
+-#[relm4::widget_template(pub)]
+-impl WidgetTemplate for EndButton {
+-    view! {
+-        gtk::Button {
+-            set_focusable: true,
+-            add_css_class: "destructive-action",
+-        }
+-    }
+-}
+-
+-/// Label for an entry/combo box
+-#[relm4::widget_template(pub)]
+-impl WidgetTemplate for EntryLabel {
+-    view! {
+-        gtk::Label {
+-            set_width_request: 100,
+-            set_xalign: 1.0,
+-        }
+-    }
+-}
+-
+-/// Main UI of the greeter
+ #[relm4::widget_template(pub)]
+ impl WidgetTemplate for Ui {
+     view! {
+         gtk::Overlay {
+-            /// Background image/video
+             #[name = "background"]
+             gtk::Picture,
+ 
+-            /// Main login box
+-            add_overlay = &gtk::Frame {
++            add_overlay = &gtk::Box {
++                set_orientation: gtk::Orientation::Vertical,
+                 set_halign: gtk::Align::Center,
+                 set_valign: gtk::Align::Center,
+-                add_css_class: "background",
++                set_spacing: 14,
++                add_css_class: "lock-layout",
++
++                #[name = "clock_frame"]
++                gtk::Frame { add_css_class: "lock-clock" },
++
++                #[name = "message_label"]
++                gtk::Label {
++                    add_css_class: "lock-identity",
++                    set_margin_bottom: 22,
++                },
+ 
+                 gtk::Grid {
+-                    set_column_spacing: 15,
+-                    set_margin_bottom: 15,
+-                    set_margin_end: 15,
+-                    set_margin_start: 15,
+-                    set_margin_top: 15,
+-                    set_row_spacing: 15,
+-                    set_width_request: 500,
++                    set_column_spacing: 8,
++                    set_row_spacing: 12,
++                    set_width_request: 340,
+ 
+-                    /// Widget to display messages to the user
+-                    #[name = "message_label"]
+-                    attach[0, 0, 3, 1] = &gtk::Label {
+-                        set_margin_bottom: 15,
+-
+-                        // Format all messages in boldface.
+-                        #[wrap(Some)]
+-                        set_attributes = &gtk::pango::AttrList {
+-                            insert: {
+-                                let mut font_desc = gtk::pango::FontDescription::new();
+-                                font_desc.set_weight(gtk::pango::Weight::Bold);
+-                                gtk::pango::AttrFontDesc::new(&font_desc)
+-                            },
+-                        },
+-                    },
+-
+-                    #[template]
+-                    attach[0, 1, 1, 1] = &EntryLabel {
+-                        set_label: "User:",
+-                        set_height_request: 45,
+-                    },
+-
+-                    /// Label for the sessions widget
+-                    #[name = "session_label"]
+-                    #[template]
+-                    attach[0, 2, 1, 1] = &EntryLabel {
+-                        set_label: "Session:",
+-                        set_height_request: 45,
+-                    },
+-
+-                    /// Widget containing the usernames
+                     #[name = "usernames_box"]
+-                    attach[1, 1, 1, 1] = &gtk::ComboBoxText { set_hexpand: true },
+-
+-                    /// Widget where the user enters the username
++                    attach[0, 0, 1, 1] = &gtk::ComboBoxText { set_hexpand: true },
+                     #[name = "username_entry"]
+-                    attach[1, 1, 1, 1] = &gtk::Entry { set_hexpand: true },
+-
+-                    /// Widget containing the sessions
+-                    #[name = "sessions_box"]
+-                    attach[1, 2, 1, 1] = &gtk::ComboBoxText,
+-
+-                    /// Widget where the user enters the session
+-                    #[name = "session_entry"]
+-                    attach[1, 2, 1, 1] = &gtk::Entry,
+-
+-                    /// Label for the password widget
+-                    #[name = "input_label"]
+-                    #[template]
+-                    attach[0, 2, 1, 1] = &EntryLabel {
+-                        set_height_request: 45,
+-                    },
+-
+-                    /// Widget where the user enters a secret
+-                    #[name = "secret_entry"]
+-                    attach[1, 2, 1, 1] = &gtk::PasswordEntry { set_show_peek_icon: true },
+-
+-                    /// Widget where the user enters something visible
+-                    #[name = "visible_entry"]
+-                    attach[1, 2, 1, 1] = &gtk::Entry,
+-
+-                    /// Button to toggle manual user entry
++                    attach[0, 0, 1, 1] = &gtk::Entry { set_hexpand: true },
+                     #[name = "user_toggle"]
+-                    attach[2, 1, 1, 1] = &gtk::ToggleButton {
++                    attach[1, 0, 1, 1] = &gtk::ToggleButton {
+                         set_icon_name: "document-edit-symbolic",
+                         set_tooltip_text: Some("Manually enter username"),
+                     },
+ 
+-                    /// Button to toggle manual session entry
++                    // The exported session is fixed to NOCTURNE (Hyprland).
++                    // Keep these template children for upstream session handling.
++                    #[name = "session_label"]
++                    attach[0, 1, 2, 1] = &gtk::Label,
++                    #[name = "sessions_box"]
++                    attach[0, 1, 1, 1] = &gtk::ComboBoxText,
++                    #[name = "session_entry"]
++                    attach[0, 1, 1, 1] = &gtk::Entry,
+                     #[name = "sess_toggle"]
+-                    attach[2, 2, 1, 1] = &gtk::ToggleButton {
+-                        set_icon_name: "document-edit-symbolic",
+-                        set_tooltip_text: Some("Manually enter session command"),
+-                    },
++                    attach[1, 1, 1, 1] = &gtk::ToggleButton,
+ 
+-                    /// Collection of action buttons (eg. Login)
+-                    attach[1, 3, 2, 1] = &gtk::Box {
+-                        set_halign: gtk::Align::End,
+-                        set_spacing: 15,
++                    #[name = "input_label"]
++                    attach[0, 2, 2, 1] = &gtk::Label { add_css_class: "lock-prompt" },
++                    #[name = "secret_entry"]
++                    attach[0, 3, 2, 1] = &gtk::PasswordEntry { set_show_peek_icon: true },
++                    #[name = "visible_entry"]
++                    attach[0, 3, 2, 1] = &gtk::Entry,
+ 
+-                        /// Button to cancel password entry
++                    attach[0, 4, 2, 1] = &gtk::Box {
++                        set_halign: gtk::Align::Center,
++                        set_spacing: 10,
+                         #[name = "cancel_button"]
+                         gtk::Button {
+                             set_focusable: true,
+-                            set_label: "Cancel",
++                            set_label: "戻る",
+                         },
+-
+-                        /// Button to enter the password and login
+                         #[name = "login_button"]
+                         gtk::Button {
+                             set_focusable: true,
+-                            set_label: "Login",
++                            set_label: "ログイン",
+                             set_receives_default: true,
+                             add_css_class: "suggested-action",
+                         },
+@@ -153,71 +81,40 @@
+                 },
+             },
+ 
+-            /// Clock widget
+-            #[name = "clock_frame"]
+-            add_overlay = &gtk::Frame {
+-                set_halign: gtk::Align::Center,
+-                set_valign: gtk::Align::Start,
+-
+-                add_css_class: "background",
+-
+-                // Make it fit cleanly onto the top edge of the screen.
+-                inline_css: "
+-                    border-top-right-radius: 0px;
+-                    border-top-left-radius: 0px;
+-                    border-top-width: 0px;
+-                ",
+-            },
+-
+-            /// Collection of widgets appearing at the bottom
+             add_overlay = &gtk::Box {
+                 set_orientation: gtk::Orientation::Vertical,
+                 set_halign: gtk::Align::Center,
+                 set_valign: gtk::Align::End,
+-                set_margin_bottom: 15,
+-                set_spacing: 15,
++                set_margin_bottom: 24,
++                set_spacing: 12,
+ 
+-                gtk::Frame {
+-                    inline_css: "
+-                        border: none;
+-                    ",
+-
+-                    /// Notification bar for messages
+-                    #[name = "notif_info"]
+-                    gtk::InfoBar {
+-                        // During init, the info bar closing animation is shown. To hide that, make
+-                        // it invisible. Later, the code will permanently make it visible, so that
+-                        // `InfoBar::set_revealed` will work properly with animations.
+-                        set_visible: false,
+-                        set_message_type: gtk::MessageType::Info,
+-
+-                        /// The actual notification message
+-                        #[name = "notif_label"]
+-                        gtk::Label {
+-                            set_halign: gtk::Align::Center,
+-                            set_margin_top: 10,
+-                            set_margin_bottom: 10,
+-                            set_margin_start: 10,
+-                            set_margin_end: 10,
+-                        },
+-                    }
++                #[name = "notif_info"]
++                gtk::InfoBar {
++                    set_visible: false,
++                    set_message_type: gtk::MessageType::Info,
++                    #[name = "notif_label"]
++                    gtk::Label {
++                        set_margin_top: 8,
++                        set_margin_bottom: 8,
++                        set_margin_start: 12,
++                        set_margin_end: 12,
++                    },
+                 },
+-
+-                /// Collection of buttons that close the greeter (eg. Reboot)
+                 gtk::Box {
+                     set_halign: gtk::Align::Center,
+-                    set_homogeneous: true,
+-                    set_spacing: 15,
+-
+-                    /// Button to reboot
++                    set_spacing: 14,
+                     #[name = "reboot_button"]
+-                    #[template]
+-                    EndButton { set_label: "Reboot" },
+-
+-                    /// Button to power-off
++                    gtk::Button {
++                        set_focusable: true,
++                        set_label: "再起動",
++                        add_css_class: "power-action",
++                    },
+                     #[name = "poweroff_button"]
+-                    #[template]
+-                    EndButton { set_label: "Power Off" },
++                    gtk::Button {
++                        set_focusable: true,
++                        set_label: "電源オフ",
++                        add_css_class: "power-action",
++                    },
+                 },
+             },
+         }
+--- a/src/gui/component.rs
++++ b/src/gui/component.rs
+@@ -179,12 +179,18 @@
+ 
+                 #[template_child]
+                 message_label {
+-                    set_label: model.config.get_default_message(),
++                    #[watch]
++                    set_label: &model.sess_info.as_ref().map_or_else(
++                        || model.config.get_default_message().to_string(),
++                        |info| format!("{} / {}", model.config.get_default_message(),
++                            if model.updates.manual_user_mode { &info.user_text }
++                            else { info.user_id.as_ref().unwrap_or(&info.user_text) })
++                    ),
+                 },
+                 #[template_child]
+                 session_label {
+                     #[track(model.updates.changed(Updates::input_mode()))]
+-                    set_visible: !model.updates.is_input(),
++                    set_visible: false,
+                 },
+                 #[template_child]
+                 usernames_box {
+@@ -193,8 +199,8 @@
+                         || model.updates.changed(Updates::input_mode())
+                     )]
+                     set_sensitive: !model.updates.manual_user_mode && !model.updates.is_input(),
+-                    #[track(model.updates.changed(Updates::manual_user_mode()))]
+-                    set_visible: !model.updates.manual_user_mode,
++                    #[watch]
++                    set_visible: !model.updates.manual_user_mode && !model.updates.is_input(),
+                     connect_changed[
+                         sender,
+                         username_entry = ui.username_entry.clone(),
+@@ -213,8 +219,8 @@
+                         || model.updates.changed(Updates::input_mode())
+                     )]
+                     set_sensitive: model.updates.manual_user_mode && !model.updates.is_input(),
+-                    #[track(model.updates.changed(Updates::manual_user_mode()))]
+-                    set_visible: model.updates.manual_user_mode,
++                    #[watch]
++                    set_visible: model.updates.manual_user_mode && !model.updates.is_input(),
+                 },
+                 #[template_child]
+                 sessions_box {
+@@ -222,7 +228,7 @@
+                         model.updates.changed(Updates::manual_sess_mode())
+                         || model.updates.changed(Updates::input_mode())
+                     )]
+-                    set_visible: !model.updates.manual_sess_mode && !model.updates.is_input(),
++                    set_visible: false,
+                     #[track(model.updates.changed(Updates::active_session_id()))]
+                     set_active_id: model.updates.active_session_id.as_deref(),
+                 },
+@@ -232,7 +238,7 @@
+                         model.updates.changed(Updates::manual_sess_mode())
+                         || model.updates.changed(Updates::input_mode())
+                     )]
+-                    set_visible: model.updates.manual_sess_mode && !model.updates.is_input(),
++                    set_visible: false,
+                 },
+                 #[template_child]
+                 input_label {
+@@ -297,12 +303,14 @@
+                 user_toggle {
+                     #[track(model.updates.changed(Updates::input_mode()))]
+                     set_sensitive: !model.updates.is_input(),
++                    #[watch]
++                    set_visible: !model.updates.is_input(),
+                     connect_clicked => Self::Input::ToggleManualUser,
+                 },
+                 #[template_child]
+                 sess_toggle {
+                     #[track(model.updates.changed(Updates::input_mode()))]
+-                    set_visible: !model.updates.is_input(),
++                    set_visible: false,
+                     connect_clicked => Self::Input::ToggleManualSess,
+                 },
+                 #[template_child]
