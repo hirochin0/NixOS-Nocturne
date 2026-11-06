@@ -1,5 +1,5 @@
 { config, lib, pkgs, user, desktop, ... }: {
-  imports = [ ./power.nix ];
+  imports = [ ./power.nix ./login.nix ];
   nix.settings.experimental-features = [ "nix-command" "flakes" ];
   nix.settings.extra-substituters = [ "https://hyprland.cachix.org" ];
   nix.settings.extra-trusted-public-keys = [ "hyprland.cachix.org-1:a7pgxzMz7+chwVL3/pzj6jIBMioiJM7ypFP8PwtkuGc=" ];
@@ -42,13 +42,6 @@
   };
   fonts.packages = with pkgs; [ nerd-fonts.jetbrains-mono noto-fonts-cjk-sans noto-fonts-color-emoji ];
   environment.systemPackages = with pkgs; [ git ];
-  services.greetd = lib.mkIf user.enableGreetd {
-    enable = true;
-    settings.default_session = {
-      command = "${pkgs.tuigreet}/bin/tuigreet --time --remember --cmd 'uwsm start -e -D Hyprland hyprland.desktop'";
-      user = "greeter";
-    };
-  };
   assertions = [{
     assertion = lib.versionAtLeast config.programs.hyprland.package.version "0.57.1"
       && lib.versionOlder config.programs.hyprland.package.version "0.58";

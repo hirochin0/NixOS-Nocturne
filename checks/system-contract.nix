@@ -45,6 +45,19 @@ assert cfg.services.power-profiles-daemon.enable;
 assert !cfg.services.tlp.enable && !cfg.services.auto-cpufreq.enable && !cfg.powerManagement.powertop.enable;
 assert hm.programs.waybar.settings.main.battery.on-click == "nocturne-widgets power";
 assert hm.systemd.user.services.nocturne-widgets.Unit.PartOf == [ hm.wayland.systemd.target ];
+assert cfg.programs.regreet.enable == user.enableGreetd;
+assert !user.enableGreetd || (
+  cfg.services.greetd.enable
+  && !cfg.services.greetd.useTextGreeter
+  && !(cfg.services.greetd.settings ? initial_session)
+  && !cfg.services.displayManager.autoLogin.enable
+  && !cfg.services.displayManager.sddm.enable
+  && !cfg.services.displayManager.gdm.enable
+  && !cfg.services.displayManager.ly.enable
+  && !cfg.services.xserver.displayManager.lightdm.enable
+  && cfg.services.greetd.settings.default_session.user == "greeter"
+  && cfg.programs.regreet.package.outPath == desktop.regreet.outPath
+);
 system.pkgs.writeText "nocturne-system-contract.json" (builtins.toJSON {
   hyprland = cfg.programs.hyprland.package.version;
   portal = cfg.programs.hyprland.portalPackage.version;
@@ -64,6 +77,13 @@ system.pkgs.writeText "nocturne-system-contract.json" (builtins.toJSON {
   target = hm.wayland.systemd.target;
   dconfSettings = hm.dconf.settings;
   powerProfiles = cfg.services.power-profiles-daemon.enable;
+  login = {
+    enabled = cfg.programs.regreet.enable;
+    command = if user.enableGreetd then cfg.services.greetd.settings.default_session.command else null;
+    css = if user.enableGreetd then toString cfg.programs.regreet.extraCss else null;
+    settings = if user.enableGreetd then cfg.programs.regreet.settings else {};
+    sessionPackages = map (p: builtins.unsafeDiscardStringContext (toString p)) cfg.services.displayManager.sessionPackages;
+  };
   spotifyLauncher = hm.xdg.desktopEntries.spotify.exec;
   # forcing the HM activation script also checks module option generation.
   activation = builtins.unsafeDiscardStringContext hm.home.activationPackage.drvPath;

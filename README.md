@@ -12,6 +12,7 @@
 - Codex CLI、VS Code、Google Chrome、Discord、オリジナルのNeofetch 7.1.0を導入します。Super+BでChromeを開きます。
 - ターミナル用にNeofetch・htop・cmatrix・cavaを導入します。Kittyでそれぞれ`neofetch`・`htop`・`cmatrix`・`cava`を実行してください。cavaは音楽などの再生中に音声を可視化します。
 - アプリ一覧の「ChatGPT」は公式サイトをChromeの独立ウィンドウで開きます。Codexはターミナルで`codex`を実行します。
+- 起動時はReGreetのGUIログイン画面。Nocturneの壁紙・濃紺カード・青紫からシアンへのログインボタン・時計を表示し、ログイン後はUWSM経由でHyprlandを起動します。
 - Quickshell 0.3.2のSpotifyカードを右下に表示します。Super+Mで表示切替、WaybarのバッテリーをクリックするとSave / Balanced / Powerを選べます。
 
 VS Codeは公式Marketplaceの拡張機能を使いやすいため採用しました。エディタ本体はNixで更新し、テレメトリはオフにしています。非自由ライセンスの許可はVS Code・Chrome・Spotify・Discordの4パッケージに限定しています。
@@ -49,6 +50,8 @@ sudo nixos-rebuild switch --flake path:.#nocturne
 
 | 編集先 | 管理するもの |
 |---|---|
+| `modules/nixos/login.nix` | GUIログイン・キーボード・UWSMセッション |
+| `lib/login-style.nix` | ログイン画面のGTK CSS（色と壁紙は`theme.nix`参照） |
 | `home/programs/development.nix` | Codex・VS Code・Chrome・Discord・Neofetch、エディタ設定 |
 | `home/programs/spotify.nix` | Spotify・Spicetify・テーマ・拡張機能 |
 | `home/programs/spicetify/Nocturne/` | Spotify用の追加CSS |
@@ -116,7 +119,7 @@ NixOSをインストール済みの環境が対象です。UEFI、Windowsとの�
 3. `/etc/nixos/.`を`hosts/nixos/base/`へディレクトリ構造ごとコピーします。既存のconfiguration.nixで案内用throwを置き換えます。
 4. `user.nix`の`name`を現在のログイン名へ変更します。このリポジトリの既定値は`hiroto`です。
 5. 既存利用者はHome ManagerのstateVersionを維持します。system.stateVersionも元の値を変えません。
-6. 元設定のHome Manager、Hyprland、通知、PulseAudio単体などの重複を整理します。既存DMは利用できます。`enableGreetd`は既存DMがない場合だけ有効にします。
+6. 元設定のHome Manager、Hyprland、通知、PulseAudio単体などの重複を整理します。`user.nix`の`enableGreetd = true;`でNocturneのGUIログインを使用します。このときSDDM/GDM/LightDM/lyと自動ログインは無効になります。元のログインマネージャーを使う場合だけ`false`にします。
 
 既存設定がFlakeのinputsやspecialArgsに依存する場合は、その依存も統合する必要があります。公開リポジトリには実機のbase設定が含まれていないため、こちらでは実機のシステム全体は検証できません。
 
@@ -186,6 +189,34 @@ Waybarの太陽アイコンには内蔵画面の明るさ（%）を表示しま�
 キー操作とバーは`lib/brightness.nix`の同じコマンドを使用し、`backlight`クラスを自動選択します。デバイス名を固定せず、キーボード照明は変更しません。最低値はハードウェアの1段階です。権限はNixOSのudevルールと`video`グループで管理するため、毎回sudoを使う必要はありません。外部HDMI/DisplayPortモニターの明るさは別途DDC/CI対応が必要です。
 
 既存環境に初めて適用した際は、rebuild後に`sudo udevadm trigger --subsystem-match=backlight --action=add`を実行すると、接続済みバックライトにも権限を反映できます。以後の起動時は自動適用されます。
+
+## NocturneのGUIログイン
+
+![Nocturne GUIログインの描画プレビュー](docs/login-preview.png)
+
+プレビューはReGreetのデモモードで描画したものです。実際の認証は実機のPAMが担当します。
+
+`user.nix`の`enableGreetd = true;`でgreetd + ReGreetを使用します。CageとReGreetはMesaと同じ固定パッケージ集合から導入します。認証にはgreetdのPAMを使用し、ユーザー名やパスワードをコードに埋め込みません。
+
+- 中央に角丸の濃紺カード、上部に日本時間の時計、下部に再起動・電源オフを配置します。
+- `theme.nix`の配色・壁紙を参照します。静止画はGTK CSSで表示し、動画の常駐処理を追加しません。
+- 日本語キーボードは`user.keyboardLayout`から設定します。
+- セッション選択は`NOCTURNE (Hyprland)`のみです。内部では従来と同じ`uwsm start -e -D Hyprland hyprland.desktop`を使用し、WaybarやQuickshellのsystemdターゲットを維持します。
+- 最初はユーザーを選んでLogin、続けてパスワードを入力します。Enterでも操作できます。
+- SDDM/GDM/LightDM/lyとの同時起動と、自動ログインを無効化します。ロック画面（Hyprlock）の設定は別です。
+
+ログイン方式の変更は、現在の作業を継続したまま次回起動へ適用できます。
+
+```bash
+cd ~/NixOS-Nocturne-0571
+git pull --ff-only
+sudo nixos-rebuild boot --flake path:.#nocturne
+sudo reboot
+```
+
+`boot`が成功してから再起動してください。実機のディスク・ブート設定は`hosts/nixos/base/`のものを使用し、この変更では編集しません。
+
+ログイン画面が表示されない場合はCtrl+Alt+F3（Fnキーが必要な機種は併用）でTTYへ移動し、ログインして`sudo nixos-rebuild switch --rollback`で以前の世代へ戻せます。ログは`sudo journalctl -b -u greetd --no-pager`と`/var/log/regreet/log`で確認できます。
 
 ## Spotifyウィジェットと電源モード
 

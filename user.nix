@@ -6,8 +6,8 @@
   keyboardLayout = "jp";
   # 個別指定例: { output = "HDMI-A-1"; mode = "1920x1080@60"; position = "1920x0"; scale = 1; }
   monitors = [ { output = ""; mode = "preferred"; position = "auto"; scale = 1; } ];
-  # 既存ログイン画面がなければ true。既存DMは base 側で無効化する。
-  enableGreetd = false;
+  # NocturneのGUIログイン。trueならSDDM/GDM/LightDMを置き換える。
+  enableGreetd = true;
   # 初めて Home Manager を使う場合の初期値。既存環境では元の値を維持。
   homeStateVersion = "26.05";
   # 空なら内蔵画面を優先し、なければ最初の画面。例: "HDMI-A-1"

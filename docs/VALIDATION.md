@@ -100,3 +100,22 @@ XDG_DATA_DIRSに採用dconfパッケージのサービス定義を明示する�
 - https://gerg-l.github.io/spicetify-nix/usage.html
 - https://github.com/Gerg-L/spicetify-nix/blob/13e6fed4eb99f809d390fb50f591bed6cb716dc0/modules/options.nix
 - https://github.com/Gerg-L/spicetify-nix/blob/13e6fed4eb99f809d390fb50f591bed6cb716dc0/modules/homeManager.nix
+
+
+## Nocturne GUIログイン（2026-11-06）
+
+- NixOS 26.05の固定モジュール`programs.regreet`を使用し、ReGreet 0.5.0とCageはMesaと同じ固定nixpkgs集合から取得する。flake.lockは変更していない。
+- `system-contract`をビルドし、GUI有効化、greeterユーザー、initial_sessionの不存在、自動ログイン無効化、SDDM/GDM/LightDM/lyとの重複がないこと、Home Managerのactivation derivationを確認した。
+- `enableGreetd = false`で既存のログイン方式を使う構成も、同じチェックのderivation評価が成功した。
+- 生成したセッションは`uwsm start -e -D Hyprland hyprland.desktop`を呼ぶ。既存の`wayland-session@hyprland.desktop.target`を維持する。
+- ReGreet実行ファイルのデモモードを1440×900の仮想Xサーバーで起動し、実際に生成したGTK CSSを読み込ませて描画確認した。検証専用のAccountsServiceモックを使用し、ユーザー／セッション選択画面からEnterで秘密情報入力画面へ遷移することも確認した。モック・仮想Xサーバー・検証用D-Busは実機設定には含めない。
+- プレビューは`docs/login-preview.png`。カスタムCSSファイルの構文エラーは出ていない。デモ環境では上流のインラインCSSにempty declarationの警告が出るが、画面描画と入力遷移は成功した。
+- 実機のDRM/Wayland起動、PAM認証、ログイン後のHyprland起動、サスペンド復帰はこのコンテナでは検証できない。実機のディスク設定を含むOS全体のビルド・起動テストは対象端末で行う。適用は`nixos-rebuild boot`後の再起動を案内する。
+
+参照した一次資料:
+
+- https://github.com/rharish101/ReGreet/blob/0.5.0/regreet.sample.toml
+- https://github.com/rharish101/ReGreet/blob/0.5.0/src/sysutil.rs
+- https://github.com/rharish101/ReGreet/blob/0.5.0/src/gui/templates.rs
+- https://github.com/NixOS/nixpkgs/blob/7dcdd87373d72e7a2173e4db02e20d3d7f495cfd/nixos/modules/programs/regreet.nix
+- https://github.com/NixOS/nixpkgs/blob/7dcdd87373d72e7a2173e4db02e20d3d7f495cfd/nixos/modules/services/display-managers/greetd.nix
