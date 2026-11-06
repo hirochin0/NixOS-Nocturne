@@ -16,7 +16,7 @@ VS Codeの既存プロセスが環境を引き継がない場合は全ウィン�
 
 NixpkgsはNocturneの固定済み26.05リビジョン `7dcdd87373d72e7a2173e4db02e20d3d7f495cfd` と一致させた。Nocturneのlock変更は不要。VitaSDKはこのNixpkgsのpkgs/lib内を検索して定義がないことを確認し、公式core 2026.08.1-1をハッシュ固定してNix用にパッケージ化する。
 
-再現に必要なソースはアプリ側、環境管理の方針は両方のAGENTS.mdに保存する。アプリのGitHub保存先はユーザー未作成。APKやゲームの素材はこのdotfilesへ置かない。現段階のアプリは基本戦闘の試作でありGrow Castle全体の移植完了ではない。
+再現に必要なソースはアプリ側、環境管理の方針は両方のAGENTS.mdに保存する。アプリのGitHub保存先は https://github.com/hirochin0/GrowCastle-for-Vita （非公開）。APKやゲームの素材はこのdotfilesへ置かない。現段階のアプリは基本戦闘の試作でありGrow Castle全体の移植完了ではない。
 
 この文書とAGENTS.mdのみの反映にはnixos-rebuildは不要。今後システム設定を変えた場合は、検証後 `sudo nixos-rebuild switch --flake path:$HOME/NixOS-Nocturne-0571#nocturne` で適用する。実ホスト名nixosとflake構成名nocturneは異なるため混同しない。
 
@@ -42,7 +42,7 @@ nix build path:.#checks.x86_64-linux.game-logic --out-link local/check-result
 
 解析で確認した原作の値と仮の仕様はアプリ側 `docs/REIMPLEMENTATION.md` に区別して記録する。城の基礎HP/MPは実APKのARMコードから確認した式を反映。強化費用・ウェーブ編成・多数のヒーロー/スキル等はまだ原作と一致しない。
 
-この変更もプロジェクト定義と手順の追加のみで、システム適用のrebuildは不要。アプリ側GitHubリポジトリは未作成であり、ソースはローカルGitへ保存する。
+この変更もプロジェクト定義と手順の追加のみで、システム適用のrebuildは不要。アプリ側のソースは https://github.com/hirochin0/GrowCastle-for-Vita のmainで管理する。
 
 ## タッチ操作・素材入りVPKの既定化（2026-11-06 JST）
 
@@ -83,3 +83,7 @@ sudo nixos-rebuild switch --flake path:$HOME/NixOS-Nocturne-0571#nocturne
 元のUnity TextAssetから52敵・289ユニット・224スキルの基礎値をアプリ側tools/export_catalog.pyでネイティブ形式へ変換し、素材入りVPKのassets/catalog.gcdに含める。Cローダで最終VPKからの読込を検証する。カタログの存在と全能力の実装完了を混同しない。城・弓兵の基礎強化費用は元APKのARMコードの式へ反映した。完全移植と実機検証は引き続き未完了。
 
 元APK・画像・カタログ・ダンプはアプリのlocal/へ生成しGitから除外する。再現用スクリプト・Nix定義・書式設定・コード・文書のみを保存する。既存のhosts/nixos/base/configuration.nixの未commit変更はこの変更に含めない。
+
+## アプリのGitHub保存先（2026-11-06 JST）
+
+ユーザーが作成した非公開リポジトリ https://github.com/hirochin0/GrowCastle-for-Vita をアプリのoriginへ設定した。ソース・再現用Nix定義・スクリプト・ドキュメントだけをmainへ反映する。元APK、抽出素材、ネイティブカタログ、解析ダンプ、VPKは引き続きGitへ追加しない。通常のGit HTTPS認証は未設定のため、今回は接続済みGitHubから同内容をcommitした。従来のローカル履歴はアプリのarchive/local-before-github-63ca246ブランチに保持し、mainのファイル内容とGitHubのツリーが一致することを確認して同期した。
