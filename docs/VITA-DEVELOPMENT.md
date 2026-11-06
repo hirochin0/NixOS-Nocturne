@@ -60,3 +60,26 @@ nix develop path:. --command python tools/build_local.py \
 ```
 
 変更箇所はアプリ側のNix/CMake定義・ビルドタスク・コードと手順。既存flake.lock、Home Manager、システム設定の変更やnixos-rebuildは不要。タッチの座標変換・長押し・ドラッグ・複数指・強化・戦闘・pause・終了メニューと素材欠落のテストを追加した。Vita上のタッチ位置と素材読み込みの最終確認は実機で行う。読込診断はux0:data/growcastle/assets-load.logへ保存する。
+
+## ネイティブ実装のカテゴリ分割と書式管理（2026-11-06 JST）
+
+アプリCコードをplayer / enemy / castle / battle / ui / persistence / platform/vita等へ分割し、1処理関数につき1ファイルで管理する。旧game.c/render.c/ui.cの実装は移動し、公開ヘッダは入口として維持する。アプリ側docs/NATIVE-PORT.mdとdocs/PORT-COVERAGE.mdに構成、原作との対応、未実装を記録した。オンライン・クラン/ギルド・ランキングは保留。
+
+共通の開発ツールとしてhome/programs/development.nixにpkgs.clang-toolsとpkgs.ruffを追加した。固定済みNixpkgsでclang-format 21.1.8 / Ruff 0.15.14の実在とバージョンを確認し、Home Managerのhome.packages評価も成功した。アプリのdevShellにも同じ固定集合のツールを含め、Codexの整形/検証はnix developを通す。flake.lockの変更は不要。
+
+```bash
+cd ~/work/vita/growcastle
+nix develop path:. --command python tools/format_source.py
+nix build path:.#checks.x86_64-linux.source-style --out-link local/style-check
+nix build path:.#checks.x86_64-linux.game-logic --out-link local/game-check
+```
+
+通常環境にも追加したフォーマッタを適用する場合は、本人のsudo操作で次を実行する。プロジェクトのnix developは適用前でも利用できる。
+
+```bash
+sudo nixos-rebuild switch --flake path:$HOME/NixOS-Nocturne-0571#nocturne
+```
+
+元のUnity TextAssetから52敵・289ユニット・224スキルの基礎値をアプリ側tools/export_catalog.pyでネイティブ形式へ変換し、素材入りVPKのassets/catalog.gcdに含める。Cローダで最終VPKからの読込を検証する。カタログの存在と全能力の実装完了を混同しない。城・弓兵の基礎強化費用は元APKのARMコードの式へ反映した。完全移植と実機検証は引き続き未完了。
+
+元APK・画像・カタログ・ダンプはアプリのlocal/へ生成しGitから除外する。再現用スクリプト・Nix定義・書式設定・コード・文書のみを保存する。既存のhosts/nixos/base/configuration.nixの未commit変更はこの変更に含めない。

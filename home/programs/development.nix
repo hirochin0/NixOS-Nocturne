@@ -7,6 +7,9 @@
     pkgs.htop
     pkgs.cmatrix
     pkgs.cava
+    # C/C++ and Python source formatting, also pinned by project flakes.
+    pkgs.clang-tools
+    pkgs.ruff
   ];
   programs.vscode = {
     enable = true;
