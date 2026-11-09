@@ -6,8 +6,10 @@ import Quickshell.Io
 
 Item {
     id: root
-    implicitWidth: surfaceOpen ? 400 : 88
-    implicitHeight: surfaceOpen ? 400 : 88
+    implicitWidth: surfaceOpen ? 416 : 120
+    implicitHeight: surfaceOpen ? 416 : 120
+    readonly property real originX: tile.x + tile.width / 2
+    readonly property real originY: tile.y + tile.height / 2
     property int nodeRevision: 0
     readonly property alias tileItem: tile
     readonly property alias pageControls: pagination
@@ -70,17 +72,17 @@ Item {
                 ctx.reset();
                 ctx.clearRect(0, 0, width, height);
                 ctx.lineCap = "round";
-                let previous = { x: 44, y: 44, reveal: 1 };
+                const source = { x: root.originX, y: root.originY };
                 for (let i = 0; i < appNodes.count; ++i) {
                     const node = appNodes.itemAt(i);
                     if (!node) continue;
                     const next = { x: node.x + 31, y: node.y + 31, reveal: node.reveal };
-                    const dx = next.x - previous.x, dy = next.y - previous.y;
+                    const dx = next.x - source.x, dy = next.y - source.y;
                     const distance = Math.sqrt(dx * dx + dy * dy);
-                    if (distance > 72) {
-                        const alpha = Math.min(1, Math.max(0, Math.min(previous.reveal, next.reveal)));
+                    if (distance > 92) {
+                        const alpha = Math.min(1, Math.max(0, next.reveal));
                         ctx.beginPath();
-                        ctx.moveTo(previous.x + dx / distance * 35, previous.y + dy / distance * 35);
+                        ctx.moveTo(source.x + dx / distance * 55, source.y + dy / distance * 55);
                         ctx.lineTo(next.x - dx / distance * 35, next.y - dy / distance * 35);
                         ctx.strokeStyle = Qt.alpha(Theme.cyan, alpha * 0.12);
                         ctx.lineWidth = 3;
@@ -89,7 +91,6 @@ Item {
                         ctx.lineWidth = 1.2;
                         ctx.stroke();
                     }
-                    previous = next;
                 }
             }
         }
@@ -107,8 +108,8 @@ Item {
                 onYChanged: links.requestPaint()
                 onRevealChanged: links.requestPaint()
                 readonly property real angle: (index * 18) * Math.PI / 180 + (1 - reveal) * 0.32
-                x: 44 + Math.cos(angle) * 270 * reveal - 31
-                y: 44 + Math.sin(angle) * 270 * reveal - 31
+                x: root.originX + Math.cos(angle) * 270 * reveal - 31
+                y: root.originY + Math.sin(angle) * 270 * reveal - 31
                 width: 62; height: 86
                 opacity: Math.max(0, Math.min(1, reveal))
                 scale: Math.max(0.1, reveal) * (hover.containsMouse ? 1.1 : 1)
@@ -170,7 +171,7 @@ Item {
         }
         Row {
             id: pagination
-            x: 164; y: 354; spacing: 12
+            x: 180; y: 374; spacing: 12
             opacity: root.bloom
             visible: root.surfaceOpen && root.pages > 1
             ActionButton { text: "‹"; enabled: root.page > 0; onClicked: root.page-- }
@@ -179,7 +180,7 @@ Item {
         }
         Rectangle {
             id: tile
-            x: 12; y: 12; width: 64; height: 64; radius: 16
+            x: 12; y: 12; width: 96; height: 96; radius: 22
             color: Theme.surface
             border.color: tileMouse.containsMouse || root.opened ? Theme.cyan : Qt.alpha(Theme.muted, 0.4)
             border.width: 2
@@ -200,7 +201,7 @@ Item {
             }
             Rectangle {
                 id: imageMask
-                width: 54; height: 54; radius: 12
+                width: 86; height: 86; radius: 18
                 visible: false; layer.enabled: true
             }
             MouseArea {
