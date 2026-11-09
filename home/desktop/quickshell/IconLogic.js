@@ -18,7 +18,8 @@ function names(value) {
     return [...new Set(result)];
 }
 function findEntry(appId, entries) {
-    const ids = names(appId).map(normalize);
+    const ids = names(appId).map(normalize).filter(id => id.length > 0);
+    if (ids.length === 0) return null;
     return entries.find(e => normalize(e.id) === ids[0])
         || entries.find(e => ids.includes(normalize(e.startupClass)) && !!e.startupClass)
         || entries.find(e => ids.includes(normalize(e.id)))

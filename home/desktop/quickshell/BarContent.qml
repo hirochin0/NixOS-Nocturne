@@ -22,11 +22,19 @@ Item {
     property date now: new Date()
     signal powerRequested()
     function action(name) { Quickshell.execDetached([Theme.barCommand, name]); }
-    function workspaceFor(window) { return window.HyprlandToplevel ? window.HyprlandToplevel.workspace : null; }
+    function workspaceFor(window) { return window.workspace || null; }
+    function dispatch(request) { Hyprland.dispatch(request); }
     function focusWindow(window) {
         const workspace = workspaceFor(window);
         if (workspace) workspace.activate();
-        window.activate();
+        if (window.wayland) window.wayland.activate();
+        else {
+            const address = String(window.address || "").replace(/^0x/, "");
+            if (/^[0-9a-f]+$/i.test(address)) {
+                const selector = "address:0x" + address;
+                root.dispatch(Hyprland.usingLua ? 'hl.dsp.focus({ window = "' + selector + '" })' : "focuswindow " + selector);
+            }
+        }
     }
     function switchWorkspace(id) {
         const workspace = workspaces.find(w => w.id === id);
@@ -34,8 +42,8 @@ Item {
         else Hyprland.dispatch(Hyprland.usingLua ? 'hl.dsp.focus({ workspace = "' + id + '" })' : "workspace " + id);
     }
     function appIdFor(window) {
-        const ipc = window.HyprlandToplevel ? window.HyprlandToplevel.lastIpcObject : null;
-        return (ipc && (ipc.class || ipc.initialClass)) || window.appId || "";
+        const ipc = window.lastIpcObject;
+        return (ipc && (ipc.class || ipc.initialClass)) || (window.wayland && window.wayland.appId) || "";
     }
     function desktopFor(window) {
         const appId = appIdFor(window);
@@ -133,7 +141,7 @@ Item {
                         BarButton {
                             id: task
                             required property var modelData
-                            objectName: "task-" + modelData.appId
+                            objectName: "task-" + root.appIdFor(modelData)
                             readonly property var desktop: root.desktopFor(modelData)
                             readonly property var workspace: root.workspaceFor(modelData)
                             implicitWidth: 34; implicitHeight: 34

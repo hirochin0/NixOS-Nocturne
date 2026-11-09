@@ -389,3 +389,5 @@ systemctl --user restart nocturne-widgets.service
 アイコン参照は実際のXDGデータディレクトリ、Nixのユーザープロファイル、Flatpakのエクスポート先を起動時と60秒ごとに読み取ります。desktopファイルの`Icon`・`StartupWMClass`・IDとウィンドウのアプリIDを照合し、ユーザーが上書きしたdesktopファイルを優先します。取得候補が読み込めなかった場合は次の候補へ進み、情報が後から読み込まれた場合も再取得します。
 
 ChatGPTのChromeアプリウィンドウ（`chrome-chatgpt.com__-Default`）は`chatgpt.desktop`のStartupWMClassで対応付けます。このdesktopファイルで指定している画像はChromeのアイコンです。アプリ本来の画像（hicolor/pixmaps）を優先し、Papirusは元画像が見つからない場合に使います。
+
+Hyprlandのウィンドウ一覧は`HyprlandToplevel`として扱い、`lastIpcObject.class`からアプリを特定します。空のアプリIDはdesktopエントリーへ一致させません。クリック時はそのオブジェクトの`workspace`へ移動し、`wayland`ハンドル、またはウィンドウアドレスへのHyprland dispatchでフォーカスします。

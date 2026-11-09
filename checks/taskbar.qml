@@ -6,7 +6,7 @@ ShellRoot {
     id: testRoot
     property var calls: []
     QtObject {
-        id: workspace
+        id: testWorkspace
         property int id: 3
         property string name: "3"
         property bool focused: true
@@ -16,8 +16,18 @@ ShellRoot {
     QtObject {
         id: window
         property string title: "Editor test"
-        property string appId: "code"
+        // Same exposed shape as Quickshell 0.3.2 HyprlandToplevel:
+        // no appId or activate() on the Hyprland object itself.
+        property var lastIpcObject: ({class: "code", initialClass: "code"})
+        property var workspace: testWorkspace
+        property var wayland: waylandWindow
+        property string address: "123abc"
         property bool activated: true
+
+    }
+    QtObject {
+        id: waylandWindow
+        property string appId: "code"
         function activate() { testRoot.calls.push("window"); }
     }
     FloatingWindow {
@@ -28,11 +38,11 @@ ShellRoot {
             height: 46
             live: false
             windows: [window]
-            workspaces: [workspace]
+            workspaces: [testWorkspace]
             trayItems: []
             device: null
             status: ({network: "󰖩 80%", networkDetail: "Test Wi-Fi", audio: "󰕾 50%", brightness: "70%", calendar: "Calendar"})
-            function workspaceFor(w) { return workspace; }
+            function dispatch(request) { testRoot.calls.push("dispatch:" + request); }
         }
         TestCase { id: interaction; name: "TaskbarInteraction"; when: false }
         Timer {
@@ -43,6 +53,20 @@ ShellRoot {
                     for (const child of item.children) { const result = find(child, name); if (result) return result; }
                     return null;
                 }
+                IconCatalog.entries = [
+                    {id: "files", name: "", startupClass: "", icon: "system-file-manager"},
+                    {id: "kitty", name: "Kitty", startupClass: "kitty", icon: "kitty"},
+                    {id: "google-chrome", name: "Chrome", startupClass: "Google-chrome", icon: "google-chrome"},
+                    {id: "chatgpt", name: "ChatGPT", startupClass: "chrome-chatgpt.com__-Default", icon: "google-chrome"}
+                ];
+                for (const appClass of ["kitty", "google-chrome", "chrome-chatgpt.com__-Default"]) {
+                    const nativeShape = {lastIpcObject: {class: appClass}, wayland: null};
+                    if (bar.appIdFor(nativeShape) !== appClass) throw new Error("Native Hyprland class not extracted");
+                    const entry = bar.desktopFor(nativeShape);
+                    if (!entry || entry.id === "files") throw new Error("Window incorrectly matched to Files: " + appClass);
+                }
+                if (bar.desktopFor({lastIpcObject: {}, wayland: null}) !== null)
+                    throw new Error("Empty class must not match Files");
                 const clock = find(bar, "clockIsland");
                 if (!clock || Math.abs(clock.x + clock.width / 2 - bar.width / 2) > 0.5)
                     throw new Error("Clock is not at screen center");
@@ -68,6 +92,10 @@ ShellRoot {
                 if (!task) throw new Error("Window button missing");
                 interaction.mouseClick(task, task.width / 2, task.height / 2);
                 if (JSON.stringify(testRoot.calls) !== '["workspace","window"]') throw new Error("Focus did not switch workspace first");
+                testRoot.calls = [];
+                bar.focusWindow({workspace: testWorkspace, wayland: null, address: "abcdef"});
+                if (testRoot.calls[0] !== "workspace" || !testRoot.calls[1].includes("address:0xabcdef"))
+                    throw new Error("IPC-only window focus failed");
                 bar.windows = [];
                 if (bar.windows.length !== 0) throw new Error("Closed window not removed");
                 bar.workspaces = [];

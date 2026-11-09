@@ -209,3 +209,10 @@ XDG_DATA_DIRSに採用dconfパッケージのサービス定義を明示する�
 - Papirusへの固定参照を除去。アプリのhicolor/scalable・高解像度画像、pixmapsをテーマ画像より優先する。検索ディレクトリの先頭にPapirusがあっても、別ディレクトリのhicolor元画像を先に選ぶ。
 - AppIconも、全候補名の元画像を探索してからPapirus・Qtテーマへ進む形に変更。QuickShellチェックと、テーマと元画像が同時にある場合の優先順位テストが成功した。
 - ChatGPTのdesktopエントリーは現在Icon=google-chromeのため、元のChromeアイコンが表示対象になる。実機の元画像は適用後に収集する。
+
+## 全アイコンがFilesになる問題の根本修正（2026-11-09 JST）
+
+- Quickshell v0.3.2の`src/wayland/hyprland/ipc/qml.hpp`と`hyprland_toplevel.hpp`を確認。`Hyprland.toplevels`の要素はHyprlandToplevelであり、WaylandのToplevelではない。従来の実装とテストはappId/activate()を直接持つ別の型を前提にしていた。
+- class取得を要素自身のlastIpcObject.class/initialClassへ、ワークスペース取得を要素自身のworkspaceへ変更。フォーカスはwaylandハンドル、なければaddressに対するdispatchを利用する。
+- 空IDの名前照合を禁止し、データ未取得時に無関係なdesktopエントリー（Files等）を選ばないようにした。
+- 実際のHyprlandToplevelと同じ公開プロパティ構造（appId/activateなし）へテストを修正し、実機で報告された3つのclassの取得・desktop選択、空ID非一致、ワークスペース→Waylandフォーカス、アドレスによるフォーカスを検証。QuickShellチェック全体のビルド成功。実機での表示は適用後に確認する。
