@@ -37,6 +37,8 @@ assert hm.programs.hyprlock.package.version == desktop.hyprlock.version;
 assert hm.programs.kitty.package.outPath == desktop.kitty.outPath;
 assert hm.programs.vscode.package.outPath == desktop.vscode.outPath;
 assert lib.any (p: p.outPath == system.pkgs.gcc.outPath) hm.home.packages;
+assert hm.programs.vim.enable;
+assert lib.any (p: p.outPath == hm.programs.vim.package.outPath) hm.home.packages;
 assert !hm.programs.spicetify.enable;
 assert lib.any (p: p.name == "nocturne-spotify") hm.home.packages;
 assert lib.hasSuffix "/bin/spotify %U" hm.xdg.desktopEntries.spotify.exec;

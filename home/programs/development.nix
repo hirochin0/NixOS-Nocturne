@@ -1,4 +1,5 @@
 { pkgs, desktop, ... }: {
+  imports = [ ./vim.nix ];
   home.packages = [
     desktop.codex
     desktop.google-chrome

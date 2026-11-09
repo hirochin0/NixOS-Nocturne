@@ -296,6 +296,38 @@ systemctl status power-profiles-daemon.service --no-pager
 journalctl --user -b -u nocturne-widgets.service -n 100 --no-pager
 ```
 
+## Vim
+
+`home/programs/vim.nix`でVimとプラグインを管理します。Nocturneの配色、行番号、マウス、永続Undoを設定済みです。通常はスペース4文字、Nixは2文字のインデントです。既存の`EDITOR=nano`はそのままです。
+
+| プラグイン | 用途 |
+|---|---|
+| fzf.vim | ファイル・バッファ・全文検索（fzf/ripgrep） |
+| vim-fugitive | Gitの状態確認・差分・コミット操作 |
+| vim-gitgutter | 変更した行を左端に表示 |
+| vim-commentary | コメントの切替 |
+| vim-surround | 括弧・引用符の追加と変更 |
+| vim-nix | Nixの構文・インデント |
+
+更新・適用後に`vim file.nix`で起動します。`i`で入力、`Esc`で通常モード、`:wq`で保存して終了、`:q!`で保存せず終了します。
+
+以下は通常モードで順に押します。`Space`はスペースキーです。
+
+| キー | 操作 |
+|---|---|
+| `Space f f` | カレントディレクトリのファイルを検索 |
+| `Space f g` → 検索語 → Enter | ファイルの内容を検索 |
+| `Space f b` | 開いているバッファを検索 |
+| `Space g s` | Gitの状態を表示 |
+| `Space g d` | 現在のファイルのGit差分を分割表示 |
+| `Space e` | ディレクトリを表示 |
+| `Space Space` | 検索ハイライトを消す |
+| `gcc` | 現在行のコメントを切替（ビジュアル選択後は`gc`） |
+| `ysiw"` | 現在の単語を二重引用符で囲む |
+| `cs"'` / `ds"` | 二重引用符を単引用符に変更 / 削除 |
+
+プラグインはNixで導入するため、`:PlugInstall`等の操作は不要です。設定変更はこのモジュールを編集してコミットし、`nixos-rebuild switch --flake path:.#nocturne`で適用します。端末のVim設定は`nix build path:.#checks.x86_64-linux.vim`で検証できます。
+
 ## 検証範囲
 
 詳細は`docs/VALIDATION.md`を参照してください。GPU・画面・実機のログイン・Windowsとの起動切替は対象マシンで確認が必要です。

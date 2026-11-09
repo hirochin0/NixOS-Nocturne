@@ -33,6 +33,7 @@
       };
     in {
       checks.${user.system} = {
+        vim = import ./checks/vim.nix { inherit pkgs home-manager theme; };
         hyprland-config = import ./lib/hyprland-config.nix { inherit pkgs desktop user theme; };
         system-contract = import ./checks/system-contract.nix {
           inherit nixpkgs home-manager user theme desktop spicetify-nix;

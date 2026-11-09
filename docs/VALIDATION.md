@@ -149,3 +149,11 @@ XDG_DATA_DIRSに採用dconfパッケージのサービス定義を明示する�
 - https://quickshell.org/docs/v0.3.2/types/Quickshell.Services.UPower/UPowerDeviceState/
 - https://quickshell.org/docs/v0.3.2/types/Quickshell.Services.UPower/UPower/
 - https://github.com/Alexays/Waybar/blob/master/man/waybar-custom.5.scd
+
+## Vim（2026-11-09 UTC）
+
+- `home/programs/development.nix`からVim専用モジュールを読み込み、fzf.vim・Fugitive・GitGutter・Surround・Commentary・vim-nixをNixで導入。既存の`EDITOR=nano`とflake.lockは変更していない。
+- `checks.x86_64-linux.vim`のビルド成功。生成した実際のVimラッパーを一時HOMEで2回起動し、設定値、検索/Git/コメントコマンド、fzf実行ファイル、GitGutterの読み込み、Nixのファイルタイプと2文字インデントを確認した。
+- Vim内でCの行コメントの追加・解除、単語を引用符で囲む編集も確認。Undoディレクトリの作成と再利用を確認した。
+- `system-contract.drvPath`の評価も成功し、Vimの有効化とHome Managerパッケージへの登録、既存モジュールとの統合を確認した。
+- 実機の端末描画、対話的なfzf選択、クリップボード連携は対象端末で確認する。実機のシステム全体のビルド・適用は行っていない。
