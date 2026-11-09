@@ -10,8 +10,18 @@ PanelWindow {
     implicitHeight: card.implicitHeight
     color: "transparent"
     exclusionMode: ExclusionMode.Ignore
-    WlrLayershell.layer: WlrLayer.Top
+    WlrLayershell.layer: WlrLayer.Bottom
     WlrLayershell.namespace: "nocturne-launcher"
     WlrLayershell.keyboardFocus: card.opened ? WlrKeyboardFocus.OnDemand : WlrKeyboardFocus.None
+    mask: Region {
+        item: card.tileItem
+        Region { item: card.opened ? card.nodeAt(0) : null }
+        Region { item: card.opened ? card.nodeAt(1) : null }
+        Region { item: card.opened ? card.nodeAt(2) : null }
+        Region { item: card.opened ? card.nodeAt(3) : null }
+        Region { item: card.opened ? card.nodeAt(4) : null }
+        Region { item: card.opened ? card.nodeAt(5) : null }
+        Region { item: card.opened && card.pages > 1 ? card.pageControls : null }
+    }
     ArcLauncherCard { id: card; anchors.fill: parent }
 }

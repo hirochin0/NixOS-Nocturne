@@ -8,6 +8,13 @@ Item {
     id: root
     implicitWidth: surfaceOpen ? 400 : 88
     implicitHeight: surfaceOpen ? 400 : 88
+    property int nodeRevision: 0
+    readonly property alias tileItem: tile
+    readonly property alias pageControls: pagination
+    function nodeAt(index) {
+        const revision = nodeRevision;
+        return appNodes.itemAt(index);
+    }
     property bool opened: false
     property bool surfaceOpen: false
     property int page: 0
@@ -50,56 +57,55 @@ Item {
         if (desktop) { desktop.execute(); root.opened = false; }
         else console.warn("Launcher: desktop entry not found:", app.desktopId);
     }
-    Rectangle {
-        anchors.fill: parent
-        anchors.margins: 4
-        radius: 28
-        opacity: root.bloom * 0.96
-        gradient: Gradient {
-            GradientStop { position: 0; color: Theme.elevated }
-            GradientStop { position: 1; color: Theme.bg }
-        }
-        border.color: Qt.alpha(Theme.cyan, 0.22)
-        border.width: 1
-    }
     Item {
         anchors.fill: parent
         focus: true
         Keys.onEscapePressed: root.opened = false
-        Text {
-            x: 108; y: 26
-            text: "ORBIT"
-            font { family: Theme.font; pixelSize: 13; letterSpacing: 4 }
-            color: Theme.cyan
-            opacity: root.bloom
-        }
-        Text {
-            x: 108; y: 48
-            text: root.apps.length + " applications"
-            font { family: Theme.font; pixelSize: 10 }
-            color: Theme.muted
-            opacity: root.bloom
-        }
         Canvas {
+            id: links
             anchors.fill: parent
-            opacity: root.bloom * 0.22
+            opacity: root.bloom
             onPaint: {
                 const ctx = getContext("2d");
                 ctx.reset();
-                ctx.strokeStyle = Theme.cyan;
-                ctx.lineWidth = 1;
-                ctx.beginPath();
-                ctx.arc(44, 44, 270, 0, Math.PI / 2);
-                ctx.stroke();
+                ctx.clearRect(0, 0, width, height);
+                ctx.lineCap = "round";
+                let previous = { x: 44, y: 44, reveal: 1 };
+                for (let i = 0; i < appNodes.count; ++i) {
+                    const node = appNodes.itemAt(i);
+                    if (!node) continue;
+                    const next = { x: node.x + 31, y: node.y + 31, reveal: node.reveal };
+                    const dx = next.x - previous.x, dy = next.y - previous.y;
+                    const distance = Math.sqrt(dx * dx + dy * dy);
+                    if (distance > 72) {
+                        const alpha = Math.min(1, Math.max(0, Math.min(previous.reveal, next.reveal)));
+                        ctx.beginPath();
+                        ctx.moveTo(previous.x + dx / distance * 35, previous.y + dy / distance * 35);
+                        ctx.lineTo(next.x - dx / distance * 35, next.y - dy / distance * 35);
+                        ctx.strokeStyle = Qt.alpha(Theme.cyan, alpha * 0.12);
+                        ctx.lineWidth = 3;
+                        ctx.stroke();
+                        ctx.strokeStyle = Qt.alpha(Theme.cyan, alpha * 0.7);
+                        ctx.lineWidth = 1.2;
+                        ctx.stroke();
+                    }
+                    previous = next;
+                }
             }
         }
         Repeater {
+            id: appNodes
+            onItemAdded: { root.nodeRevision++; links.requestPaint(); }
+            onItemRemoved: { root.nodeRevision++; links.requestPaint(); }
             model: root.pageApps
             delegate: Item {
                 id: satellite
                 required property var modelData
                 required property int index
                 property real reveal: 0
+                onXChanged: links.requestPaint()
+                onYChanged: links.requestPaint()
+                onRevealChanged: links.requestPaint()
                 readonly property real angle: (index * 18) * Math.PI / 180 + (1 - reveal) * 0.32
                 x: 44 + Math.cos(angle) * 270 * reveal - 31
                 y: 44 + Math.sin(angle) * 270 * reveal - 31
@@ -163,9 +169,10 @@ Item {
             }
         }
         Row {
+            id: pagination
             x: 164; y: 354; spacing: 12
             opacity: root.bloom
-            visible: root.surfaceOpen
+            visible: root.surfaceOpen && root.pages > 1
             ActionButton { text: "‹"; enabled: root.page > 0; onClicked: root.page-- }
             Text { text: (root.page + 1) + " / " + root.pages; color: Theme.muted; anchors.verticalCenter: parent.verticalCenter }
             ActionButton { text: "›"; enabled: root.page + 1 < root.pages; onClicked: root.page++ }
