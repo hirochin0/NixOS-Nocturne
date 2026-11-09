@@ -1,5 +1,6 @@
 { pkgs, desktop, theme, user }:
 let
+  batteryTools = import ./battery-tools.nix { inherit pkgs; };
   palette = pkgs.writeText "nocturne-quickshell-theme.qml" ''
     pragma Singleton
     import QtQuick
@@ -13,6 +14,7 @@ let
       readonly property color green: "#${theme.green}"
       readonly property color yellow: "#${theme.yellow}"
       readonly property string font: ${builtins.toJSON theme.font}
+      readonly property string batteryCommand: "${batteryTools}/bin/nocturne-battery"
       readonly property string musicOutput: ${builtins.toJSON (user.musicWidgetOutput or "")}
     }
   '';
@@ -28,6 +30,7 @@ in pkgs.runCommand "nocturne-quickshell-config" {
   ActionButton 1.0 ActionButton.qml
   MusicCard 1.0 MusicCard.qml
   PowerMenu 1.0 PowerMenu.qml
+  PowerCard 1.0 PowerCard.qml
   EOF
   export HOME="$TMPDIR/home" XDG_CACHE_HOME="$TMPDIR/cache" LANG=C.UTF-8
   mkdir -p "$HOME" "$XDG_CACHE_HOME"

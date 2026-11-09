@@ -4,6 +4,7 @@
     desktop.google-chrome
     desktop.neofetch
     desktop.discord
+    pkgs.gcc
     pkgs.htop
     pkgs.cmatrix
     pkgs.cava

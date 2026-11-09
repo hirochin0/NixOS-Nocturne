@@ -36,6 +36,7 @@ assert hm.programs.waybar.package.version == desktop.waybar.version;
 assert hm.programs.hyprlock.package.version == desktop.hyprlock.version;
 assert hm.programs.kitty.package.outPath == desktop.kitty.outPath;
 assert hm.programs.vscode.package.outPath == desktop.vscode.outPath;
+assert lib.any (p: p.outPath == system.pkgs.gcc.outPath) hm.home.packages;
 assert !hm.programs.spicetify.enable;
 assert lib.any (p: p.name == "nocturne-spotify") hm.home.packages;
 assert lib.hasSuffix "/bin/spotify %U" hm.xdg.desktopEntries.spotify.exec;
@@ -43,7 +44,10 @@ assert !lib.elem desktop.spotify hm.home.packages;
 assert hm.systemd.user.services.nocturne-wallpaper.Service.ExecStart == [ "${desktop.swww}/bin/swww-daemon --no-cache" ];
 assert cfg.services.power-profiles-daemon.enable;
 assert !cfg.services.tlp.enable && !cfg.services.auto-cpufreq.enable && !cfg.powerManagement.powertop.enable;
-assert hm.programs.waybar.settings.main.battery.on-click == "nocturne-widgets power";
+assert hm.programs.waybar.settings.main."custom/battery".on-click == "nocturne-widgets power";
+assert hm.programs.waybar.settings.main."custom/battery".signal == 9;
+assert lib.elem "custom/battery" hm.programs.waybar.settings.main.modules-right;
+assert !lib.elem "battery" hm.programs.waybar.settings.main.modules-right;
 assert hm.systemd.user.services.nocturne-widgets.Unit.PartOf == [ hm.wayland.systemd.target ];
 assert cfg.programs.regreet.enable == user.enableGreetd;
 assert !user.enableGreetd || (
@@ -57,6 +61,8 @@ assert !user.enableGreetd || (
   && !cfg.services.xserver.displayManager.lightdm.enable
   && cfg.services.greetd.settings.default_session.user == "greeter"
   && cfg.programs.regreet.package.outPath == desktop.regreet.outPath
+  && cfg.systemd.services.greetd.environment.LC_ALL == "C.UTF-8"
+  && cfg.programs.regreet.settings.env.LANG == cfg.i18n.defaultLocale
 );
 system.pkgs.writeText "nocturne-system-contract.json" (builtins.toJSON {
   hyprland = cfg.programs.hyprland.package.version;
@@ -64,6 +70,7 @@ system.pkgs.writeText "nocturne-system-contract.json" (builtins.toJSON {
   mesa = cfg.hardware.graphics.package.version;
   kitty = hm.programs.kitty.package.version;
   applications = {
+    gcc = system.pkgs.gcc.version;
     vscode = hm.programs.vscode.package.version;
     chrome = desktop.google-chrome.version;
     codex = desktop.codex.version;

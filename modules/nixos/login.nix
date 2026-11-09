@@ -17,6 +17,7 @@ let
   };
   greeter = pkgs.writeShellScript "nocturne-greeter" ''
     export XKB_DEFAULT_LAYOUT=${lib.escapeShellArg user.keyboardLayout}
+    export LANG=C.UTF-8 LC_ALL=C.UTF-8 LANGUAGE=en
     export GDK_BACKEND=wayland
     export GTK_USE_PORTAL=0
     # Only offer the UWSM session, rather than the unmanaged Hyprland entry.
@@ -48,6 +49,8 @@ in {
       extraCss = import ../../lib/login-style.nix { inherit pkgs theme; };
       settings = {
         skip_selection = true;
+        # Restore the desktop locale after greetd's English-only authentication UI.
+        env = { LANG = config.i18n.defaultLocale; LC_ALL = ""; LANGUAGE = ""; };
         GTK.application_prefer_dark_theme = true;
         appearance.greeting_msg = "NOCTURNE";
         widget.clock = {
@@ -61,6 +64,11 @@ in {
           poweroff = [ "${pkgs.systemd}/bin/systemctl" "poweroff" ];
         };
       };
+    };
+    systemd.services.greetd.environment = {
+      LANG = "C.UTF-8";
+      LC_ALL = "C.UTF-8";
+      LANGUAGE = "en";
     };
     services.greetd = {
       enable = true;

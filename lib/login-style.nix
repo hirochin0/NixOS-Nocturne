@@ -32,8 +32,8 @@ in pkgs.writeText "nocturne-login.css" ''
     font-weight: 400;
     color: #${theme.text};
   }
-  .lock-layout > grid { margin-left: 30px; margin-right: 30px; }
-  grid > passwordentry, grid > entry { min-width: 308px; }
+  .lock-layout > grid { margin-left: 24px; margin-right: 24px; }
+  grid > passwordentry, grid > entry { min-width: 264px; }
   .lock-identity { color: #${theme.muted}; font-size: 14px; }
   .lock-prompt { color: #${theme.muted}; font-size: 13px; }
 
@@ -59,7 +59,9 @@ in pkgs.writeText "nocturne-login.css" ''
     background: transparent;
     border-color: transparent;
     font-weight: 500;
-    min-width: 90px;
+    min-width: 24px;
+    padding: 10px;
+    border: 1px solid alpha(#${theme.cyan}, 0.45);
   }
   button.suggested-action:hover { background-color: alpha(#${theme.cyan}, 0.08); }
   button.power-action {

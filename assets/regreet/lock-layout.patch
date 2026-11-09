@@ -1,6 +1,6 @@
 --- a/src/gui/templates.rs
 +++ b/src/gui/templates.rs
-@@ -1,151 +1,79 @@
+@@ -1,223 +1,123 @@
  // SPDX-FileCopyrightText: 2022 The ReGreet Authors
 -//
  // SPDX-License-Identifier: GPL-3.0-or-later
@@ -73,7 +73,7 @@
 -                    set_width_request: 500,
 +                    set_column_spacing: 8,
 +                    set_row_spacing: 12,
-+                    set_width_request: 340,
++                    set_width_request: 352,
  
 -                    /// Widget to display messages to the user
 -                    #[name = "message_label"]
@@ -110,7 +110,7 @@
 -                    attach[1, 1, 1, 1] = &gtk::ComboBoxText { set_hexpand: true },
 -
 -                    /// Widget where the user enters the username
-+                    attach[0, 0, 1, 1] = &gtk::ComboBoxText { set_hexpand: true },
++                    attach[0, 3, 1, 1] = &gtk::ComboBoxText { set_hexpand: true },
                      #[name = "username_entry"]
 -                    attach[1, 1, 1, 1] = &gtk::Entry { set_hexpand: true },
 -
@@ -138,10 +138,10 @@
 -                    attach[1, 2, 1, 1] = &gtk::Entry,
 -
 -                    /// Button to toggle manual user entry
-+                    attach[0, 0, 1, 1] = &gtk::Entry { set_hexpand: true },
++                    attach[0, 3, 1, 1] = &gtk::Entry { set_hexpand: true },
                      #[name = "user_toggle"]
 -                    attach[2, 1, 1, 1] = &gtk::ToggleButton {
-+                    attach[1, 0, 1, 1] = &gtk::ToggleButton {
++                    attach[1, 3, 1, 1] = &gtk::ToggleButton {
                          set_icon_name: "document-edit-symbolic",
                          set_tooltip_text: Some("Manually enter username"),
                      },
@@ -159,41 +159,49 @@
 -                    attach[2, 2, 1, 1] = &gtk::ToggleButton {
 -                        set_icon_name: "document-edit-symbolic",
 -                        set_tooltip_text: Some("Manually enter session command"),
--                    },
 +                    attach[1, 1, 1, 1] = &gtk::ToggleButton,
++
++                    #[name = "input_label"]
++                    attach[0, 2, 3, 1] = &gtk::Label { add_css_class: "lock-prompt" },
++                    #[name = "secret_entry"]
++                    attach[0, 3, 2, 1] = &gtk::PasswordEntry { set_show_peek_icon: true, set_hexpand: true },
++                    #[name = "visible_entry"]
++                    attach[0, 3, 2, 1] = &gtk::Entry { set_hexpand: true },
++
++                    #[name = "login_button"]
++                    attach[2, 3, 1, 1] = &gtk::Button {
++                        set_focusable: true,
++                        set_icon_name: "go-next-symbolic",
++                        set_tooltip_text: Some("Log in"),
++                        set_receives_default: true,
++                        add_css_class: "suggested-action",
+                     },
  
 -                    /// Collection of action buttons (eg. Login)
 -                    attach[1, 3, 2, 1] = &gtk::Box {
 -                        set_halign: gtk::Align::End,
 -                        set_spacing: 15,
-+                    #[name = "input_label"]
-+                    attach[0, 2, 2, 1] = &gtk::Label { add_css_class: "lock-prompt" },
-+                    #[name = "secret_entry"]
-+                    attach[0, 3, 2, 1] = &gtk::PasswordEntry { set_show_peek_icon: true },
-+                    #[name = "visible_entry"]
-+                    attach[0, 3, 2, 1] = &gtk::Entry,
- 
+-
 -                        /// Button to cancel password entry
-+                    attach[0, 4, 2, 1] = &gtk::Box {
++                    attach[0, 4, 3, 1] = &gtk::Box {
 +                        set_halign: gtk::Align::Center,
 +                        set_spacing: 10,
                          #[name = "cancel_button"]
                          gtk::Button {
                              set_focusable: true,
 -                            set_label: "Cancel",
-+                            set_label: "戻る",
++                            set_label: "Back",
                          },
--
+ 
 -                        /// Button to enter the password and login
-                         #[name = "login_button"]
-                         gtk::Button {
-                             set_focusable: true,
+-                        #[name = "login_button"]
+-                        gtk::Button {
+-                            set_focusable: true,
 -                            set_label: "Login",
-+                            set_label: "ログイン",
-                             set_receives_default: true,
-                             add_css_class: "suggested-action",
-                         },
-@@ -153,71 +81,40 @@
+-                            set_receives_default: true,
+-                            add_css_class: "suggested-action",
+-                        },
+                     },
                  },
              },
  
@@ -275,7 +283,7 @@
 -                    /// Button to power-off
 +                    gtk::Button {
 +                        set_focusable: true,
-+                        set_label: "再起動",
++                        set_label: "Reboot",
 +                        add_css_class: "power-action",
 +                    },
                      #[name = "poweroff_button"]
@@ -283,7 +291,7 @@
 -                    EndButton { set_label: "Power Off" },
 +                    gtk::Button {
 +                        set_focusable: true,
-+                        set_label: "電源オフ",
++                        set_label: "Power off",
 +                        add_css_class: "power-action",
 +                    },
                  },

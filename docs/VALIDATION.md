@@ -129,3 +129,23 @@ XDG_DATA_DIRSに採用dconfパッケージのサービス定義を明示する�
 - ぼかし壁紙をビルド時に生成し、最終構成のCSSと同一のCSSをデモで読み込んで描画確認した。実際のNoto Sans CJK JPとJetBrainsMono Nerd Fontで日本語ボタンと時計を確認した。
 - 最終ビルドのReGreetを使い、検証専用AccountsServiceと`/bin/true`のセッションで、Enterによるユーザー選択→デモOTP→Passwordの表示遷移、誤入力時のエラー／認証キャンセル、正しいデモ入力後のセッション開始成功まで確認した。秘密入力はプロンプトごとに選択して置き換えた。これらはデモ認証であり、実機のPAM検証ではない。
 - `docs/login-preview.png`はデモのPassword入力画面。実機のWayland・PAM・Hyprland起動の確認は対象端末で必要。適用方法は引き続き`nixos-rebuild boot`後の再起動。
+
+
+## GCC・英語ログイン・バッテリーメニュー（2026-11-09）
+
+- `home.packages`へ固定NixpkgsのGCCを追加。GCC 15.3.0で`-Wall -Wextra -Werror`を付けたCプログラムを実際にコンパイルし、生成物の実行を確認した。
+- ReGreet 0.5.0のレイアウト差分を更新して実ビルド成功。入力欄の右に`go-next-symbolic`のLog inボタンを配置し、Back/Reboot/Power offなどの表示を英語化した。greetdとgreeterはC.UTF-8で起動し、セッション開始時はOSのデスクトップ用LANGへ戻す。日本語キーボードは維持する。
+- 最終ReGreetを仮想Xサーバーと検証用AccountsServiceで起動し、矢印のマウスクリックによる認証開始・デモOTP入力・Password入力後の矢印クリック・デモセッション開始成功を確認した。`docs/login-preview.png`を更新した。実機のPAM認証やWaylandの検証ではない。
+- PowerCardを分離し、UPowerの集約デバイスから％・TimeToEmpty・TimeToFullを表示する。モード説明文を削除し、残り時間が未知・充電中・満充電・バッテリー不在の場合を区別する。モードごとの架空の稼働時間は表示しない。
+- バーは`custom/battery`のJSONモジュールへ変更。横向きFont Awesomeバッテリーを約24px相当で表示し、通常の％テキストは12pxのままにした。UPowerのGetAllを10秒ごとに参照し、％設定の変更時は同じユーザーのWaybarにSIGRTMIN+9を送って即時更新する。
+- ％設定の原子的保存・破損時の既定値・表示切替・充電／放電／満充電・不明な推定時間・低残量色・半端な％の丸め・短い時間のツールチップのマークアップを含むPythonの11テストが成功した。実際のNixラッパーでも設定のオフ／オンと再読込を確認した。
+- 検証用のUPower D-Busモックに対し、実装したGetAll呼出しから68％・残り3時間30分を取得できることを確認した。モックはTCPの匿名認証を使う検証専用構成で、実機は通常のシステムD-Bus認証を使う。
+- Quickshell実行ファイルでPowerCardの描画、推定値変更時の反映、バッテリー消失時の状態、スイッチを実際にクリックしたオフ／オンを検証した。既存の音楽カードのテストも成功した。offscreen環境ではWayland PanelWindowのバックエンドは利用できないため、実際のオーバーレイ配置とハードウェア上の電源モード切替は実機確認が必要。
+- NixOS/Home Managerのsystem-contractはGCC・Waybarの設定・greetdの英語ロケールとセッションロケール復元を含めて検証する。flake.lockと実機のディスク／ブート設定は変更していない。
+
+参照:
+
+- https://quickshell.org/docs/v0.3.2/types/Quickshell.Services.UPower/UPowerDevice/
+- https://quickshell.org/docs/v0.3.2/types/Quickshell.Services.UPower/UPowerDeviceState/
+- https://quickshell.org/docs/v0.3.2/types/Quickshell.Services.UPower/UPower/
+- https://github.com/Alexays/Waybar/blob/master/man/waybar-custom.5.scd

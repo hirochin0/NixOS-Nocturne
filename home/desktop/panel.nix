@@ -1,5 +1,6 @@
 { lib, config, pkgs, theme, desktop, ... }:
 let
+  batteryTools = import ../../lib/battery-tools.nix { inherit pkgs; };
   brightness = import ../../lib/brightness.nix { inherit pkgs; };
 in {
   # HMはtray.targetもWantedByに追加するため、他DEでの二重起動を防ぐ。
@@ -18,7 +19,7 @@ in {
       spacing = 6;
       modules-left = [ "custom/launcher" "hyprland/workspaces" ];
       modules-center = [ "clock" ];
-      modules-right = [ "network" "pulseaudio" "backlight" "battery" "tray" "custom/power" ];
+      modules-right = [ "network" "pulseaudio" "backlight" "custom/battery" "tray" "custom/power" ];
       "custom/launcher" = { format = "󱄅"; tooltip-format = "Applications"; on-click = "nocturne-launcher"; };
       "hyprland/workspaces" = {
         format = "{name}";
@@ -47,13 +48,14 @@ in {
         on-scroll-up = brightness.up;
         on-scroll-down = brightness.down;
       };
-      battery = {
-        format = "{icon}  {capacity}%";
-        format-charging = "󰂄  {capacity}%";
-        format-icons = [ "󰁺" "󰁼" "󰁾" "󰂀" "󰁹" ];
-        states = { warning = 25; critical = 12; };
+      "custom/battery" = {
+        exec = "${batteryTools}/bin/nocturne-battery status";
+        return-type = "json";
+        format = "{}";
+        escape = false;
+        interval = 10;
+        signal = 9;
         on-click = "nocturne-widgets power";
-        tooltip-format = "バッテリー: {capacity}%\nクリック: Save / Balanced / Power";
       };
       tray.spacing = 10;
       "custom/power" = { format = "󰐥"; tooltip-format = "Session"; on-click = "nocturne-power"; };
@@ -69,13 +71,14 @@ in {
       #workspaces button { color: #${theme.muted}; padding: 0 10px; border-radius: 9px; margin: 2px; }
       #workspaces button.active { color: #${theme.bg}; background: #${theme.accent}; }
       #workspaces button:hover { background: #${theme.elevated}; color: #${theme.text}; }
-      #workspaces button.urgent, #battery.critical { color: #${theme.red}; }
+      #workspaces button.urgent, #custom-battery.critical { color: #${theme.red}; }
       #clock { padding: 0 16px; color: #${theme.text}; }
-      #network, #pulseaudio, #backlight, #battery, #tray { padding: 0 9px; }
+      #network, #pulseaudio, #backlight, #custom-battery, #tray { padding: 0 9px; }
       #network { color: #${theme.cyan}; }
       #backlight { color: #${theme.yellow}; }
-      #battery.charging { color: #${theme.green}; }
-      #battery.warning { color: #${theme.yellow}; }
+      #custom-battery { padding: 0 10px; }
+      #custom-battery.charging { color: #${theme.green}; }
+      #custom-battery.warning { color: #${theme.yellow}; }
       #custom-power { color: #${theme.accent}; padding: 0 8px; }
       tooltip { background: #${theme.surface}; border: 1px solid #${theme.elevated}; border-radius: 10px; }
     '';

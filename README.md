@@ -9,7 +9,7 @@
 - Super+W、またはアプリ一覧の「Wallpaper」でサムネイル付きの3列グリッドを開きます。`~/Pictures/Wallpapers`にPNG/JPEG/WebP/GIF/BMPを置き、文字入力で検索、矢印キーで移動、Enterで選択、Escapeでキャンセルします。サブフォルダも対象です。壁紙メニューだけWayland対応rofiを使い、通常のアプリ検索は従来どおりです。
 - サムネイルは480×270に縮小して`~/.cache/nocturne/wallpaper-thumbnails/`へ保存します（`XDG_CACHE_HOME`設定時はそちら）。変更した画像は自動で作り直し、GIFは先頭フレームを表示します。適用時は元画像・元GIFをswwwへ渡します。プレビューを作れない画像は代替画像で表示します。
 - 選択を`~/.local/state/nocturne/wallpaper.json`へ保存し、次のログイン時に復元します（`XDG_STATE_HOME`設定時はそちら）。元画像を移動・削除するとNixで指定した既定画像へ戻ります。
-- Codex CLI、VS Code、Google Chrome、Discord、オリジナルのNeofetch 7.1.0を導入します。Super+BでChromeを開きます。
+- GCC、Codex CLI、VS Code、Google Chrome、Discord、オリジナルのNeofetch 7.1.0を導入します。Super+BでChromeを開きます。
 - ターミナル用にNeofetch・htop・cmatrix・cavaを導入します。Kittyでそれぞれ`neofetch`・`htop`・`cmatrix`・`cava`を実行してください。cavaは音楽などの再生中に音声を可視化します。
 - アプリ一覧の「ChatGPT」は公式サイトをChromeの独立ウィンドウで開きます。Codexはターミナルで`codex`を実行します。
 - 起動時はReGreetのGUIログイン画面。ロック画面に合わせたぼかし壁紙・大きな中央時計・ユーザー名・シンプルな入力欄を表示し、ログイン後はUWSM経由でHyprlandを起動します。
@@ -51,8 +51,9 @@ sudo nixos-rebuild switch --flake path:.#nocturne
 | 編集先 | 管理するもの |
 |---|---|
 | `modules/nixos/login.nix` | GUIログイン・キーボード・UWSMセッション |
+| `lib/battery-tools.nix` / `home/scripts/battery.py` | タスクバーのバッテリー表示・％表示設定の保存 |
 | `lib/login-style.nix` | ログイン画面のGTK CSS（色と壁紙は`theme.nix`参照） |
-| `home/programs/development.nix` | Codex・VS Code・Chrome・Discord・Neofetch、エディタ設定 |
+| `home/programs/development.nix` | GCC・Codex・VS Code・Chrome・Discord・Neofetch、エディタ設定 |
 | `home/programs/spotify.nix` | Spotify・Spicetify・テーマ・拡張機能 |
 | `home/programs/spicetify/Nocturne/` | Spotify用の追加CSS |
 | `home/desktop/wallpaper.nix` | swwwサービス、壁紙メニュー登録 |
@@ -200,9 +201,9 @@ Waybarの太陽アイコンには内蔵画面の明るさ（%）を表示しま�
 
 - 大きな中央時計、`NOCTURNE / ユーザー名`、角丸のパスワード欄を中心にした、ロック画面風のデザインです。大きなカード枠は表示せず、再起動・電源オフは下部に小さく配置します。
 - `theme.nix`の配色・壁紙を参照します。壁紙のぼかしはビルド時に静止画として生成し、動画やリアルタイムぼかしの常駐処理を追加しません。
-- 日本語キーボードは`user.keyboardLayout`から設定します。
+- ログイン画面と認証プロンプトは英語で表示します。日本語キーボードは`user.keyboardLayout`から設定し、ログイン後のデスクトップの言語設定は維持します。
 - セッション選択は`NOCTURNE (Hyprland)`のみです。内部では従来と同じ`uwsm start -e -D Hyprland hyprland.desktop`を使用し、WaybarやQuickshellのsystemdターゲットを維持します。
-- 初回はユーザーを選んで「ログイン」、続けてパスワードを入力します。次回以降は記憶したユーザー・セッションでパスワード入力から始めます。「戻る」でユーザーを選び直せます。Enterでも操作できます。
+- 初回はユーザーを選んで右側の矢印（Log in）、続けてパスワードを入力して矢印をクリックします。次回以降は記憶したユーザー・セッションでパスワード入力から始めます。Backでユーザーを選び直せます。Enterでも操作できます。
 - SDDM/GDM/LightDM/lyとの同時起動と、自動ログインを無効化します。ロック画面（Hyprlock）の設定は別です。
 
 レイアウトは`assets/regreet/lock-layout.patch`でReGreet 0.5.0のGTKテンプレートと表示状態だけを調整しています。PAM・greetd IPC・セッション開始処理は上流のままです。初回はカスタマイズ版ReGreetのコンパイルに時間がかかります。
@@ -256,13 +257,20 @@ Marketplaceで選んだ内容は自動でGitには保存されません。別PC�
 
 ### 電源モード
 
-Waybarのバッテリーをクリックすると、Quickshellの電源メニューが開きます。選択中のモードにチェックが付き、Esc・外側クリック・閉じるボタンで閉じます。
+Waybarの横向きバッテリーをクリックすると、Quickshellの電源メニューが開きます。選択中のモードにチェックが付き、Esc・外側クリック・閉じるボタンで閉じます。モードの説明文は表示しません。
 
-| 表示 | power-profiles-daemonのプロファイル | 用途 |
-|---|---|---|
-| Save | `power-saver` | バッテリー優先 |
-| Balanced | `balanced` | 通常利用 |
-| Power | `performance` | 性能優先。消費電力が増えます |
+![バッテリーメニューの描画プレビュー（値はデモ用）](docs/power-preview.png)
+
+- メニューに残量とUPowerの推定残り時間を表示します。充電中は満充電までの時間、満充電時はFully chargedを表示します。推定値が未取得の場合はEstimating…と表示します。各モードの架空の稼働時間は計算しません。
+- Show percentage in barで、タスクバーの％表示をオン／オフできます。メニュー内の残量は常に確認できます。
+- 設定は`${XDG_STATE_HOME:-~/.local/state}/nocturne/battery.json`へ保存し、次回ログイン後も維持します。変更時はWaybarの該当モジュールを即時更新します。
+- タスクバーのアイコンは横向きで、他の文字より少し大きく表示します。充電中は緑、残量低下時は黄／赤になります。
+
+| 表示 | power-profiles-daemonのプロファイル |
+|---|---|
+| Save | power-saver |
+| Balanced | balanced |
+| Power | performance |
 
 Powerはハードウェア/ドライバが対応する場合だけ選べます。実際に制御されるCPU・プラットフォーム設定はカーネルと機器の対応に従います。モード選択をAC接続やログインのたびに上書きする独自スクリプトは入れていません。
 
