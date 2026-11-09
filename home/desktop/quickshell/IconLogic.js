@@ -4,6 +4,7 @@ function names(value) {
     const raw = String(value || "").replace(/\.desktop$/i, "");
     const result = [raw, raw.toLowerCase()];
     const aliases = {
+        chromechatgptcomdefault: ["chatgpt", "google-chrome"],
         code: ["vscode", "visual-studio-code"], codeoss: ["code-oss", "vscode"],
         googlechrome: ["google-chrome", "chrome"], chromiumbrowser: ["chromium", "chromium-browser"],
         orggnomenautilus: ["org.gnome.Nautilus", "nautilus"],

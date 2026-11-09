@@ -33,9 +33,14 @@ Item {
         if (workspace) workspace.activate();
         else Hyprland.dispatch(Hyprland.usingLua ? 'hl.dsp.focus({ workspace = "' + id + '" })' : "workspace " + id);
     }
+    function appIdFor(window) {
+        const ipc = window.HyprlandToplevel ? window.HyprlandToplevel.lastIpcObject : null;
+        return (ipc && (ipc.class || ipc.initialClass)) || window.appId || "";
+    }
     function desktopFor(window) {
-        return IconLogic.findEntry(window.appId, IconCatalog.entries)
-            || IconLogic.findEntry(window.appId, DesktopEntries.applications.values);
+        const appId = appIdFor(window);
+        return IconLogic.findEntry(appId, IconCatalog.entries)
+            || IconLogic.findEntry(appId, DesktopEntries.applications.values);
     }
     readonly property var workspaceIds: {
         const ids = [1, 2, 3, 4, 5];
@@ -141,7 +146,7 @@ Item {
                                 color: task.hovered ? Theme.elevated : task.modelData.activated ? Qt.alpha(Theme.cyan, 0.12) : "transparent"
                             }
                             contentItem: Item {
-                                AppIcon { anchors.centerIn: parent; width: 28; height: 28; iconName: task.desktop ? task.desktop.icon : task.modelData.appId }
+                                AppIcon { anchors.centerIn: parent; width: 28; height: 28; iconName: task.desktop && task.desktop.icon ? task.desktop.icon : root.appIdFor(task.modelData) }
                                 Rectangle { anchors.bottom: parent.bottom; anchors.horizontalCenter: parent.horizontalCenter; width: 12; height: 2; radius: 1; color: Theme.cyan; visible: task.modelData.activated }
                             }
                         }

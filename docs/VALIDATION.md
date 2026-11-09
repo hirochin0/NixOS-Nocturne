@@ -197,3 +197,9 @@ XDG_DATA_DIRSに採用dconfパッケージのサービス定義を明示する�
 - 以前のImage.onStatusChangedからsourceへ直接代入する処理は、参照元へのバインディングを解除し、後からカタログが読み込まれても代替画像のままになる。候補リストと候補番号による切替へ修正した。Qtの同期エラー通知中の再評価を避け、次の候補への移行はQt.callLaterで行う。
 - 実際のXDG applications/icons/pixmaps、Nixプロファイル、Flatpakエクスポートを起動時と60秒ごとに走査。desktopファイルのID・StartupWMClass・Iconを利用し、ユーザー定義優先・一部の逆DNSアプリIDとアイコン名の差を解決する。
 - QuickShellチェックビルド成功。欠損パス→汎用画像→実Spotifyアイコンの再取得テスト、ユーザーdesktopファイルとアイコンの優先順位テストが成功。既存の時計位置・ウィンドウ選択・各ウィジェットテストも成功。実機でのみ存在するアプリの参照先は、適用後にユーザー環境から収集する。
+
+## 実機アプリIDの対応（2026-11-09 JST）
+
+- 実機で報告されたclassは`chrome-chatgpt.com__-Default`・`google-chrome`・`kitty`。ChatGPTのdesktop設定にはStartupWMClassがなく、IDの照合ができていなかったため、設定と解決用エイリアスを追加した。ChatGPTの既存Icon指定はgoogle-chrome。
+- Chrome/KittyとChatGPTの実機IDについては、存在を確認したPapirusのSVGをNix storeの絶対参照で指定する。一般の参照も、利用可能なローカルファイルをQtテーマ検索より優先する。HyprlandのIPC class/initialClassがある場合はWayland appIdより優先して照合する。
+- QuickShellチェック成功。報告された3つのIDを順にAppIconへ渡し、汎用画像以外のsourceでImage.Readyになることを確認した。既存の再取得・クリック・中央位置テストも成功。実機の表示は適用後の確認が必要。

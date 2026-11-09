@@ -31,5 +31,6 @@
     icon = "google-chrome";
     terminal = false;
     categories = [ "Network" ];
+    settings.StartupWMClass = "chrome-chatgpt.com__-Default";
   };
 }

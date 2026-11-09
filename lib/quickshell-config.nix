@@ -28,6 +28,11 @@ let
       readonly property color green: "#${theme.green}"
       readonly property color yellow: "#${theme.yellow}"
       readonly property string font: ${builtins.toJSON theme.font}
+      readonly property var appIconOverrides: ({
+        "kitty": "${pkgs.papirus-icon-theme}/share/icons/Papirus/48x48/apps/kitty.svg",
+        "googlechrome": "${pkgs.papirus-icon-theme}/share/icons/Papirus/48x48/apps/google-chrome.svg",
+        "chromechatgptcomdefault": "${pkgs.papirus-icon-theme}/share/icons/Papirus/48x48/apps/google-chrome.svg"
+      })
       readonly property string iconCatalogCommand: "${iconCatalog}/bin/nocturne-icon-catalog"
       readonly property string iconIndexPath: "${iconIndex}"
       readonly property string barCommand: "${barTools}/bin/nocturne-bar"

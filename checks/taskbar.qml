@@ -57,6 +57,12 @@ ShellRoot {
                 interaction.wait(120);
                 if (String(icon.source).indexOf("application.svg") !== -1 || icon.status !== 1)
                     throw new Error("Valid icon did not replace fallback");
+                for (const appId of ["google-chrome", "kitty", "chrome-chatgpt.com__-Default"]) {
+                    icon.iconName = appId;
+                    interaction.wait(100);
+                    if (icon.status !== 1 || String(icon.source).indexOf("application.svg") !== -1)
+                        throw new Error("Observed app class icon missing: " + appId);
+                }
                 icon.destroy();
                 const task = find(bar, "task-code");
                 if (!task) throw new Error("Window button missing");

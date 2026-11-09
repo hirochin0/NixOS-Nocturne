@@ -10,11 +10,13 @@ Image {
         const sources = [];
         if (iconName.startsWith("/") || iconName.startsWith("file:")) sources.push(iconName);
         else {
+            const pinned = Theme.appIconOverrides[IconLogic.normalize(iconName)];
+            if (pinned) sources.push(pinned);
             for (const name of IconLogic.names(iconName)) {
                 if (IconCatalog.userIcons[name]) sources.push(IconCatalog.userIcons[name]);
+                if (IconCatalog.icons[name]) sources.push(IconCatalog.icons[name]);
                 const themed = Quickshell.iconPath(name, true);
                 if (themed) sources.push(themed);
-                if (IconCatalog.icons[name]) sources.push(IconCatalog.icons[name]);
             }
         }
         sources.push(String(Qt.resolvedUrl("application.svg")));
