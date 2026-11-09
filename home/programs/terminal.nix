@@ -3,6 +3,12 @@
     enable = true;
     package = desktop.kitty;
     font = { name = theme.font; size = theme.fontSize; };
+    keybindings = {
+      # Arrow keys avoid ambiguity around shifted +/= keys on Japanese layouts.
+      "ctrl+alt+up" = "change_font_size all +2.0";
+      "ctrl+alt+down" = "change_font_size all -2.0";
+      "ctrl+alt+backspace" = "change_font_size all 0";
+    };
     settings = {
       background = "#${theme.bg}";
       foreground = "#${theme.text}";
