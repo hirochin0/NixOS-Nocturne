@@ -175,3 +175,11 @@ XDG_DATA_DIRSに採用dconfパッケージのサービス定義を明示する�
 
 - 月タイルを64pxから96pxに拡大。アプリタイル62px・内部アイコン32pxは維持し、月の中心から各アプリへ直接線を伸ばす形へ変更した。
 - QuickShellチェックのビルドと開閉・設定更新テストが成功。offscreen描画でも月の拡大と放射状の線を確認した。
+
+## タスクバーをQuickshellへ移行（2026-11-09 JST）
+
+- Waybarを無効化し、QuickshellのTaskbar/BarContentで全モニターに上部バーを描画。ランチャー・常設ワークスペース1〜5と追加ワークスペース・時計/カレンダー・ネットワーク・音量・明るさ・バッテリー・トレイ・電源操作を移した。
+- 右端のウィンドウ一覧はHyprland.toplevelsに追従し、クリック時にHyprlandToplevel.workspace.activate()を呼んでからToplevel.activate()する。アイコン列は横スクロール可能。同一アプリの複数ウィンドウは別ボタンにする。
+- `checks.x86_64-linux.quickshell`ビルド成功。offscreenの実QuickShellでバーを生成し、モックのアプリボタンをマウスクリックしてワークスペース→ウィンドウの呼出順と一覧の更新を確認。既存のカード・ORBITテストも成功。状態取得のWi-Fi・音量ミュート・明るさ解析とサービス不在時のフォールバックの2テストが成功。
+- `system-contract.drvPath`の評価成功。Waybar無効化と既存Home Manager設定との整合を確認。1440pxのoffscreen描画を確認した。検証環境にはNerd Fontと実アプリがないため、一部の記号・アプリアイコンは代替表示になる。
+- 実機のHyprlandワークスペース切替、Wayland領域確保、複数モニター、実際のトレイメニュー、音量・明るさ・ネットワーク操作は対象端末で確認する。コンテナのIPCソケット作成制限による警告は従来どおり。

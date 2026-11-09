@@ -17,7 +17,7 @@ in {
   xdg.configFile."quickshell/nocturne".source = bundle;
   systemd.user.services.nocturne-widgets = {
     Unit = {
-      Description = "NOCTURNE Quickshell music and power widgets";
+      Description = "NOCTURNE Quickshell taskbar and desktop widgets";
       PartOf = [ target ];
       After = [ target ];
     };

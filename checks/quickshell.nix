@@ -9,6 +9,7 @@ in pkgs.runCommand "nocturne-quickshell-check" {
   for file in ${bundle}/*.qml; do
     qmlformat --normalize "$file" > /dev/null
   done
+  python ${./bar_tools_test.py} ${../home/scripts/bar.py} > "$out/bar-tools.log" 2>&1
   node ${./quickshell-logic.cjs} ${bundle}/Logic.js > "$out/logic.log"
   export XDG_RUNTIME_DIR="$TMPDIR/runtime"
   export QT_QPA_PLATFORM=offscreen QT_QUICK_BACKEND=software QT_QUICK_CONTROLS_STYLE=Basic
@@ -42,6 +43,16 @@ in pkgs.runCommand "nocturne-quickshell-check" {
   grep -q NOCTURNE_ARC_CHECK_PASSED "$out/arc.log"
   if grep -Eq 'ReferenceError|TypeError|Unable to assign|Failed to load configuration' "$out/arc.log"; then
     cat "$out/arc.log"
+    exit 1
+  fi
+  substitute ${./taskbar.qml} "$TMPDIR/taskbar-check.qml" --subst-var-by bundle ${bundle}
+  if ! timeout 10s quickshell --path "$TMPDIR/taskbar-check.qml" --no-color > "$out/taskbar.log" 2>&1; then
+    cat "$out/taskbar.log"
+    exit 1
+  fi
+  grep -q NOCTURNE_TASKBAR_CHECK_PASSED "$out/taskbar.log"
+  if grep -Eq 'ReferenceError|TypeError|Unable to assign|Failed to load configuration' "$out/taskbar.log"; then
+    cat "$out/taskbar.log"
     exit 1
   fi
   cp -r ${bundle} "$out/config"

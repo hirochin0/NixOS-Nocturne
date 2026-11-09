@@ -46,6 +46,17 @@ ShellRoot {
             updating: musicWindow.visible
         }
     }
+    Variants {
+        model: Quickshell.screens
+        Taskbar {
+            required property var modelData
+            screen: modelData
+            onPowerRequested: {
+                powerMenu.screen = modelData;
+                powerMenu.visible = !powerMenu.visible;
+            }
+        }
+    }
     ArcLauncher {}
     PowerMenu { id: powerMenu; onDismissed: visible = false }
 }

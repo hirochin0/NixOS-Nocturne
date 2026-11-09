@@ -13,7 +13,7 @@
 - ターミナル用にNeofetch・htop・cmatrix・cavaを導入します。Kittyでそれぞれ`neofetch`・`htop`・`cmatrix`・`cava`を実行してください。cavaは音楽などの再生中に音声を可視化します。
 - アプリ一覧の「ChatGPT」は公式サイトをChromeの独立ウィンドウで開きます。Codexはターミナルで`codex`を実行します。
 - 起動時はReGreetのGUIログイン画面。ロック画面に合わせたぼかし壁紙・大きな中央時計・ユーザー名・シンプルな入力欄を表示し、ログイン後はUWSM経由でHyprlandを起動します。
-- Quickshell 0.3.2のSpotifyカードを右下に表示します。Super+Mで表示切替、WaybarのバッテリーをクリックするとSave / Balanced / Powerを選べます。
+- Quickshell 0.3.2のSpotifyカードを右下に表示します。Super+Mで表示切替、QuickshellバーのバッテリーをクリックするとSave / Balanced / Powerを選べます。
 
 VS Codeは公式Marketplaceの拡張機能を使いやすいため採用しました。エディタ本体はNixで更新し、テレメトリはオフにしています。非自由ライセンスの許可はVS Code・Chrome・Spotify・Discordの4パッケージに限定しています。
 
@@ -185,7 +185,7 @@ sudo nixos-rebuild switch --flake path:.#nocturne
 | Print / Super+Shift+S | 範囲スクリーンショット |
 | 明るさキー / Super+F5・F6 | 内蔵画面を5%ずつ暗く / 明るく |
 
-Waybarの太陽アイコンには内蔵画面の明るさ（%）を表示します。アイコン上で上スクロールすると明るく、下スクロールすると暗くなり、キー操作による変更も表示に反映されます。ThinkPadのF5/F6はFn Lockの状態によりFnとの同時押しが必要です。Super+F5/F6でも操作できます。
+Quickshellバーの太陽アイコンには内蔵画面の明るさ（%）を表示します。アイコン上で上スクロールすると明るく、下スクロールすると暗くなり、キー操作による変更も表示に反映されます。ThinkPadのF5/F6はFn Lockの状態によりFnとの同時押しが必要です。Super+F5/F6でも操作できます。
 
 キー操作とバーは`lib/brightness.nix`の同じコマンドを使用し、`backlight`クラスを自動選択します。デバイス名を固定せず、キーボード照明は変更しません。最低値はハードウェアの1段階です。権限はNixOSのudevルールと`video`グループで管理するため、毎回sudoを使う必要はありません。外部HDMI/DisplayPortモニターの明るさは別途DDC/CI対応が必要です。
 
@@ -202,7 +202,7 @@ Waybarの太陽アイコンには内蔵画面の明るさ（%）を表示しま�
 - 大きな中央時計、`NOCTURNE / ユーザー名`、角丸のパスワード欄を中心にした、ロック画面風のデザインです。大きなカード枠は表示せず、再起動・電源オフは下部に小さく配置します。
 - `theme.nix`の配色・壁紙を参照します。壁紙のぼかしはビルド時に静止画として生成し、動画やリアルタイムぼかしの常駐処理を追加しません。
 - ログイン画面と認証プロンプトは英語で表示します。日本語キーボードは`user.keyboardLayout`から設定し、ログイン後のデスクトップの言語設定は維持します。
-- セッション選択は`NOCTURNE (Hyprland)`のみです。内部では従来と同じ`uwsm start -e -D Hyprland hyprland.desktop`を使用し、WaybarやQuickshellのsystemdターゲットを維持します。
+- セッション選択は`NOCTURNE (Hyprland)`のみです。内部では従来と同じ`uwsm start -e -D Hyprland hyprland.desktop`を使用し、Quickshellのsystemdターゲットを維持します。
 - 初回はユーザーを選んで右側の矢印（Log in）、続けてパスワードを入力して矢印をクリックします。次回以降は記憶したユーザー・セッションでパスワード入力から始めます。Backでユーザーを選び直せます。Enterでも操作できます。
 - SDDM/GDM/LightDM/lyとの同時起動と、自動ログインを無効化します。ロック画面（Hyprlock）の設定は別です。
 
@@ -257,13 +257,13 @@ Marketplaceで選んだ内容は自動でGitには保存されません。別PC�
 
 ### 電源モード
 
-Waybarの横向きバッテリーをクリックすると、Quickshellの電源メニューが開きます。選択中のモードにチェックが付き、Esc・外側クリック・閉じるボタンで閉じます。モードの説明文は表示しません。
+Quickshellバーの横向きバッテリーをクリックすると、Quickshellの電源メニューが開きます。選択中のモードにチェックが付き、Esc・外側クリック・閉じるボタンで閉じます。モードの説明文は表示しません。
 
 ![バッテリーメニューの描画プレビュー（値はデモ用）](docs/power-preview.png)
 
 - メニューに残量とUPowerの推定残り時間を表示します。充電中は満充電までの時間、満充電時はFully chargedを表示します。推定値が未取得の場合はEstimating…と表示します。各モードの架空の稼働時間は計算しません。
 - Show percentage in barで、タスクバーの％表示をオン／オフできます。メニュー内の残量は常に確認できます。
-- 設定は`${XDG_STATE_HOME:-~/.local/state}/nocturne/battery.json`へ保存し、次回ログイン後も維持します。変更時はWaybarの該当モジュールを即時更新します。
+- 設定は`${XDG_STATE_HOME:-~/.local/state}/nocturne/battery.json`へ保存し、次回ログイン後も維持します。変更はQuickshellバーにも反映されます。
 - タスクバーのアイコンは横向きで、他の文字より少し大きく表示します。充電中は緑、残量低下時は黄／赤になります。
 
 | 表示 | power-profiles-daemonのプロファイル |
@@ -283,7 +283,7 @@ cd ~/NixOS-Nocturne-0571
 git pull --ff-only
 sudo nixos-rebuild switch --flake path:.#nocturne
 hyprctl reload
-systemctl --user restart nocturne-widgets.service waybar.service hypridle.service
+systemctl --user restart nocturne-widgets.service hypridle.service
 spotify
 ```
 
@@ -360,3 +360,26 @@ journalctl --user -b -u nocturne-widgets.service -n 100 --no-pager
 `apps`に行を追加するとショートカットを追加できます。`desktopId`はインストールしたアプリの`.desktop`ファイル名（拡張子は省略可）です。`~/.local/share/applications`、`/etc/profiles/per-user/hiroto/share/applications`、`/run/current-system/sw/share/applications`等で確認できます。未インストールのアプリは起動しません。JSONの書式が壊れた場合は直前の有効な一覧を保持します。画像ファイル自体を置き換えた場合は、別名にしてJSONのパスを変更すると確実に再読み込みできます。
 
 初期設定へ戻すには`~/.config/nocturne/launcher.json`を削除し、再度`nixos-rebuild switch --flake path:.#nocturne`を実行します。更新後は`systemctl --user restart nocturne-widgets.service`でウィジェットを再起動します。
+
+
+## Quickshellタスクバー
+
+タスクバー全体を`nocturne-widgets.service`が描画し、Waybarは無効化しています。全モニターの上端に表示し、通常のウィンドウがバーに重ならないよう領域を確保します。
+
+左はランチャーとワークスペース（1〜5に加え、存在する追加ワークスペース）、中央は時計、右はネットワーク・音量・明るさ・横向きバッテリー・トレイ・電源操作です。時計のホバーでカレンダー、ネットワークのクリックで接続設定、音量のクリックでミキサー、右クリックでミュート、スクロールで音量や明るさを変更できます。小さな画面では時計を時刻だけに短縮します。
+
+**開いているアプリ一覧はバーの右端**に表示します。ウィンドウごとに1個のアイコンを並べ、ホバーするとタイトルとワークスペース名を表示します。クリックすると、そのワークスペースを開いてウィンドウへフォーカスします。同じアプリの別ウィンドウも個別に選択できます。全モニター・全ワークスペースのウィンドウが対象です。収まらない場合はアイコン上のホイール／トラックパッドで横スクロールできます。選択中のウィンドウは下線で示します。
+
+外部CLIの状態取得はバックグラウンドで2秒ごとに行い、実行中の取得を重複させません。ウィンドウ一覧・ワークスペース・バッテリー・トレイはQuickshellのサービスに追従します。画像やアプリ名を解決できない場合は先頭文字を表示します。
+
+主な管理元は`home/desktop/quickshell/Taskbar.qml`、`BarContent.qml`、`BarButton.qml`です。外部コマンドと状態取得は`lib/bar-tools.nix`と`home/scripts/bar.py`で管理します。
+
+更新・移行:
+
+```bash
+cd ~/NixOS-Nocturne-0571
+git pull --ff-only
+sudo nixos-rebuild switch --flake path:.#nocturne
+systemctl --user stop waybar.service 2>/dev/null || true
+systemctl --user restart nocturne-widgets.service
+```

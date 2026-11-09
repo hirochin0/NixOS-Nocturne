@@ -1,5 +1,6 @@
 { pkgs, desktop, theme, user }:
 let
+  barTools = import ./bar-tools.nix { inherit pkgs desktop; };
   batteryTools = import ./battery-tools.nix { inherit pkgs; };
   palette = pkgs.writeText "nocturne-quickshell-theme.qml" ''
     pragma Singleton
@@ -14,6 +15,7 @@ let
       readonly property color green: "#${theme.green}"
       readonly property color yellow: "#${theme.yellow}"
       readonly property string font: ${builtins.toJSON theme.font}
+      readonly property string barCommand: "${barTools}/bin/nocturne-bar"
       readonly property string batteryCommand: "${batteryTools}/bin/nocturne-battery"
       readonly property string musicOutput: ${builtins.toJSON (user.musicWidgetOutput or "")}
     }
@@ -33,6 +35,9 @@ in pkgs.runCommand "nocturne-quickshell-config" {
   MusicCard 1.0 MusicCard.qml
   PowerMenu 1.0 PowerMenu.qml
   PowerCard 1.0 PowerCard.qml
+  Taskbar 1.0 Taskbar.qml
+  BarContent 1.0 BarContent.qml
+  BarButton 1.0 BarButton.qml
   ArcLauncher 1.0 ArcLauncher.qml
   ArcLauncherCard 1.0 ArcLauncherCard.qml
   EOF
