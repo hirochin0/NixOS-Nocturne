@@ -25,7 +25,7 @@ ShellRoot {
         BarContent {
             id: bar
             anchors { left: parent.left; right: parent.right; top: parent.top }
-            height: 38
+            height: 46
             live: false
             windows: [window]
             workspaces: [workspace]
@@ -43,6 +43,14 @@ ShellRoot {
                     for (const child of item.children) { const result = find(child, name); if (result) return result; }
                     return null;
                 }
+                const clock = find(bar, "clockIsland");
+                if (!clock || Math.abs(clock.x + clock.width / 2 - bar.width / 2) > 0.5)
+                    throw new Error("Clock is not at screen center");
+                const iconComponent = Qt.createComponent("file://@bundle@/AppIcon.qml");
+                if (iconComponent.status !== Component.Ready) throw new Error(iconComponent.errorString());
+                const icon = iconComponent.createObject(bar, {iconName: "no-such-icon-nocturne", width: 28, height: 28});
+                if (String(icon.source).indexOf("application.svg") === -1) throw new Error("Missing icon fallback failed");
+                icon.destroy();
                 const task = find(bar, "task-code");
                 if (!task) throw new Error("Window button missing");
                 interaction.mouseClick(task, task.width / 2, task.height / 2);

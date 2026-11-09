@@ -64,7 +64,7 @@ Item {
     Timer { interval: 2000; repeat: true; running: root.live; onTriggered: if (!reader.running) reader.running = true }
     Timer { interval: 1000; repeat: true; running: root.live; onTriggered: root.now = new Date() }
     RowLayout {
-        anchors.fill: parent
+        anchors { left: parent.left; right: parent.horizontalCenter; top: parent.top; bottom: parent.bottom }
         spacing: 8
         Rectangle {
             Layout.preferredWidth: leftRow.implicitWidth + 12
@@ -88,22 +88,30 @@ Item {
                 }
             }
         }
-        Item {
-            Layout.fillWidth: true; Layout.minimumWidth: 80; Layout.fillHeight: true
-            Rectangle {
-                anchors.centerIn: parent
-                width: Math.min(parent.width, clock.implicitWidth + 8); height: parent.height
-                radius: 14; color: Qt.alpha(Theme.bg, 0.94); border.color: Theme.elevated
-                BarButton {
-                    id: clock
-                    anchors.fill: parent
-                    text: root.width < 1350 ? Qt.formatDateTime(root.now, "HH:mm") : Qt.formatDateTime(root.now, "ddd  MM.dd  ·  HH:mm")
-                    hint: root.status.calendar || Qt.formatDate(root.now, "yyyy-MM-dd")
-                }
-            }
+    }
+    Rectangle {
+        id: clockIsland
+        objectName: "clockIsland"
+        anchors.horizontalCenter: parent.horizontalCenter
+        height: parent.height
+        width: clock.implicitWidth + 20
+        radius: 14; color: Qt.alpha(Theme.bg, 0.94); border.color: Theme.elevated
+        BarButton {
+            id: clock
+            anchors.fill: parent
+            text: Qt.formatDateTime(root.now, "ddd  MM.dd  ·  HH:mm")
+            hint: root.status.calendar || Qt.formatDate(root.now, "yyyy-MM-dd")
         }
+    }
+    RowLayout {
+        id: rightGroup
+        anchors { left: clockIsland.right; leftMargin: 12; right: parent.right; top: parent.top; bottom: parent.bottom }
+        spacing: 8
+        Item { Layout.fillWidth: true }
         Rectangle {
-            Layout.preferredWidth: statusRow.implicitWidth + 12
+            Layout.preferredWidth: Math.min(statusRow.implicitWidth + 12, Math.max(0, rightGroup.width - (root.windows.length ? 54 : 0)))
+            Layout.minimumWidth: 0
+            clip: true
             Layout.fillHeight: true
             radius: 14; color: Qt.alpha(Theme.bg, 0.94); border.color: Theme.elevated
             Row {
@@ -157,7 +165,7 @@ Item {
             }
         }
         Rectangle {
-            Layout.preferredWidth: Math.min(root.windows.length * 38 + 12, Math.max(48, root.width * 0.23))
+            Layout.preferredWidth: Math.min(root.windows.length * 36 + 12, Math.max(42, rightGroup.width - statusRow.implicitWidth - 28))
             Layout.minimumWidth: root.windows.length ? 48 : 0
             Layout.fillHeight: true
             visible: root.windows.length > 0
@@ -170,7 +178,7 @@ Item {
                 flickableDirection: Flickable.HorizontalFlick
                 Row {
                     id: taskRow
-                    spacing: 4
+                    spacing: 2
                     Repeater {
                         model: root.windows
                         BarButton {
@@ -179,14 +187,17 @@ Item {
                             objectName: "task-" + modelData.appId
                             readonly property var desktop: root.desktopFor(modelData)
                             readonly property var workspace: root.workspaceFor(modelData)
-                            implicitWidth: 34; implicitHeight: 28
+                            implicitWidth: 34; implicitHeight: 34
                             hint: modelData.title + (workspace ? " · Workspace " + workspace.name : "")
                             tint: modelData.activated ? Theme.cyan : Theme.muted
                             onClicked: root.focusWindow(modelData)
                             onScrolled: up => tasks.contentX = Math.max(0, Math.min(tasks.contentWidth - tasks.width, tasks.contentX + (up ? -80 : 80)))
+                            background: Rectangle {
+                                radius: 7
+                                color: task.hovered ? Theme.elevated : task.modelData.activated ? Qt.alpha(Theme.cyan, 0.12) : "transparent"
+                            }
                             contentItem: Item {
-                                Image { anchors.centerIn: parent; width: 22; height: 22; source: task.desktop ? Quickshell.iconPath(task.desktop.icon) : ""; visible: source != "" }
-                                Text { anchors.centerIn: parent; visible: !task.desktop; text: (task.modelData.appId || "?").slice(0, 1).toUpperCase(); color: task.tint; font { family: Theme.font; pixelSize: 15 } }
+                                AppIcon { anchors.centerIn: parent; width: 28; height: 28; iconName: task.desktop ? task.desktop.icon : task.modelData.appId }
                                 Rectangle { anchors.bottom: parent.bottom; anchors.horizontalCenter: parent.horizontalCenter; width: 12; height: 2; radius: 1; color: Theme.cyan; visible: task.modelData.activated }
                             }
                         }

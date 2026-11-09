@@ -8,7 +8,7 @@ Button {
     signal secondaryClicked()
     signal scrolled(bool up)
     implicitWidth: label.implicitWidth + 16
-    implicitHeight: 32
+    implicitHeight: 38
     hoverEnabled: true
     padding: 8
     Accessible.name: hint || text
@@ -16,7 +16,7 @@ Button {
         id: label
         text: control.text
         color: control.tint
-        font { family: Theme.font; pixelSize: 12 }
+        font { family: Theme.font; pixelSize: 13 }
         horizontalAlignment: Text.AlignHCenter
         verticalAlignment: Text.AlignVCenter
     }

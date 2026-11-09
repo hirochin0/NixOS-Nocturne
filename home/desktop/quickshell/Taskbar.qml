@@ -7,7 +7,7 @@ PanelWindow {
     signal powerRequested()
     anchors { top: true; left: true; right: true }
     margins { top: 10; left: 14; right: 14 }
-    implicitHeight: 38
+    implicitHeight: 46
     exclusionMode: ExclusionMode.Auto
     WlrLayershell.layer: WlrLayer.Top
     WlrLayershell.namespace: "nocturne-taskbar"

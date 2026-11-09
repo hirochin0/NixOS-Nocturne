@@ -135,17 +135,10 @@ Item {
                     color: hover.containsMouse ? Theme.elevated : Theme.surface
                     border.color: hover.containsMouse ? Theme.cyan : Qt.alpha(Theme.muted, 0.25)
                     Behavior on border.color { ColorAnimation { duration: 170 } }
-                    Text {
-                        anchors.centerIn: parent
-                        visible: !root.entry(satellite.modelData)
-                        text: (satellite.modelData.name || satellite.modelData.desktopId).slice(0, 1).toUpperCase()
-                        color: Theme.cyan
-                        font { family: Theme.font; pixelSize: 24 }
-                    }
-                    Image {
+                    AppIcon {
                         anchors.centerIn: parent
                         width: 32; height: 32
-                        source: { const e = root.entry(satellite.modelData); return e ? Quickshell.iconPath(e.icon) : ""; }
+                        iconName: { const e = root.entry(satellite.modelData); return e ? e.icon : satellite.modelData.desktopId; }
                         smooth: true
                     }
                 }
