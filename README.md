@@ -337,3 +337,26 @@ journalctl --user -b -u nocturne-widgets.service -n 100 --no-pager
 `.gitignore`はbaseのハードウェア設定等を意図的に除外しています。Git Flakeには追跡済みファイルしか含まれないため、ローカル全体の検証では`path:.`を使います。
 
 公開するのは機密がないと確認したファイルだけにしてください。`flake.lock`は生成済みのものを保存し、更新時だけ意図的に変更します。
+
+## ORBIT アプリショートカット
+
+左上（左20px、上60px）にある角丸の月画像をクリックすると、6個のショートカットが四分円状に展開します。時間差のある曲線移動、弾む展開、ホバー拡大、画像の傾きと押し込みを組み合わせています。もう一度画像を押すか、ウィジェットにフォーカスした状態でEscを押すと閉じます。アプリ起動後も閉じます。7個以上は下の矢印でページを切り替えます。最初のモニターの左上に表示します。
+
+初期画像は`home/desktop/quickshell/launcher.svg`、初期アプリは同ディレクトリの`launcher-defaults.json`でNix管理します。初回適用時に`~/.config/nocturne/launcher.json`を作成します。このファイルはユーザーが編集でき、再構築でも上書きされません。編集を保存すると自動で読み直します。
+
+例えば画像を`~/Pictures/launcher.png`に保存して、JSONを以下のように編集します（`~`は展開されないため、絶対パスを使います）。画像は中央を正方形に切り取り、角を丸めます。画像を読み込めない場合は初期画像に戻ります。
+
+```json
+{
+  "image": "file:///home/hiroto/Pictures/launcher.png",
+  "apps": [
+    {"name": "Terminal", "desktopId": "kitty"},
+    {"name": "Chrome", "desktopId": "google-chrome"},
+    {"name": "Code", "desktopId": "code"}
+  ]
+}
+```
+
+`apps`に行を追加するとショートカットを追加できます。`desktopId`はインストールしたアプリの`.desktop`ファイル名（拡張子は省略可）です。`~/.local/share/applications`、`/etc/profiles/per-user/hiroto/share/applications`、`/run/current-system/sw/share/applications`等で確認できます。未インストールのアプリは起動しません。JSONの書式が壊れた場合は直前の有効な一覧を保持します。画像ファイル自体を置き換えた場合は、別名にしてJSONのパスを変更すると確実に再読み込みできます。
+
+初期設定へ戻すには`~/.config/nocturne/launcher.json`を削除し、再度`nixos-rebuild switch --flake path:.#nocturne`を実行します。更新後は`systemctl --user restart nocturne-widgets.service`でウィジェットを再起動します。

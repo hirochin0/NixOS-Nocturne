@@ -34,5 +34,15 @@ in pkgs.runCommand "nocturne-quickshell-check" {
     cat "$out/power.log"
     exit 1
   fi
+  substitute ${./arc-launcher.qml} "$TMPDIR/arc-check.qml" --subst-var-by bundle ${bundle}
+  if ! timeout 10s quickshell --path "$TMPDIR/arc-check.qml" --no-color > "$out/arc.log" 2>&1; then
+    cat "$out/arc.log"
+    exit 1
+  fi
+  grep -q NOCTURNE_ARC_CHECK_PASSED "$out/arc.log"
+  if grep -Eq 'ReferenceError|TypeError|Unable to assign|Failed to load configuration' "$out/arc.log"; then
+    cat "$out/arc.log"
+    exit 1
+  fi
   cp -r ${bundle} "$out/config"
 ''

@@ -4,6 +4,16 @@ let
   target = config.wayland.systemd.target;
 in {
   home.packages = [ desktop.quickshell ];
+  # Seed a writable user configuration once; rebuilds preserve user edits.
+  home.activation.nocturneLauncher = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
+    configDir=${lib.escapeShellArg "${config.xdg.configHome}/nocturne"}
+    $DRY_RUN_CMD mkdir -p "$configDir"
+    if [ ! -e "$configDir/launcher.json" ]; then
+      $DRY_RUN_CMD cp ${./quickshell/launcher-defaults.json} "$configDir/launcher.json"
+      $DRY_RUN_CMD chmod u+w "$configDir/launcher.json"
+    fi
+  '';
+
   xdg.configFile."quickshell/nocturne".source = bundle;
   systemd.user.services.nocturne-widgets = {
     Unit = {

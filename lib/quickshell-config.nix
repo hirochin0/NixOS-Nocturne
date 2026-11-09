@@ -24,6 +24,8 @@ in pkgs.runCommand "nocturne-quickshell-config" {
   mkdir -p "$out"
   cp ${../home/desktop/quickshell}/*.qml "$out/"
   cp ${../home/desktop/quickshell}/*.js "$out/"
+  cp ${../home/desktop/quickshell/launcher.svg} "$out/launcher.svg"
+  cp ${../home/desktop/quickshell/launcher-defaults.json} "$out/launcher-defaults.json"
   cp ${palette} "$out/Theme.qml"
   cat > "$out/qmldir" <<'EOF'
   singleton Theme 1.0 Theme.qml
@@ -31,6 +33,8 @@ in pkgs.runCommand "nocturne-quickshell-config" {
   MusicCard 1.0 MusicCard.qml
   PowerMenu 1.0 PowerMenu.qml
   PowerCard 1.0 PowerCard.qml
+  ArcLauncher 1.0 ArcLauncher.qml
+  ArcLauncherCard 1.0 ArcLauncherCard.qml
   EOF
   export HOME="$TMPDIR/home" XDG_CACHE_HOME="$TMPDIR/cache" LANG=C.UTF-8
   mkdir -p "$HOME" "$XDG_CACHE_HOME"

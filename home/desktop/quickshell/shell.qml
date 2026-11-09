@@ -46,5 +46,6 @@ ShellRoot {
             updating: musicWindow.visible
         }
     }
+    ArcLauncher {}
     PowerMenu { id: powerMenu; onDismissed: visible = false }
 }

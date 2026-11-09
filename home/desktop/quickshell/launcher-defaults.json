@@ -1,0 +1,11 @@
+{
+  "image": "",
+  "apps": [
+    {"name": "Terminal", "desktopId": "kitty"},
+    {"name": "Chrome", "desktopId": "google-chrome"},
+    {"name": "Files", "desktopId": "thunar"},
+    {"name": "Code", "desktopId": "code"},
+    {"name": "Discord", "desktopId": "discord"},
+    {"name": "Spotify", "desktopId": "spotify"}
+  ]
+}
