@@ -388,4 +388,4 @@ systemctl --user restart nocturne-widgets.service
 
 アイコン参照は実際のXDGデータディレクトリ、Nixのユーザープロファイル、Flatpakのエクスポート先を起動時と60秒ごとに読み取ります。desktopファイルの`Icon`・`StartupWMClass`・IDとウィンドウのアプリIDを照合し、ユーザーが上書きしたdesktopファイルを優先します。取得候補が読み込めなかった場合は次の候補へ進み、情報が後から読み込まれた場合も再取得します。
 
-ChatGPTのChromeアプリウィンドウ（`chrome-chatgpt.com__-Default`）は`chatgpt.desktop`のStartupWMClassで対応付けます。このdesktopファイルで指定している画像はChromeのアイコンです。ChromeとKittyにはNix管理のPapirus SVGへの直接参照も用意しています。
+ChatGPTのChromeアプリウィンドウ（`chrome-chatgpt.com__-Default`）は`chatgpt.desktop`のStartupWMClassで対応付けます。このdesktopファイルで指定している画像はChromeのアイコンです。アプリ本来の画像（hicolor/pixmaps）を優先し、Papirusは元画像が見つからない場合に使います。

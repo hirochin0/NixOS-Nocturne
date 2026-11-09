@@ -25,4 +25,16 @@ class CatalogTest(unittest.TestCase):
             self.assertEqual(entries[0]["startupClass"], "CustomWindow")
             self.assertEqual(entries[0]["icon"], "custom-logo")
             self.assertEqual(result["icons"]["custom-logo"], str(image))
+    def test_original_icon_beats_earlier_theme(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            theme = root / "user/icons/Papirus/48x48/apps/kitty.svg"
+            native = root / "system/icons/hicolor/256x256/apps/kitty.png"
+            for path in [theme, native]:
+                path.parent.mkdir(parents=True, exist_ok=True)
+                path.write_text("fixture")
+            with patch.dict(os.environ, {"HOME": temp, "XDG_DATA_HOME": str(root / "user"), "XDG_DATA_DIRS": str(root / "system")}):
+                result = module.catalog()
+            self.assertEqual(result["icons"]["kitty"], str(native))
+
 unittest.main()

@@ -203,3 +203,9 @@ XDG_DATA_DIRSに採用dconfパッケージのサービス定義を明示する�
 - 実機で報告されたclassは`chrome-chatgpt.com__-Default`・`google-chrome`・`kitty`。ChatGPTのdesktop設定にはStartupWMClassがなく、IDの照合ができていなかったため、設定と解決用エイリアスを追加した。ChatGPTの既存Icon指定はgoogle-chrome。
 - Chrome/KittyとChatGPTの実機IDについては、存在を確認したPapirusのSVGをNix storeの絶対参照で指定する。一般の参照も、利用可能なローカルファイルをQtテーマ検索より優先する。HyprlandのIPC class/initialClassがある場合はWayland appIdより優先して照合する。
 - QuickShellチェック成功。報告された3つのIDを順にAppIconへ渡し、汎用画像以外のsourceでImage.Readyになることを確認した。既存の再取得・クリック・中央位置テストも成功。実機の表示は適用後の確認が必要。
+
+## アプリ元画像の優先（2026-11-09 JST）
+
+- Papirusへの固定参照を除去。アプリのhicolor/scalable・高解像度画像、pixmapsをテーマ画像より優先する。検索ディレクトリの先頭にPapirusがあっても、別ディレクトリのhicolor元画像を先に選ぶ。
+- AppIconも、全候補名の元画像を探索してからPapirus・Qtテーマへ進む形に変更。QuickShellチェックと、テーマと元画像が同時にある場合の優先順位テストが成功した。
+- ChatGPTのdesktopエントリーは現在Icon=google-chromeのため、元のChromeアイコンが表示対象になる。実機の元画像は適用後に収集する。

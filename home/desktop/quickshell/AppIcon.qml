@@ -10,11 +10,12 @@ Image {
         const sources = [];
         if (iconName.startsWith("/") || iconName.startsWith("file:")) sources.push(iconName);
         else {
-            const pinned = Theme.appIconOverrides[IconLogic.normalize(iconName)];
-            if (pinned) sources.push(pinned);
-            for (const name of IconLogic.names(iconName)) {
+            const names = IconLogic.names(iconName);
+            for (const name of names)
                 if (IconCatalog.userIcons[name]) sources.push(IconCatalog.userIcons[name]);
+            for (const name of names)
                 if (IconCatalog.icons[name]) sources.push(IconCatalog.icons[name]);
+            for (const name of names) {
                 const themed = Quickshell.iconPath(name, true);
                 if (themed) sources.push(themed);
             }
