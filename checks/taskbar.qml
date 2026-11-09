@@ -50,6 +50,13 @@ ShellRoot {
                 if (iconComponent.status !== Component.Ready) throw new Error(iconComponent.errorString());
                 const icon = iconComponent.createObject(bar, {iconName: "no-such-icon-nocturne", width: 28, height: 28});
                 if (String(icon.source).indexOf("application.svg") === -1) throw new Error("Missing icon fallback failed");
+                icon.iconName = "/does-not-exist-nocturne.png";
+                interaction.wait(120);
+                if (String(icon.source).indexOf("application.svg") === -1) throw new Error("Failed path did not recover");
+                icon.iconName = "spotify";
+                interaction.wait(120);
+                if (String(icon.source).indexOf("application.svg") !== -1 || icon.status !== 1)
+                    throw new Error("Valid icon did not replace fallback");
                 icon.destroy();
                 const task = find(bar, "task-code");
                 if (!task) throw new Error("Window button missing");

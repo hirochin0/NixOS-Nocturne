@@ -7,6 +7,7 @@ import Quickshell.Hyprland
 import Quickshell.Services.SystemTray
 import Quickshell.Services.UPower
 import "BatteryLogic.js" as BatteryLogic
+import "IconLogic.js" as IconLogic
 
 Item {
     id: root
@@ -33,9 +34,8 @@ Item {
         else Hyprland.dispatch(Hyprland.usingLua ? 'hl.dsp.focus({ workspace = "' + id + '" })' : "workspace " + id);
     }
     function desktopFor(window) {
-        const id = (window.appId || "").toLowerCase().replace(/\.desktop$/, "");
-        return DesktopEntries.applications.values.find(e => e.id.toLowerCase().replace(/\.desktop$/, "") === id
-            || (e.startupClass || "").toLowerCase() === id);
+        return IconLogic.findEntry(window.appId, IconCatalog.entries)
+            || IconLogic.findEntry(window.appId, DesktopEntries.applications.values);
     }
     readonly property var workspaceIds: {
         const ids = [1, 2, 3, 4, 5];
@@ -109,6 +109,47 @@ Item {
         spacing: 8
         Item { Layout.fillWidth: true }
         Rectangle {
+            Layout.preferredWidth: Math.min(root.windows.length * 36 + 12, Math.max(42, rightGroup.width - statusRow.implicitWidth - 28))
+            Layout.minimumWidth: root.windows.length ? 48 : 0
+            Layout.fillHeight: true
+            visible: root.windows.length > 0
+            radius: 14; color: Qt.alpha(Theme.bg, 0.94); border.color: Theme.elevated
+            Flickable {
+                id: tasks
+                anchors.fill: parent; anchors.margins: 5
+                clip: true; contentWidth: taskRow.implicitWidth; contentHeight: height
+                boundsBehavior: Flickable.StopAtBounds
+                flickableDirection: Flickable.HorizontalFlick
+                Row {
+                    id: taskRow
+                    spacing: 2
+                    Repeater {
+                        model: root.windows
+                        BarButton {
+                            id: task
+                            required property var modelData
+                            objectName: "task-" + modelData.appId
+                            readonly property var desktop: root.desktopFor(modelData)
+                            readonly property var workspace: root.workspaceFor(modelData)
+                            implicitWidth: 34; implicitHeight: 34
+                            hint: modelData.title + (workspace ? " · Workspace " + workspace.name : "")
+                            tint: modelData.activated ? Theme.cyan : Theme.muted
+                            onClicked: root.focusWindow(modelData)
+                            onScrolled: up => tasks.contentX = Math.max(0, Math.min(tasks.contentWidth - tasks.width, tasks.contentX + (up ? -80 : 80)))
+                            background: Rectangle {
+                                radius: 7
+                                color: task.hovered ? Theme.elevated : task.modelData.activated ? Qt.alpha(Theme.cyan, 0.12) : "transparent"
+                            }
+                            contentItem: Item {
+                                AppIcon { anchors.centerIn: parent; width: 28; height: 28; iconName: task.desktop ? task.desktop.icon : task.modelData.appId }
+                                Rectangle { anchors.bottom: parent.bottom; anchors.horizontalCenter: parent.horizontalCenter; width: 12; height: 2; radius: 1; color: Theme.cyan; visible: task.modelData.activated }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        Rectangle {
             Layout.preferredWidth: Math.min(statusRow.implicitWidth + 12, Math.max(0, rightGroup.width - (root.windows.length ? 54 : 0)))
             Layout.minimumWidth: 0
             clip: true
@@ -164,46 +205,6 @@ Item {
                 BarButton { text: "󰐥"; tint: Theme.cyan; hint: "Session"; onClicked: root.action("session") }
             }
         }
-        Rectangle {
-            Layout.preferredWidth: Math.min(root.windows.length * 36 + 12, Math.max(42, rightGroup.width - statusRow.implicitWidth - 28))
-            Layout.minimumWidth: root.windows.length ? 48 : 0
-            Layout.fillHeight: true
-            visible: root.windows.length > 0
-            radius: 14; color: Qt.alpha(Theme.bg, 0.94); border.color: Theme.elevated
-            Flickable {
-                id: tasks
-                anchors.fill: parent; anchors.margins: 5
-                clip: true; contentWidth: taskRow.implicitWidth; contentHeight: height
-                boundsBehavior: Flickable.StopAtBounds
-                flickableDirection: Flickable.HorizontalFlick
-                Row {
-                    id: taskRow
-                    spacing: 2
-                    Repeater {
-                        model: root.windows
-                        BarButton {
-                            id: task
-                            required property var modelData
-                            objectName: "task-" + modelData.appId
-                            readonly property var desktop: root.desktopFor(modelData)
-                            readonly property var workspace: root.workspaceFor(modelData)
-                            implicitWidth: 34; implicitHeight: 34
-                            hint: modelData.title + (workspace ? " · Workspace " + workspace.name : "")
-                            tint: modelData.activated ? Theme.cyan : Theme.muted
-                            onClicked: root.focusWindow(modelData)
-                            onScrolled: up => tasks.contentX = Math.max(0, Math.min(tasks.contentWidth - tasks.width, tasks.contentX + (up ? -80 : 80)))
-                            background: Rectangle {
-                                radius: 7
-                                color: task.hovered ? Theme.elevated : task.modelData.activated ? Qt.alpha(Theme.cyan, 0.12) : "transparent"
-                            }
-                            contentItem: Item {
-                                AppIcon { anchors.centerIn: parent; width: 28; height: 28; iconName: task.desktop ? task.desktop.icon : task.modelData.appId }
-                                Rectangle { anchors.bottom: parent.bottom; anchors.horizontalCenter: parent.horizontalCenter; width: 12; height: 2; radius: 1; color: Theme.cyan; visible: task.modelData.activated }
-                            }
-                        }
-                    }
-                }
-            }
-        }
+
     }
 }

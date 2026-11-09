@@ -1,5 +1,10 @@
 { pkgs, desktop, theme, user }:
 let
+  iconCatalog = pkgs.writeShellApplication {
+    name = "nocturne-icon-catalog";
+    runtimeInputs = [ pkgs.python3 ];
+    text = ''exec python3 ${../home/scripts/icon_catalog.py}'';
+  };
   iconIndex = pkgs.runCommand "nocturne-icon-index" { nativeBuildInputs = [ pkgs.python3 ]; } ''
     python3 - <<'PYINDEX' > "$out"
     import json
@@ -23,6 +28,7 @@ let
       readonly property color green: "#${theme.green}"
       readonly property color yellow: "#${theme.yellow}"
       readonly property string font: ${builtins.toJSON theme.font}
+      readonly property string iconCatalogCommand: "${iconCatalog}/bin/nocturne-icon-catalog"
       readonly property string iconIndexPath: "${iconIndex}"
       readonly property string barCommand: "${barTools}/bin/nocturne-bar"
       readonly property string batteryCommand: "${batteryTools}/bin/nocturne-battery"

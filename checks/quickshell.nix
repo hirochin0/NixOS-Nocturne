@@ -9,6 +9,7 @@ in pkgs.runCommand "nocturne-quickshell-check" {
   for file in ${bundle}/*.qml; do
     qmlformat --normalize "$file" > /dev/null
   done
+  python ${./icon_catalog_test.py} ${../home/scripts/icon_catalog.py} > "$out/icon-catalog.log" 2>&1
   python ${./bar_tools_test.py} ${../home/scripts/bar.py} > "$out/bar-tools.log" 2>&1
   node ${./quickshell-logic.cjs} ${bundle}/Logic.js > "$out/logic.log"
   export XDG_RUNTIME_DIR="$TMPDIR/runtime"
