@@ -7,12 +7,15 @@ import "BranchLogic.js" as BranchLogic
 
 Item {
     id: root
-    implicitWidth: surfaceOpen ? 790 : 120
-    implicitHeight: surfaceOpen ? 590 : 120
+    readonly property int pageSize: BranchLogic.capacity()
+    readonly property real canvasWidth: pageApps.length > 10 ? 1140 : 790
+    readonly property real canvasHeight: pageApps.length > 10 ? 650 : 590
+    implicitWidth: surfaceOpen ? canvasWidth : 120
+    implicitHeight: surfaceOpen ? canvasHeight : 120
     readonly property real originX: tile.x + tile.width / 2
     readonly property real originY: tile.y + tile.height / 2
     property var appEntries: DesktopEntries.applications.values
-    readonly property real layoutScale: Math.min(1, (width - 40) / 750, (height - 40) / 550)
+    readonly property real layoutScale: Math.min(1, (width - 40) / (canvasWidth - 40), (height - 40) / (canvasHeight - 40))
     property int nodeRevision: 0
     readonly property alias tileItem: tile
     readonly property alias pageControls: pagination
@@ -25,8 +28,8 @@ Item {
     property int page: 0
     property var settings: ({})
     readonly property var apps: Array.isArray(settings.apps) ? settings.apps : []
-    readonly property int pages: Math.max(1, Math.ceil(apps.length / 10))
-    readonly property var pageApps: apps.slice(page * 10, page * 10 + 10)
+    readonly property int pages: Math.max(1, Math.ceil(apps.length / pageSize))
+    readonly property var pageApps: apps.slice(page * pageSize, page * pageSize + pageSize)
     property real bloom: opened ? 1 : 0
     Behavior on bloom { NumberAnimation { duration: 460; easing.type: Easing.OutCubic } }
     onOpenedChanged: {

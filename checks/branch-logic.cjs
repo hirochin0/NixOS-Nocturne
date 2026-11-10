@@ -3,15 +3,17 @@ const vm = require('node:vm');
 const assert = require('node:assert/strict');
 const logic = vm.createContext({});
 vm.runInContext(fs.readFileSync(process.argv[2], 'utf8').replace(/^\.pragma library\s*/, ''), logic);
-const apps = JSON.parse(fs.readFileSync(process.argv[3], 'utf8')).apps;
-assert.equal(apps.length, 10);
+const defaults = JSON.parse(fs.readFileSync(process.argv[3], 'utf8')).apps;
+assert.equal(defaults.length, 10);
+assert.equal(logic.capacity(), 21);
+const apps = [...defaults, ...Array.from({length: 11}, (_, i) => ({desktopId: 'extra-' + i}))];
 assert.deepEqual(apps.map((_, index) => logic.parentIndex(apps, index)).filter(parent => parent === -1), [-1, -1, -1]);
 const childCount = new Map();
-for (let i = 0; i < 10; i++) {
+for (let i = 0; i < 21; i++) {
     const parent = logic.parentIndex(apps, i);
     assert.ok(parent < i && parent >= -1);
     childCount.set(parent, (childCount.get(parent) || 0) + 1);
-    assert.ok(logic.depth(apps, i) >= 1 && logic.depth(apps, i) <= 3);
+    assert.ok(logic.depth(apps, i) >= 1 && logic.depth(apps, i) <= 5);
     const parentIndex = logic.parentIndex(apps, i);
     if (parentIndex >= 0) assert.ok(logic.openDelay(apps, i) > logic.openDelay(apps, parentIndex));
     const p = logic.position(i);
@@ -24,4 +26,4 @@ for (let i = 0; i < 10; i++) {
 }
 assert.ok([...childCount].filter(([parent, count]) => parent >= 0 && count >= 2).length >= 3);
 assert.equal(logic.parentIndex([{parent: 99}], 0), -1);
-console.log('10 nodes, acyclic parent graph, multiple branch points and non-overlapping app bounds passed.');
+console.log('21 nodes, acyclic parent graph, multiple branch points and non-overlapping app bounds passed.');
