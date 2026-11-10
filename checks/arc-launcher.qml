@@ -17,8 +17,8 @@ ShellRoot {
             id: verifyOpen; interval: 1400
             onTriggered: {
                 if (!card.surfaceOpen || card.bloom < 0.99) throw new Error("Open animation failed");
-                const rootNode = card.nodeAt(0), child = card.nodeAt(1), grandchild = card.nodeAt(3);
-                if (child.parentNode !== rootNode || grandchild.parentNode !== child || card.nodeAt(9).depth !== 4)
+                const rootNode = card.nodeAt(0), child = card.nodeAt(3), grandchild = card.nodeAt(9);
+                if (child.parentNode !== rootNode || card.nodeAt(1).parentNode || card.nodeAt(2).parentNode || grandchild.depth !== 3)
                     throw new Error("Application branches are not connected to parent nodes");
                 for (let i = 0; i < 10; i++) if (card.nodeAt(i).reveal < 0.99) throw new Error("Branch did not unfold");
                 card.apply('{"image":"","apps":[{"desktopId":"kitty"}]}');

@@ -8,11 +8,11 @@ import "BranchLogic.js" as BranchLogic
 Item {
     id: root
     implicitWidth: surfaceOpen ? 790 : 120
-    implicitHeight: surfaceOpen ? 470 : 120
+    implicitHeight: surfaceOpen ? 590 : 120
     readonly property real originX: tile.x + tile.width / 2
     readonly property real originY: tile.y + tile.height / 2
     property var appEntries: DesktopEntries.applications.values
-    readonly property real layoutScale: Math.min(1, (width - 40) / 750, (height - 40) / 430)
+    readonly property real layoutScale: Math.min(1, (width - 40) / 750, (height - 40) / 550)
     property int nodeRevision: 0
     readonly property alias tileItem: tile
     readonly property alias pageControls: pagination
@@ -88,8 +88,8 @@ Item {
                         const alpha = Math.min(1, Math.max(0, Math.min(next.reveal, parent ? parent.reveal : 1)));
                         ctx.beginPath();
                         const verticalBranch = Math.abs(dx) < 20 && dy > 0;
-                        const startX = source.x + (verticalBranch ? -sourceRadius : sourceRadius);
-                        const startY = source.y;
+                        const startX = parent ? source.x + (verticalBranch ? -sourceRadius : sourceRadius) : source.x + dx / distance * sourceRadius;
+                        const startY = parent ? source.y : source.y + dy / distance * sourceRadius;
                         const endX = next.x - 35;
                         const endY = next.y;
                         ctx.moveTo(startX, startY);
@@ -100,10 +100,11 @@ Item {
                                 startX + (endX - startX) * 0.4, endY, endX, endY);
                         }
                         ctx.strokeStyle = Qt.alpha(Theme.cyan, alpha * 0.12);
-                        ctx.lineWidth = 3;
+                        const branchWidth = Math.max(1, 2.3 - (node.depth - 1) * 0.5);
+                        ctx.lineWidth = branchWidth + 2;
                         ctx.stroke();
                         ctx.strokeStyle = Qt.alpha(Theme.cyan, alpha * 0.7);
-                        ctx.lineWidth = 1.2;
+                        ctx.lineWidth = branchWidth;
                         ctx.stroke();
                     }
                 }
@@ -143,13 +144,13 @@ Item {
                 }
                 SequentialAnimation {
                     id: unfold
-                    PauseAnimation { duration: root.opened ? (satellite.depth - 1) * 155 + (satellite.index % 3) * 30 : Math.max(0, 4 - satellite.depth) * 75 }
+                    PauseAnimation { duration: root.opened ? BranchLogic.openDelay(root.pageApps, satellite.index) : Math.max(0, 4 - satellite.depth) * 75 }
                     NumberAnimation {
                         target: satellite; property: "reveal"
                         to: root.opened ? 1 : 0
-                        duration: root.opened ? 520 : 260
+                        duration: root.opened ? 620 : 300
                         easing.type: root.opened ? Easing.OutBack : Easing.InCubic
-                        easing.overshoot: 1.1
+                        easing.overshoot: 0.4
                     }
                 }
                 Rectangle {

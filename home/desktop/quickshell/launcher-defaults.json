@@ -9,42 +9,42 @@
     {
       "name": "Chrome",
       "desktopId": "google-chrome",
-      "parent": 0
+      "parent": -1
     },
     {
       "name": "Files",
       "desktopId": "thunar",
-      "parent": 0
+      "parent": -1
     },
     {
       "name": "Code",
       "desktopId": "code",
-      "parent": 1
+      "parent": 0
     },
     {
       "name": "Discord",
       "desktopId": "discord",
-      "parent": 1
+      "parent": 0
     },
     {
       "name": "Spotify",
       "desktopId": "spotify",
-      "parent": 2
+      "parent": 1
     },
     {
       "name": "Firefox",
       "desktopId": "firefox",
-      "parent": 2
+      "parent": 1
     },
     {
       "name": "Network",
       "desktopId": "nm-connection-editor",
-      "parent": 3
+      "parent": 2
     },
     {
       "name": "Bluetooth",
       "desktopId": "blueman-manager",
-      "parent": 4
+      "parent": 2
     },
     {
       "name": "ChatGPT",

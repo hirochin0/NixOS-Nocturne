@@ -5,13 +5,15 @@ const logic = vm.createContext({});
 vm.runInContext(fs.readFileSync(process.argv[2], 'utf8').replace(/^\.pragma library\s*/, ''), logic);
 const apps = JSON.parse(fs.readFileSync(process.argv[3], 'utf8')).apps;
 assert.equal(apps.length, 10);
-assert.equal(logic.parentIndex(apps, 0), -1);
+assert.deepEqual(apps.map((_, index) => logic.parentIndex(apps, index)).filter(parent => parent === -1), [-1, -1, -1]);
 const childCount = new Map();
 for (let i = 0; i < 10; i++) {
     const parent = logic.parentIndex(apps, i);
     assert.ok(parent < i && parent >= -1);
     childCount.set(parent, (childCount.get(parent) || 0) + 1);
-    assert.ok(logic.depth(apps, i) >= 1 && logic.depth(apps, i) <= 4);
+    assert.ok(logic.depth(apps, i) >= 1 && logic.depth(apps, i) <= 3);
+    const parentIndex = logic.parentIndex(apps, i);
+    if (parentIndex >= 0) assert.ok(logic.openDelay(apps, i) > logic.openDelay(apps, parentIndex));
     const p = logic.position(i);
     for (let j = 0; j < i; j++) {
         const other = logic.position(j);

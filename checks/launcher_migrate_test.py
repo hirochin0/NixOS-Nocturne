@@ -23,6 +23,16 @@ class MigrationTest(unittest.TestCase):
             self.assertEqual(len(result["apps"]), 10)
             self.assertFalse(module.migrate(path, defaults))
 
+    def test_previous_single_root_tree_upgrades(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "launcher.json"
+            old_parents = [-1, 0, 0, 1, 1, 2, 2, 3, 4, 5]
+            old_apps = [dict(app, parent=parent) for app, parent in zip(new["apps"], old_parents)]
+            path.write_text(json.dumps({"image": "custom.png", "apps": old_apps}))
+            self.assertTrue(module.migrate(path, defaults))
+            self.assertEqual(json.loads(path.read_text())["apps"], new["apps"])
+            self.assertEqual(json.loads(path.read_text())["image"], "custom.png")
+
     def test_custom_invalid_and_symlink_configs_are_preserved(self):
         with tempfile.TemporaryDirectory() as tmp:
             path = Path(tmp) / "launcher.json"

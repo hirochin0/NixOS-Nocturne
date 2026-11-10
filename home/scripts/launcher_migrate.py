@@ -1,4 +1,4 @@
-"""Extend only the untouched six-app default list, preserving user image/settings."""
+"""Upgrade untouched launcher defaults, preserving user image/settings."""
 import json
 import os
 from pathlib import Path
@@ -14,7 +14,9 @@ def migrate(current, defaults):
         old = json.loads(current.read_text())
         new = json.loads(defaults.read_text())
         legacy = [{"name": app["name"], "desktopId": app["desktopId"]} for app in new["apps"][:6]]
-        if old.get("apps") != legacy:
+        previous_parents = [-1, 0, 0, 1, 1, 2, 2, 3, 4, 5]
+        previous_tree = [dict(app, parent=parent) for app, parent in zip(new["apps"], previous_parents)]
+        if old.get("apps") not in (legacy, previous_tree):
             return False
         old["apps"] = new["apps"]
         with tempfile.NamedTemporaryFile(mode="w", dir=current.parent, delete=False) as output:

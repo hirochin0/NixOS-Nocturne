@@ -7,7 +7,7 @@ PanelWindow {
     anchors { left: true; top: true }
     margins { left: 20; top: 60 }
     implicitWidth: Math.min(card.implicitWidth, screen ? screen.width - 40 : 790)
-    implicitHeight: Math.min(card.implicitHeight, screen ? screen.height - 100 : 470)
+    implicitHeight: Math.min(card.implicitHeight, screen ? screen.height - 100 : 590)
     color: "transparent"
     exclusionMode: ExclusionMode.Ignore
     WlrLayershell.layer: WlrLayer.Bottom
