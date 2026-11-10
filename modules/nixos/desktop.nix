@@ -1,5 +1,5 @@
 { config, lib, pkgs, user, desktop, ... }: {
-  imports = [ ./power.nix ./login.nix ];
+  imports = [ ./power.nix ./login.nix ./gaming.nix ];
   nix.settings.experimental-features = [ "nix-command" "flakes" ];
   nix.settings.extra-substituters = [ "https://hyprland.cachix.org" ];
   nix.settings.extra-trusted-public-keys = [ "hyprland.cachix.org-1:a7pgxzMz7+chwVL3/pzj6jIBMioiJM7ypFP8PwtkuGc=" ];
@@ -14,7 +14,7 @@
   hardware.graphics = {
     enable = true;
     package = desktop.mesa;
-    # 既存環境でenable32Bitが有効なら同じMesa集合に揃える。
+    # Steamを含む32bitアプリも同じMesa集合に揃える。
     package32 = lib.mkIf config.hardware.graphics.enable32Bit desktop.mesa32;
   };
   security.polkit.enable = true;

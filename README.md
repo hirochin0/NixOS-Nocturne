@@ -410,3 +410,18 @@ Hyprlandのウィンドウ一覧は`HyprlandToplevel`として扱い、`lastIpcO
 
 
 ORBITの各アプリには`"parent": 0`のように親を指定できます。番号はページ内の0〜20のアプリ番号、`-1`は月です。親は必ず自分より前の番号にします。省略時は初期の分岐構成を使います。ノード位置と既定の親は`BranchLogic.js`で調整できます。
+
+## Steamとゲーム
+
+`modules/nixos/gaming.nix`でSteamを有効にします。SteamはデスクトップのMesaと同じパッケージ集合を使い、32bitグラフィックも同じMesaへ揃えます。NixOSのSteamモジュールで32bit音声とSteam対応デバイスのudev設定も有効になります。
+
+更新・適用後、ランチャーでSteamを検索するか、端末で`steam`を実行してログインしてください。ライブラリからゲームをインストールして起動できます。Windows用ゲームでは、必要に応じてゲームの「プロパティ」→「互換性」→「特定のSteam Play互換ツールの使用を強制する」でSteamが提供するProton（例: Proton Experimental）を選びます。
+
+```bash
+cd ~/NixOS-Nocturne-0571
+git pull --ff-only
+sudo nixos-rebuild switch --flake path:.#nocturne
+steam
+```
+
+デスクトップ上のゲームプレイを対象とし、ゲームのインストール先はSteamの「設定」→「ストレージ」で指定します。Steam Remote Play・ローカル転送・専用サーバー用のファイアウォール開放は標準では有効にしていません。

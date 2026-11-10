@@ -28,6 +28,13 @@ let
 in
 assert lib.assertMsg (failures == []) (lib.concatMapStringsSep "\n" (a: a.message) failures);
 assert cfg.programs.hyprland.withUWSM;
+assert cfg.programs.steam.enable;
+assert cfg.programs.steam.package.version == desktop.steam.version;
+assert cfg.hardware.graphics.enable32Bit;
+assert cfg.hardware.graphics.package32.outPath == desktop.mesa32.outPath;
+assert cfg.services.pipewire.alsa.support32Bit;
+assert cfg.hardware.steam-hardware.enable;
+assert lib.any (p: p.outPath == cfg.programs.steam.package.outPath) cfg.environment.systemPackages;
 assert cfg.programs.hyprland.package.version == desktop.hyprland.version;
 assert hm.wayland.systemd.target == "wayland-session@hyprland.desktop.target";
 assert hm.dconf.enable;
@@ -69,6 +76,7 @@ system.pkgs.writeText "nocturne-system-contract.json" (builtins.toJSON {
   kitty = hm.programs.kitty.package.version;
   applications = {
     gcc = system.pkgs.gcc.version;
+    steam = cfg.programs.steam.package.version;
     vscode = hm.programs.vscode.package.version;
     chrome = desktop.google-chrome.version;
     codex = desktop.codex.version;
