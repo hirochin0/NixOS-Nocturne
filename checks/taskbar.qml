@@ -2,6 +2,7 @@ import QtQuick
 import QtTest
 import Quickshell
 import "file://@bundle@"
+import "file://@bundle@/FocusLogic.js" as FocusLogic
 ShellRoot {
     id: testRoot
     property var calls: []
@@ -91,11 +92,19 @@ ShellRoot {
                 const task = find(bar, "task-code");
                 if (!task) throw new Error("Window button missing");
                 interaction.mouseClick(task, task.width / 2, task.height / 2);
-                if (JSON.stringify(testRoot.calls) !== '["workspace","window"]') throw new Error("Focus did not switch workspace first");
+                if (testRoot.calls.length !== 1 || testRoot.calls[0] !== "dispatch:" + FocusLogic.request("123abc", false))
+                    throw new Error("Addressed window did not use compositor dispatch even with a Wayland handle");
+                if (FocusLogic.request("0xabcdef", true) !== 'hl.dsp.focus({ window = "address:0xabcdef" })')
+                    throw new Error("Lua dispatcher syntax incorrect");
+                for (const invalid of ["", "0", "0x0", "bad; command", "../window"])
+                    if (FocusLogic.request(invalid, true)) throw new Error("Invalid address accepted");
                 testRoot.calls = [];
                 bar.focusWindow({workspace: testWorkspace, wayland: null, address: "abcdef"});
-                if (testRoot.calls[0] !== "workspace" || !testRoot.calls[1].includes("address:0xabcdef"))
+                if (testRoot.calls.length !== 1 || !testRoot.calls[0].includes("address:0xabcdef"))
                     throw new Error("IPC-only window focus failed");
+                testRoot.calls = [];
+                bar.focusWindow({workspace: testWorkspace, wayland: waylandWindow, address: ""});
+                if (JSON.stringify(testRoot.calls) !== '["workspace","window"]') throw new Error("Unmapped window fallback failed");
                 bar.windows = [];
                 if (bar.windows.length !== 0) throw new Error("Closed window not removed");
                 bar.workspaces = [];

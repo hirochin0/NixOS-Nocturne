@@ -8,6 +8,7 @@ import Quickshell.Services.SystemTray
 import Quickshell.Services.UPower
 import "BatteryLogic.js" as BatteryLogic
 import "IconLogic.js" as IconLogic
+import "FocusLogic.js" as FocusLogic
 
 Item {
     id: root
@@ -25,16 +26,18 @@ Item {
     function workspaceFor(window) { return window.workspace || null; }
     function dispatch(request) { Hyprland.dispatch(request); }
     function focusWindow(window) {
+        // A compositor address selects the exact window, including windows on
+        // other workspaces. Avoid the serial/activation rules of foreign-toplevel.
+        const request = FocusLogic.request(window.address, Hyprland.usingLua);
+        if (request) {
+            root.dispatch(request);
+            return;
+        }
+        // A newly mapped window can temporarily lack its Hyprland address.
         const workspace = workspaceFor(window);
         if (workspace) workspace.activate();
         if (window.wayland) window.wayland.activate();
-        else {
-            const address = String(window.address || "").replace(/^0x/, "");
-            if (/^[0-9a-f]+$/i.test(address)) {
-                const selector = "address:0x" + address;
-                root.dispatch(Hyprland.usingLua ? 'hl.dsp.focus({ window = "' + selector + '" })' : "focuswindow " + selector);
-            }
-        }
+        else console.warn("Taskbar: window has no address or activation handle");
     }
     function switchWorkspace(id) {
         const workspace = workspaces.find(w => w.id === id);

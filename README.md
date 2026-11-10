@@ -390,4 +390,4 @@ systemctl --user restart nocturne-widgets.service
 
 ChatGPTのChromeアプリウィンドウ（`chrome-chatgpt.com__-Default`）は`chatgpt.desktop`のStartupWMClassで対応付けます。このdesktopファイルで指定している画像はChromeのアイコンです。アプリ本来の画像（hicolor/pixmaps）を優先し、Papirusは元画像が見つからない場合に使います。
 
-Hyprlandのウィンドウ一覧は`HyprlandToplevel`として扱い、`lastIpcObject.class`からアプリを特定します。空のアプリIDはdesktopエントリーへ一致させません。クリック時はそのオブジェクトの`workspace`へ移動し、`wayland`ハンドル、またはウィンドウアドレスへのHyprland dispatchでフォーカスします。
+Hyprlandのウィンドウ一覧は`HyprlandToplevel`として扱い、`lastIpcObject.class`からアプリを特定します。空のアプリIDはdesktopエントリーへ一致させません。クリック時はウィンドウアドレスを指定したHyprland dispatchを優先し、対象ウィンドウとワークスペースへ直接フォーカスします。アドレスがまだない新規ウィンドウだけ、workspace移動とWaylandハンドルのactivateへフォールバックします。

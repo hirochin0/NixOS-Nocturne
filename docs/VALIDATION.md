@@ -216,3 +216,9 @@ XDG_DATA_DIRSに採用dconfパッケージのサービス定義を明示する�
 - class取得を要素自身のlastIpcObject.class/initialClassへ、ワークスペース取得を要素自身のworkspaceへ変更。フォーカスはwaylandハンドル、なければaddressに対するdispatchを利用する。
 - 空IDの名前照合を禁止し、データ未取得時に無関係なdesktopエントリー（Files等）を選ばないようにした。
 - 実際のHyprlandToplevelと同じ公開プロパティ構造（appId/activateなし）へテストを修正し、実機で報告された3つのclassの取得・desktop選択、空ID非一致、ワークスペース→Waylandフォーカス、アドレスによるフォーカスを検証。QuickShellチェック全体のビルド成功。実機での表示は適用後に確認する。
+
+## アプリ一覧クリック時のフォーカス（2026-11-10 JST）
+
+- 従来はWaylandハンドルがある場合にactivate()を選び、アドレスへのHyprland dispatchを呼ばなかった。フォーカス要求の制約や別経路のワークスペース移動との競合を避けるため、アドレスがある場合は必ず対象アドレスへの単一のHyprland dispatchを使う。アドレス未取得時のみ従来のworkspace/Waylandへフォールバックする。
+- FocusLogic.jsでLua/legacyの命令を生成。実際のBarContent.qmlのfocusWindow関数を読み込むNodeテストで、Waylandハンドルの有無に関係なく直接dispatchを使うこと、Lua/legacy両形式、アドレス未取得時のフォールバックを確認した。単体テスト成功、Nixのquickshellチェックderivation評価成功。
+- GUI全体のチェックは依存取得中にHTTP 429が発生し、ビルドプロセスも終了137となったため完了していない。実機上のHyprlandによるワークスペース切替は適用後に確認する。

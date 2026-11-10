@@ -11,6 +11,7 @@ in pkgs.runCommand "nocturne-quickshell-check" {
   done
   python ${./icon_catalog_test.py} ${../home/scripts/icon_catalog.py} > "$out/icon-catalog.log" 2>&1
   python ${./bar_tools_test.py} ${../home/scripts/bar.py} > "$out/bar-tools.log" 2>&1
+  node ${./focus-logic.cjs} ${bundle}/FocusLogic.js ${bundle}/BarContent.qml > "$out/focus.log"
   node ${./quickshell-logic.cjs} ${bundle}/Logic.js > "$out/logic.log"
   export XDG_RUNTIME_DIR="$TMPDIR/runtime"
   export QT_QPA_PLATFORM=offscreen QT_QUICK_BACKEND=software QT_QUICK_CONTROLS_STYLE=Basic
