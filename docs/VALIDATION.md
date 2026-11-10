@@ -222,3 +222,11 @@ XDG_DATA_DIRSに採用dconfパッケージのサービス定義を明示する�
 - 従来はWaylandハンドルがある場合にactivate()を選び、アドレスへのHyprland dispatchを呼ばなかった。フォーカス要求の制約や別経路のワークスペース移動との競合を避けるため、アドレスがある場合は必ず対象アドレスへの単一のHyprland dispatchを使う。アドレス未取得時のみ従来のworkspace/Waylandへフォールバックする。
 - FocusLogic.jsでLua/legacyの命令を生成。実際のBarContent.qmlのfocusWindow関数を読み込むNodeテストで、Waylandハンドルの有無に関係なく直接dispatchを使うこと、Lua/legacy両形式、アドレス未取得時のフォールバックを確認した。単体テスト成功、Nixのquickshellチェックderivation評価成功。
 - GUI全体のチェックは依存取得中にHTTP 429が発生し、ビルドプロセスも終了137となったため完了していない。実機上のHyprlandによるワークスペース切替は適用後に確認する。
+
+## ガラス風時計・丸いタスクバー（2026-11-10 JST）
+
+- 時計をBottomレイヤーの画面中央・高さ37％付近へ追加。Nunito variable fontのwght軸を明示し、数字900・バー800の丸い太字を使用する。タスクバーの項目順・中央固定を維持して角丸をカプセル形へ変更し、左端ロゴを32pxにした。
+- 数字ごとの距離場、ばねによる変位・伸縮・傾き、壁紙サンプルのずらしとぼかし、マスク/ハイライトを実装。英語の日付と日替わりの短いオリジナル英文を追加した。
+- 実際のNunitoフォントを読み込んだQt Quick（PySide6）のテストで、16:42の文字、英文、実マウス移動によるHoverHandlerの発火、数字の変形、離脱後の復帰が成功。ソフトウェア描画と仮想Xサーバー上のOpenGL/llvmpipe描画で確認し、壁紙入りのガラスマスクを描画して目視確認した。検証用Python/Xサーバーは実機設定に含めない。
+- Nodeで日替わり英文の同日安定性・月内の選択範囲・変位の上限を確認し、既存のウィンドウフォーカス単体テストも成功。Nix system-contract derivation評価も成功。Quickshell側の時計操作テストをchecksに追加したが、この環境ではQuickshell全体のビルドを再実行していない。
+- 実機Waylandでの配置・AMD GPUによる描画・Nerd FontのNixロゴは適用後に確認する。

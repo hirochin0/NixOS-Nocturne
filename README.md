@@ -391,3 +391,15 @@ systemctl --user restart nocturne-widgets.service
 ChatGPTのChromeアプリウィンドウ（`chrome-chatgpt.com__-Default`）は`chatgpt.desktop`のStartupWMClassで対応付けます。このdesktopファイルで指定している画像はChromeのアイコンです。アプリ本来の画像（hicolor/pixmaps）を優先し、Papirusは元画像が見つからない場合に使います。
 
 Hyprlandのウィンドウ一覧は`HyprlandToplevel`として扱い、`lastIpcObject.class`からアプリを特定します。空のアプリIDはdesktopエントリーへ一致させません。クリック時はウィンドウアドレスを指定したHyprland dispatchを優先し、対象ウィンドウとワークスペースへ直接フォーカスします。アドレスがまだない新規ウィンドウだけ、workspace移動とWaylandハンドルのactivateへフォールバックします。
+
+## Liquid Glass風デスクトップ時計
+
+デスクトップの中央、画面上端から約37％の位置に大きな24時間表示の時計を配置します。通常のアプリウィンドウが時計より手前になります。Nunitoの丸い太字、壁紙を取り込んだ数字のマスク、半透明グラデーションと縁の光を組み合わせたガラス風の描画です。デスクトップの他アプリ画面をキャプチャする仕組みではありません。
+
+時計の周囲にカーソルを近づけると、各数字が近さに応じて引き寄せられ、横に伸びて縦にわずかに縮みます。カーソルを離すとばねの動きで復帰します。壁紙の反射も少しずらして屈折感を付けています。壁紙ツールで保存する`~/.local/state/nocturne/wallpaper.json`を監視し、画像変更にも追従します。
+
+上に英語の日付、下に小さな英語の一言を表示します。一言は内蔵の短いオリジナル文から日付で選び、同じ日には再起動しても同じ文を表示します。ネット接続は不要です。`ClockLogic.js`の`sayings`配列を編集すると文章を追加できます。
+
+時計はSpotifyカードと同じ出力選択（内蔵画面優先、または`user.nix`の`musicWidgetOutput`）を使います。位置・サイズは`ClockWindow.qml`、時計と動きは`GlassClock.qml`・`GlassDigit.qml`で管理します。ソフトウェア描画環境では、ガラスのマスクを省略した読みやすい文字表示へ切り替わります。
+
+タスクバーもNunitoの太字とカプセル形へ変更しました。日付の中央固定、アプリ一覧と操作部の順序を保ち、左端のNixロゴだけ32pxに拡大しています。字体は`BarButton.qml`、全体のスタイルは`BarContent.qml`で調整できます。

@@ -3,6 +3,9 @@ import QtQuick.Controls
 
 Button {
     id: control
+    property int labelSize: 13
+    property string labelFont: Theme.roundFont
+    property int labelWeight: Font.Bold
     property string hint: ""
     property color tint: Theme.text
     signal secondaryClicked()
@@ -16,12 +19,12 @@ Button {
         id: label
         text: control.text
         color: control.tint
-        font { family: Theme.font; pixelSize: 13 }
+        font { family: control.labelFont; pixelSize: control.labelSize; weight: control.labelWeight; variableAxes: ({"wght": control.labelWeight === Font.Normal ? 400 : 800}) }
         horizontalAlignment: Text.AlignHCenter
         verticalAlignment: Text.AlignVCenter
     }
     background: Rectangle {
-        radius: 9
+        radius: height / 2
         color: control.down ? Qt.alpha(Theme.cyan, 0.2) : control.hovered ? Theme.elevated : "transparent"
         Behavior on color { ColorAnimation { duration: 120 } }
     }

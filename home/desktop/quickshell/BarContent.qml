@@ -85,11 +85,11 @@ Item {
         Rectangle {
             Layout.preferredWidth: leftRow.implicitWidth + 12
             Layout.fillHeight: true
-            radius: 14; color: Qt.alpha(Theme.bg, 0.94); border.color: Theme.elevated
+            radius: height / 2; color: Qt.alpha(Theme.bg, 0.94); border.color: Theme.elevated
             Row {
                 id: leftRow
                 anchors.centerIn: parent; spacing: 2
-                BarButton { text: "󱄅"; tint: Theme.cyan; hint: "Applications"; onClicked: root.action("launcher") }
+                BarButton { labelSize: 32; labelFont: Theme.font; labelWeight: Font.Normal; implicitWidth: 52; text: "󱄅"; tint: Theme.cyan; hint: "Applications"; onClicked: root.action("launcher") }
                 Repeater {
                     model: root.workspaceIds
                     BarButton {
@@ -111,7 +111,7 @@ Item {
         anchors.horizontalCenter: parent.horizontalCenter
         height: parent.height
         width: clock.implicitWidth + 20
-        radius: 14; color: Qt.alpha(Theme.bg, 0.94); border.color: Theme.elevated
+        radius: height / 2; color: Qt.alpha(Theme.bg, 0.94); border.color: Theme.elevated
         BarButton {
             id: clock
             anchors.fill: parent
@@ -129,7 +129,7 @@ Item {
             Layout.minimumWidth: root.windows.length ? 48 : 0
             Layout.fillHeight: true
             visible: root.windows.length > 0
-            radius: 14; color: Qt.alpha(Theme.bg, 0.94); border.color: Theme.elevated
+            radius: height / 2; color: Qt.alpha(Theme.bg, 0.94); border.color: Theme.elevated
             Flickable {
                 id: tasks
                 anchors.fill: parent; anchors.margins: 5
@@ -153,7 +153,7 @@ Item {
                             onClicked: root.focusWindow(modelData)
                             onScrolled: up => tasks.contentX = Math.max(0, Math.min(tasks.contentWidth - tasks.width, tasks.contentX + (up ? -80 : 80)))
                             background: Rectangle {
-                                radius: 7
+                                radius: height / 2
                                 color: task.hovered ? Theme.elevated : task.modelData.activated ? Qt.alpha(Theme.cyan, 0.12) : "transparent"
                             }
                             contentItem: Item {
@@ -170,7 +170,7 @@ Item {
             Layout.minimumWidth: 0
             clip: true
             Layout.fillHeight: true
-            radius: 14; color: Qt.alpha(Theme.bg, 0.94); border.color: Theme.elevated
+            radius: height / 2; color: Qt.alpha(Theme.bg, 0.94); border.color: Theme.elevated
             Row {
                 id: statusRow
                 anchors.centerIn: parent; spacing: 1
@@ -201,7 +201,7 @@ Item {
                             Rectangle { x: 3; y: 3; height: 8; width: 21 * battery.charge; radius: 1; color: root.device && root.device.state === UPowerDeviceState.Charging ? Theme.green : battery.charge < 0.15 ? "#f38ba8" : Theme.cyan }
                             Rectangle { x: 27; y: 4; width: 2; height: 6; radius: 1; color: Theme.muted }
                         }
-                        Text { visible: root.showPercentage; text: Math.round(battery.charge * 100) + "%"; color: Theme.text; font { family: Theme.font; pixelSize: 12 } }
+                        Text { visible: root.showPercentage; text: Math.round(battery.charge * 100) + "%"; color: Theme.text; font { family: Theme.roundFont; pixelSize: 13; weight: Font.Bold; variableAxes: ({"wght": 800}) } }
                     }
                 }
                 Repeater {

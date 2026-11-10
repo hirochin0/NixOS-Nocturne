@@ -40,7 +40,7 @@
     extraGroups = [ "wheel" "networkmanager" "video" "audio" ];
     shell = pkgs.fish;
   };
-  fonts.packages = with pkgs; [ nerd-fonts.jetbrains-mono noto-fonts-cjk-sans noto-fonts-color-emoji ];
+  fonts.packages = with pkgs; [ nunito nerd-fonts.jetbrains-mono noto-fonts-cjk-sans noto-fonts-color-emoji ];
   environment.systemPackages = with pkgs; [ git ];
   assertions = [{
     assertion = lib.versionAtLeast config.programs.hyprland.package.version "0.57.1"

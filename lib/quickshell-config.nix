@@ -27,6 +27,11 @@ let
       readonly property color cyan: "#${theme.cyan}"
       readonly property color green: "#${theme.green}"
       readonly property color yellow: "#${theme.yellow}"
+      property FontLoader roundedFont: FontLoader {
+        source: "${pkgs.nunito}/share/fonts/truetype/Nunito/Nunito[wght].ttf"
+      }
+      readonly property string wallpaperPath: "${theme.wallpaper}"
+      readonly property string roundFont: roundedFont.name || "Nunito"
       readonly property string font: ${builtins.toJSON theme.font}
       readonly property string iconCatalogCommand: "${iconCatalog}/bin/nocturne-icon-catalog"
       readonly property string iconIndexPath: "${iconIndex}"
@@ -52,6 +57,9 @@ in pkgs.runCommand "nocturne-quickshell-config" {
   PowerMenu 1.0 PowerMenu.qml
   PowerCard 1.0 PowerCard.qml
   singleton IconCatalog 1.0 IconCatalog.qml
+  GlassDigit 1.0 GlassDigit.qml
+  GlassClock 1.0 GlassClock.qml
+  ClockWindow 1.0 ClockWindow.qml
   AppIcon 1.0 AppIcon.qml
   Taskbar 1.0 Taskbar.qml
   BarContent 1.0 BarContent.qml

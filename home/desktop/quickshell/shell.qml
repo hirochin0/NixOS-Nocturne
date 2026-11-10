@@ -57,6 +57,7 @@ ShellRoot {
             }
         }
     }
+    ClockWindow { screen: root.musicScreen }
     ArcLauncher {}
     PowerMenu { id: powerMenu; onDismissed: visible = false }
 }

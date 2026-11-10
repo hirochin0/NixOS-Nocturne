@@ -11,6 +11,7 @@ in pkgs.runCommand "nocturne-quickshell-check" {
   done
   python ${./icon_catalog_test.py} ${../home/scripts/icon_catalog.py} > "$out/icon-catalog.log" 2>&1
   python ${./bar_tools_test.py} ${../home/scripts/bar.py} > "$out/bar-tools.log" 2>&1
+  node ${./clock-logic.cjs} ${bundle}/ClockLogic.js > "$out/clock-logic.log"
   node ${./focus-logic.cjs} ${bundle}/FocusLogic.js ${bundle}/BarContent.qml > "$out/focus.log"
   node ${./quickshell-logic.cjs} ${bundle}/Logic.js > "$out/logic.log"
   export XDG_RUNTIME_DIR="$TMPDIR/runtime"
@@ -55,6 +56,16 @@ in pkgs.runCommand "nocturne-quickshell-check" {
   grep -q NOCTURNE_TASKBAR_CHECK_PASSED "$out/taskbar.log"
   if grep -Eq 'ReferenceError|TypeError|Unable to assign|Failed to load configuration' "$out/taskbar.log"; then
     cat "$out/taskbar.log"
+    exit 1
+  fi
+  substitute ${./glass-clock.qml} "$TMPDIR/clock-check.qml" --subst-var-by bundle ${bundle}
+  if ! timeout 10s quickshell --path "$TMPDIR/clock-check.qml" --no-color > "$out/clock.log" 2>&1; then
+    cat "$out/clock.log"
+    exit 1
+  fi
+  grep -q NOCTURNE_CLOCK_CHECK_PASSED "$out/clock.log"
+  if grep -Eq 'ReferenceError|TypeError|Unable to assign|Failed to load configuration' "$out/clock.log"; then
+    cat "$out/clock.log"
     exit 1
   fi
   cp -r ${bundle} "$out/config"
