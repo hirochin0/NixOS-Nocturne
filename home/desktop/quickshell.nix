@@ -11,6 +11,8 @@ in {
     if [ ! -e "$configDir/launcher.json" ]; then
       $DRY_RUN_CMD cp ${./quickshell/launcher-defaults.json} "$configDir/launcher.json"
       $DRY_RUN_CMD chmod u+w "$configDir/launcher.json"
+    else
+      $DRY_RUN_CMD ${pkgs.python3}/bin/python ${../scripts/launcher_migrate.py} "$configDir/launcher.json" ${./quickshell/launcher-defaults.json}
     fi
   '';
 

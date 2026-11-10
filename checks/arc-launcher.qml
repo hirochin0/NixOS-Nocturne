@@ -3,20 +3,24 @@ import Quickshell
 import "file://@bundle@"
 ShellRoot {
     FloatingWindow {
-        implicitWidth: 352; implicitHeight: 352
+        implicitWidth: 790; implicitHeight: 470
         ArcLauncherCard { id: card; anchors.fill: parent }
         Timer {
             interval: 850; running: true
             onTriggered: {
-                if (card.apps.length !== 6) throw new Error("Default app list not loaded");
+                if (card.apps.length !== 10) throw new Error("Default app list not loaded");
                 card.opened = true;
                 verifyOpen.start();
             }
         }
         Timer {
-            id: verifyOpen; interval: 850
+            id: verifyOpen; interval: 1400
             onTriggered: {
                 if (!card.surfaceOpen || card.bloom < 0.99) throw new Error("Open animation failed");
+                const rootNode = card.nodeAt(0), child = card.nodeAt(1), grandchild = card.nodeAt(3);
+                if (child.parentNode !== rootNode || grandchild.parentNode !== child || card.nodeAt(9).depth !== 4)
+                    throw new Error("Application branches are not connected to parent nodes");
+                for (let i = 0; i < 10; i++) if (card.nodeAt(i).reveal < 0.99) throw new Error("Branch did not unfold");
                 card.apply('{"image":"","apps":[{"desktopId":"kitty"}]}');
                 if (card.apps.length !== 1) throw new Error("App configuration failed");
                 card.apply('bad json');

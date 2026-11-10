@@ -1,11 +1,55 @@
 {
   "image": "",
   "apps": [
-    {"name": "Terminal", "desktopId": "kitty"},
-    {"name": "Chrome", "desktopId": "google-chrome"},
-    {"name": "Files", "desktopId": "thunar"},
-    {"name": "Code", "desktopId": "code"},
-    {"name": "Discord", "desktopId": "discord"},
-    {"name": "Spotify", "desktopId": "spotify"}
+    {
+      "name": "Terminal",
+      "desktopId": "kitty",
+      "parent": -1
+    },
+    {
+      "name": "Chrome",
+      "desktopId": "google-chrome",
+      "parent": 0
+    },
+    {
+      "name": "Files",
+      "desktopId": "thunar",
+      "parent": 0
+    },
+    {
+      "name": "Code",
+      "desktopId": "code",
+      "parent": 1
+    },
+    {
+      "name": "Discord",
+      "desktopId": "discord",
+      "parent": 1
+    },
+    {
+      "name": "Spotify",
+      "desktopId": "spotify",
+      "parent": 2
+    },
+    {
+      "name": "Firefox",
+      "desktopId": "firefox",
+      "parent": 2
+    },
+    {
+      "name": "Network",
+      "desktopId": "nm-connection-editor",
+      "parent": 3
+    },
+    {
+      "name": "Bluetooth",
+      "desktopId": "blueman-manager",
+      "parent": 4
+    },
+    {
+      "name": "ChatGPT",
+      "desktopId": "chatgpt",
+      "parent": 5
+    }
   ]
 }

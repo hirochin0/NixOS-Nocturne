@@ -6,8 +6,8 @@ PanelWindow {
     screen: Quickshell.screens[0] ?? null
     anchors { left: true; top: true }
     margins { left: 20; top: 60 }
-    implicitWidth: card.implicitWidth
-    implicitHeight: card.implicitHeight
+    implicitWidth: Math.min(card.implicitWidth, screen ? screen.width - 40 : 790)
+    implicitHeight: Math.min(card.implicitHeight, screen ? screen.height - 100 : 470)
     color: "transparent"
     exclusionMode: ExclusionMode.Ignore
     WlrLayershell.layer: WlrLayer.Bottom
@@ -21,6 +21,10 @@ PanelWindow {
         Region { item: card.opened ? card.nodeAt(3) : null }
         Region { item: card.opened ? card.nodeAt(4) : null }
         Region { item: card.opened ? card.nodeAt(5) : null }
+        Region { item: card.opened ? card.nodeAt(6) : null }
+        Region { item: card.opened ? card.nodeAt(7) : null }
+        Region { item: card.opened ? card.nodeAt(8) : null }
+        Region { item: card.opened ? card.nodeAt(9) : null }
         Region { item: card.opened && card.pages > 1 ? card.pageControls : null }
     }
     ArcLauncherCard { id: card; anchors.fill: parent }

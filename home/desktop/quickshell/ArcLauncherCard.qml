@@ -3,27 +3,30 @@ import QtQuick.Controls
 import QtQuick.Effects
 import Quickshell
 import Quickshell.Io
+import "BranchLogic.js" as BranchLogic
 
 Item {
     id: root
-    implicitWidth: surfaceOpen ? 416 : 120
-    implicitHeight: surfaceOpen ? 416 : 120
+    implicitWidth: surfaceOpen ? 790 : 120
+    implicitHeight: surfaceOpen ? 470 : 120
     readonly property real originX: tile.x + tile.width / 2
     readonly property real originY: tile.y + tile.height / 2
+    property var appEntries: DesktopEntries.applications.values
+    readonly property real layoutScale: Math.min(1, (width - 40) / 750, (height - 40) / 430)
     property int nodeRevision: 0
     readonly property alias tileItem: tile
     readonly property alias pageControls: pagination
     function nodeAt(index) {
         const revision = nodeRevision;
-        return appNodes.itemAt(index);
+        return index >= 0 ? appNodes.itemAt(index) : null;
     }
     property bool opened: false
     property bool surfaceOpen: false
     property int page: 0
     property var settings: ({})
     readonly property var apps: Array.isArray(settings.apps) ? settings.apps : []
-    readonly property int pages: Math.max(1, Math.ceil(apps.length / 6))
-    readonly property var pageApps: apps.slice(page * 6, page * 6 + 6)
+    readonly property int pages: Math.max(1, Math.ceil(apps.length / 10))
+    readonly property var pageApps: apps.slice(page * 10, page * 10 + 10)
     property real bloom: opened ? 1 : 0
     Behavior on bloom { NumberAnimation { duration: 460; easing.type: Easing.OutCubic } }
     onOpenedChanged: {
@@ -52,7 +55,7 @@ Item {
         onLoaded: root.apply(text())
     }
     function entry(app) {
-        return DesktopEntries.applications.values.find(e => e.id === app.desktopId || e.id === app.desktopId + ".desktop");
+        return root.appEntries.find(e => e.id === app.desktopId || e.id === app.desktopId + ".desktop");
     }
     function launch(app) {
         const desktop = entry(app);
@@ -72,18 +75,30 @@ Item {
                 ctx.reset();
                 ctx.clearRect(0, 0, width, height);
                 ctx.lineCap = "round";
-                const source = { x: root.originX, y: root.originY };
                 for (let i = 0; i < appNodes.count; ++i) {
                     const node = appNodes.itemAt(i);
                     if (!node) continue;
+                    const parent = node.parentNode;
+                    const source = parent ? {x: parent.x + 31, y: parent.y + 31} : {x: root.originX, y: root.originY};
+                    const sourceRadius = parent ? 35 : 55;
                     const next = { x: node.x + 31, y: node.y + 31, reveal: node.reveal };
                     const dx = next.x - source.x, dy = next.y - source.y;
                     const distance = Math.sqrt(dx * dx + dy * dy);
-                    if (distance > 92) {
-                        const alpha = Math.min(1, Math.max(0, next.reveal));
+                    if (distance > sourceRadius + 37) {
+                        const alpha = Math.min(1, Math.max(0, Math.min(next.reveal, parent ? parent.reveal : 1)));
                         ctx.beginPath();
-                        ctx.moveTo(source.x + dx / distance * 55, source.y + dy / distance * 55);
-                        ctx.lineTo(next.x - dx / distance * 35, next.y - dy / distance * 35);
+                        const verticalBranch = Math.abs(dx) < 20 && dy > 0;
+                        const startX = source.x + (verticalBranch ? -sourceRadius : sourceRadius);
+                        const startY = source.y;
+                        const endX = next.x - 35;
+                        const endY = next.y;
+                        ctx.moveTo(startX, startY);
+                        if (verticalBranch) {
+                            ctx.bezierCurveTo(startX - 45, startY, endX - 45, endY, endX, endY);
+                        } else {
+                            ctx.bezierCurveTo(startX + (endX - startX) * 0.6, startY,
+                                startX + (endX - startX) * 0.4, endY, endX, endY);
+                        }
                         ctx.strokeStyle = Qt.alpha(Theme.cyan, alpha * 0.12);
                         ctx.lineWidth = 3;
                         ctx.stroke();
@@ -103,13 +118,20 @@ Item {
                 id: satellite
                 required property var modelData
                 required property int index
+                objectName: "branch-node-" + index
                 property real reveal: 0
                 onXChanged: links.requestPaint()
                 onYChanged: links.requestPaint()
                 onRevealChanged: links.requestPaint()
-                readonly property real angle: (index * 18) * Math.PI / 180 + (1 - reveal) * 0.32
-                x: root.originX + Math.cos(angle) * 270 * reveal - 31
-                y: root.originY + Math.sin(angle) * 270 * reveal - 31
+                readonly property int parentIndex: BranchLogic.parentIndex(root.pageApps, index)
+                readonly property int depth: BranchLogic.depth(root.pageApps, index)
+                readonly property var parentNode: root.nodeAt(parentIndex)
+                readonly property real startX: parentNode ? parentNode.x + 31 : root.originX
+                readonly property real startY: parentNode ? parentNode.y + 31 : root.originY
+                readonly property real targetX: root.originX + (BranchLogic.position(index).x - 60) * root.layoutScale
+                readonly property real targetY: root.originY + (BranchLogic.position(index).y - 60) * root.layoutScale
+                x: startX + (targetX - startX) * reveal - 31
+                y: startY + (targetY - startY) * reveal - 31 + Math.sin(Math.PI * reveal) * (index % 2 ? -12 : 12)
                 width: 62; height: 86
                 opacity: Math.max(0, Math.min(1, reveal))
                 scale: Math.max(0.1, reveal) * (hover.containsMouse ? 1.1 : 1)
@@ -121,11 +143,11 @@ Item {
                 }
                 SequentialAnimation {
                     id: unfold
-                    PauseAnimation { duration: root.opened ? satellite.index * 45 : (5 - satellite.index) * 25 }
+                    PauseAnimation { duration: root.opened ? (satellite.depth - 1) * 155 + (satellite.index % 3) * 30 : Math.max(0, 4 - satellite.depth) * 75 }
                     NumberAnimation {
                         target: satellite; property: "reveal"
                         to: root.opened ? 1 : 0
-                        duration: root.opened ? 470 : 240
+                        duration: root.opened ? 520 : 260
                         easing.type: root.opened ? Easing.OutBack : Easing.InCubic
                         easing.overshoot: 1.1
                     }
@@ -148,13 +170,13 @@ Item {
                     text: satellite.modelData.name || satellite.modelData.desktopId
                     elide: Text.ElideRight
                     color: hover.containsMouse ? Theme.text : Theme.muted
-                    font { family: Theme.font; pixelSize: 10 }
+                    font { family: Theme.roundFont; pixelSize: 11; weight: Font.Bold }
                 }
                 MouseArea {
                     id: hover
                     anchors.fill: parent
                     hoverEnabled: true
-                    enabled: root.opened
+                    enabled: root.opened && satellite.reveal > 0.85
                     cursorShape: Qt.PointingHandCursor
                     onClicked: root.launch(satellite.modelData)
                 }
@@ -164,7 +186,7 @@ Item {
         }
         Row {
             id: pagination
-            x: 180; y: 374; spacing: 12
+            x: parent.width - 155; y: parent.height - 42; spacing: 12
             opacity: root.bloom
             visible: root.surfaceOpen && root.pages > 1
             ActionButton { text: "‹"; enabled: root.page > 0; onClicked: root.page-- }
