@@ -15,6 +15,8 @@ for (let i = 0; i < 10; i++) {
     const parentIndex = logic.parentIndex(apps, i);
     if (parentIndex >= 0) assert.ok(logic.openDelay(apps, i) > logic.openDelay(apps, parentIndex));
     const p = logic.position(i);
+    const start = parentIndex >= 0 ? logic.position(parentIndex) : {x: 60, y: 60};
+    assert.ok(Math.abs(p.x - start.x) > 25 && Math.abs(p.y - start.y) > 25, 'Branch should have an oblique angle');
     for (let j = 0; j < i; j++) {
         const other = logic.position(j);
         assert.ok(Math.abs(p.x - other.x) > 64 || Math.abs(p.y - other.y) > 88, 'Overlapping application nodes');

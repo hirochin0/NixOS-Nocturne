@@ -87,18 +87,12 @@ Item {
                     if (distance > sourceRadius + 37) {
                         const alpha = Math.min(1, Math.max(0, Math.min(next.reveal, parent ? parent.reveal : 1)));
                         ctx.beginPath();
-                        const verticalBranch = Math.abs(dx) < 20 && dy > 0;
-                        const startX = parent ? source.x + (verticalBranch ? -sourceRadius : sourceRadius) : source.x + dx / distance * sourceRadius;
-                        const startY = parent ? source.y : source.y + dy / distance * sourceRadius;
-                        const endX = next.x - 35;
-                        const endY = next.y;
+                        const startX = source.x + dx / distance * sourceRadius;
+                        const startY = source.y + dy / distance * sourceRadius;
+                        const endX = next.x - dx / distance * 35;
+                        const endY = next.y - dy / distance * 35;
                         ctx.moveTo(startX, startY);
-                        if (verticalBranch) {
-                            ctx.bezierCurveTo(startX - 45, startY, endX - 45, endY, endX, endY);
-                        } else {
-                            ctx.bezierCurveTo(startX + (endX - startX) * 0.6, startY,
-                                startX + (endX - startX) * 0.4, endY, endX, endY);
-                        }
+                        ctx.lineTo(endX, endY);
                         ctx.strokeStyle = Qt.alpha(Theme.cyan, alpha * 0.12);
                         const branchWidth = Math.max(1, 2.3 - (node.depth - 1) * 0.5);
                         ctx.lineWidth = branchWidth + 2;
@@ -132,7 +126,7 @@ Item {
                 readonly property real targetX: root.originX + (BranchLogic.position(index).x - 60) * root.layoutScale
                 readonly property real targetY: root.originY + (BranchLogic.position(index).y - 60) * root.layoutScale
                 x: startX + (targetX - startX) * reveal - 31
-                y: startY + (targetY - startY) * reveal - 31 + Math.sin(Math.PI * reveal) * (index % 2 ? -12 : 12)
+                y: startY + (targetY - startY) * reveal - 31
                 width: 62; height: 86
                 opacity: Math.max(0, Math.min(1, reveal))
                 scale: Math.max(0.1, reveal) * (hover.containsMouse ? 1.1 : 1)
