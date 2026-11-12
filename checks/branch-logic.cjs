@@ -4,9 +4,9 @@ const assert = require('node:assert/strict');
 const logic = vm.createContext({});
 vm.runInContext(fs.readFileSync(process.argv[2], 'utf8').replace(/^\.pragma library\s*/, ''), logic);
 const defaults = JSON.parse(fs.readFileSync(process.argv[3], 'utf8')).apps;
-assert.equal(defaults.length, 10);
+assert.equal(defaults.length, 11);
 assert.equal(logic.capacity(), 21);
-const apps = [...defaults, ...Array.from({length: 11}, (_, i) => ({desktopId: 'extra-' + i}))];
+const apps = [...defaults, ...Array.from({length: 21 - defaults.length}, (_, i) => ({desktopId: 'extra-' + i}))];
 assert.deepEqual(apps.map((_, index) => logic.parentIndex(apps, index)).filter(parent => parent === -1), [-1, -1, -1]);
 const childCount = new Map();
 for (let i = 0; i < 21; i++) {

@@ -35,7 +35,7 @@ ShellRoot {
             screen: modelData
             visible: root.musicEnabled && !!root.player && !!modelData
             anchors { right: true; bottom: true }
-            margins { right: 24; bottom: 175 }
+            margins { right: 24; bottom: 243 }
             implicitWidth: Math.min(480, screen ? screen.width - 32 : 480)
             implicitHeight: 208
             exclusionMode: ExclusionMode.Ignore

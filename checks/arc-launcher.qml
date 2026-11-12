@@ -8,7 +8,7 @@ ShellRoot {
         Timer {
             interval: 850; running: true
             onTriggered: {
-                if (card.apps.length !== 10) throw new Error("Default app list not loaded");
+                if (card.apps.length !== 11) throw new Error("Default app list not loaded");
                 card.opened = true;
                 verifyOpen.start();
             }
@@ -20,8 +20,8 @@ ShellRoot {
                 const rootNode = card.nodeAt(0), child = card.nodeAt(3), grandchild = card.nodeAt(9);
                 if (child.parentNode !== rootNode || card.nodeAt(1).parentNode || card.nodeAt(2).parentNode || grandchild.depth !== 3)
                     throw new Error("Application branches are not connected to parent nodes");
-                for (let i = 0; i < 10; i++) if (card.nodeAt(i).reveal < 0.99) throw new Error("Branch did not unfold");
-                const extra = Array.from({length: 11}, () => ({desktopId: "kitty"}));
+                for (let i = 0; i < 11; i++) if (card.nodeAt(i).reveal < 0.99) throw new Error("Branch did not unfold");
+                const extra = Array.from({length: 21 - card.apps.length}, () => ({desktopId: "kitty"}));
                 card.apply(JSON.stringify({image: "", apps: card.apps.concat(extra)}));
                 verifyCapacity.start();
             }

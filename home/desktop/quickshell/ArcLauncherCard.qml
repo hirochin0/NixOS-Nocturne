@@ -42,6 +42,8 @@ Item {
             const value = JSON.parse(text);
             if (!value || typeof value !== "object" || !Array.isArray(value.apps)
                 || !value.apps.every(a => a && typeof a.desktopId === "string")) return;
+            if (typeof value.image === "string" && value.image.startsWith("~/"))
+                value.image = Quickshell.env("HOME") + value.image.slice(1);
             root.settings = value;
             root.page = 0;
         } catch (e) { console.warn("Launcher: invalid JSON; keeping previous settings", e); }

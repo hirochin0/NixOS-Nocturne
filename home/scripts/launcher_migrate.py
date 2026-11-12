@@ -1,4 +1,4 @@
-"""Upgrade untouched launcher defaults, preserving user image/settings."""
+"""Upgrade launcher defaults and apply the requested image/Steam setup once."""
 import json
 import os
 from pathlib import Path
@@ -16,9 +16,21 @@ def migrate(current, defaults):
         legacy = [{"name": app["name"], "desktopId": app["desktopId"]} for app in new["apps"][:6]]
         previous_parents = [-1, 0, 0, 1, 1, 2, 2, 3, 4, 5]
         previous_tree = [dict(app, parent=parent) for app, parent in zip(new["apps"], previous_parents)]
-        if old.get("apps") not in (legacy, previous_tree):
+        apps = old.get("apps")
+        if not isinstance(apps, list) or not all(
+                isinstance(app, dict) and isinstance(app.get("desktopId"), str) for app in apps):
             return False
-        old["apps"] = new["apps"]
+        if old.get("_nocturneLauncherRevision", 0) >= 1:
+            return False
+        # Recognize the previous 10-node defaults as well as the earlier layouts.
+        if apps in (legacy, previous_tree, new["apps"][:10]):
+            old["apps"] = new["apps"]
+            apps = old["apps"]
+        old["image"] = new["image"]
+        if not any(app["desktopId"] in ("steam", "steam.desktop") for app in apps):
+            apps.append({"name": "Steam", "desktopId": "steam",
+                         "parent": min(3, len(apps) - 1)})
+        old["_nocturneLauncherRevision"] = 1
         with tempfile.NamedTemporaryFile(mode="w", dir=current.parent, delete=False) as output:
             temp = Path(output.name)
             json.dump(old, output, indent=2, ensure_ascii=False)

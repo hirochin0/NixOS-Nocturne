@@ -1,5 +1,5 @@
 {
-  "image": "",
+  "image": "~/Pictures/Launcher.png",
   "apps": [
     {
       "name": "Terminal",
@@ -50,6 +50,12 @@
       "name": "ChatGPT",
       "desktopId": "chatgpt",
       "parent": 5
+    },
+    {
+      "name": "Steam",
+      "desktopId": "steam",
+      "parent": 3
     }
-  ]
+  ],
+  "_nocturneLauncherRevision": 1
 }

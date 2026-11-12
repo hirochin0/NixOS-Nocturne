@@ -13,14 +13,14 @@ new = json.loads(defaults.read_text())
 legacy = [{"name": app["name"], "desktopId": app["desktopId"]} for app in new["apps"][:6]]
 
 class MigrationTest(unittest.TestCase):
-    def test_upgrade_defaults_retains_image_and_is_idempotent(self):
+    def test_upgrade_defaults_configures_image_and_is_idempotent(self):
         with tempfile.TemporaryDirectory() as tmp:
             path = Path(tmp) / "launcher.json"
             path.write_text(json.dumps({"image": "/home/user/my-image.png", "apps": legacy}))
             self.assertTrue(module.migrate(path, defaults))
             result = json.loads(path.read_text())
-            self.assertEqual(result["image"], "/home/user/my-image.png")
-            self.assertEqual(len(result["apps"]), 10)
+            self.assertEqual(result["image"], "~/Pictures/Launcher.png")
+            self.assertEqual(len(result["apps"]), 11)
             self.assertFalse(module.migrate(path, defaults))
 
     def test_previous_single_root_tree_upgrades(self):
@@ -31,12 +31,39 @@ class MigrationTest(unittest.TestCase):
             path.write_text(json.dumps({"image": "custom.png", "apps": old_apps}))
             self.assertTrue(module.migrate(path, defaults))
             self.assertEqual(json.loads(path.read_text())["apps"], new["apps"])
-            self.assertEqual(json.loads(path.read_text())["image"], "custom.png")
+            self.assertEqual(json.loads(path.read_text())["image"], "~/Pictures/Launcher.png")
+
+    def test_existing_ten_defaults_upgrade(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "launcher.json"
+            path.write_text(json.dumps({"image": "", "apps": new["apps"][:10]}))
+            self.assertTrue(module.migrate(path, defaults))
+            self.assertEqual(json.loads(path.read_text())["apps"], new["apps"])
+            self.assertFalse(module.migrate(path, defaults))
+
+    def test_custom_apps_preserved_and_later_edits_remain(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "launcher.json"
+            custom = {"name": "My app", "desktopId": "custom", "parent": -1}
+            for steam_id in [None, "steam", "steam.desktop"]:
+                apps = [custom] + ([{"desktopId": steam_id}] if steam_id else [])
+                path.write_text(json.dumps({"apps": apps, "extra": True}))
+                self.assertTrue(module.migrate(path, defaults))
+                result = json.loads(path.read_text())
+                self.assertEqual(result["apps"][0], custom)
+                self.assertEqual(sum(a["desktopId"] in ("steam", "steam.desktop") for a in result["apps"]), 1)
+                self.assertTrue(result["extra"])
+                result["apps"] = new["apps"][:10]  # User may intentionally remove Steam later.
+                result["image"] = "/new/user-choice.png"
+                path.write_text(json.dumps(result))
+                self.assertFalse(module.migrate(path, defaults))
+                self.assertEqual(json.loads(path.read_text())["image"], "/new/user-choice.png")
+                self.assertEqual(json.loads(path.read_text())["apps"], new["apps"][:10])
 
     def test_custom_invalid_and_symlink_configs_are_preserved(self):
         with tempfile.TemporaryDirectory() as tmp:
             path = Path(tmp) / "launcher.json"
-            for contents in [json.dumps({"apps": [{"desktopId": "custom"}]}), "invalid"]:
+            for contents in [json.dumps({"apps": [{"name": "invalid"}]}), "invalid"]:
                 path.write_text(contents)
                 self.assertFalse(module.migrate(path, defaults))
                 self.assertEqual(path.read_text(), contents)

@@ -4,7 +4,7 @@ let
   target = config.wayland.systemd.target;
 in {
   home.packages = [ desktop.quickshell ];
-  # Seed a writable user configuration once; rebuilds preserve user edits.
+  # Seed writable settings, then apply versioned migrations once.
   home.activation.nocturneLauncher = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
     configDir=${lib.escapeShellArg "${config.xdg.configHome}/nocturne"}
     $DRY_RUN_CMD mkdir -p "$configDir"
