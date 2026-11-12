@@ -41,7 +41,7 @@ let
     }
   '';
 in pkgs.runCommand "nocturne-quickshell-config" {
-  nativeBuildInputs = [ desktop.qtdeclarative ];
+  nativeBuildInputs = [ desktop.qtdeclarative desktop.qtshadertools ];
 } ''
   mkdir -p "$out"
   cp ${../home/desktop/quickshell}/*.qml "$out/"
@@ -49,6 +49,9 @@ in pkgs.runCommand "nocturne-quickshell-config" {
   cp ${../home/desktop/quickshell/launcher.svg} "$out/launcher.svg"
   cp ${../home/desktop/quickshell/launcher-defaults.json} "$out/launcher-defaults.json"
   cp ${../home/desktop/quickshell/application.svg} "$out/application.svg"
+  # Compile using the same Qt package set as Quickshell, including batchable vertices.
+  qsb --batchable --glsl "100 es,120,150" --hlsl 50 --msl 12 \
+    -o "$out/droplet.vert.qsb" ${../home/desktop/quickshell/droplet.vert}
   cp ${palette} "$out/Theme.qml"
   cat > "$out/qmldir" <<'EOF'
   singleton Theme 1.0 Theme.qml

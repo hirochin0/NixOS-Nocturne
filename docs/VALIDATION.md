@@ -263,3 +263,10 @@ XDG_DATA_DIRSに採用dconfパッケージのサービス定義を明示する�
 - NixOSのprograms.steamを有効化し、Steamと64/32bit Mesaを既存デスクトップと同じupstreamパッケージ集合へ揃えた。unfree許可はその集合のsteam・steam-unwrappedに限定して追加した。flake.lockは変更しない。
 - system-contract derivationの評価成功。Steamパッケージの登録、32bitグラフィックとMesaの一致、PipeWire ALSA 32bit対応、Steam hardwareの有効化をassertで確認し、Home Manager activationの生成を含めた依存評価が成功した。
 - この環境ではSteamのGUI起動・ログイン・実ゲームのダウンロードやAMD GPU上での動作確認は行っていない。設定適用後に対象端末で確認する。ProtonはSteamのゲーム別互換性設定から選択する。
+
+## 時計の水滴状の局所変形（2026-11-12 UTC）
+
+- 数字全体の移動・伸縮・回転を、40×56メッシュの頂点シェーダーへ置き換えた。カーソルへ向かう局所的な引力をガウス状に減衰させ、近い輪郭だけを少し伸ばす。座標追従を110msで滑らかにし、離脱時の強度は既存のばねでゼロへ戻す。
+- ガラスのマスク・反射・縁をまとめて変形する。24pxの透明余白を加え、壁紙サンプルの座標と寸法も合わせた。シェーダーはQuickshellと同じQtパッケージセットのQtShaderTools/qsbで、batchable・GLSL/HLSL/MSLを含むqsbへビルドする。ソフトウェア描画では従来の読みやすい文字表示を使う。
+- Qt 6.12.0のqsbでコンパイル成功。PySide6/Qt QuickのOpenGL/llvmpipe実描画で、実マウスによる時計への接近・離脱・ばねの復帰が成功した。単一の「8」で固定位置へ引いた画像を比較し、近い右輪郭+10px、反対の左輪郭+1pxを確認。強度を戻した後は元画像へ復帰した。software描画の時計・英文・接近/離脱テストも成功した。
+- 変更したQMLのqmlformat構文確認、既存ClockLogicのNodeテスト、Nix system-contract derivation評価が成功。NixのQuickshell設定バンドル全体ビルドはcache.nixos.orgのHTTP 429による依存取得制限で中断し、完了していない。実機Wayland/GPUとnixos-rebuildでの確認は適用時に行う。

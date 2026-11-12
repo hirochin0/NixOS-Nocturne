@@ -9,7 +9,7 @@ in {
   portal = hyprland.packages.${system}.xdg-desktop-portal-hyprland;
   # EGL clients must use a libc compatible with the runtime-loaded Mesa driver.
   inherit (upstream) mesa kitty waybar hypridle hyprlock rofi quickshell cage;
-  inherit (upstream.qt6) qtdeclarative;
+  inherit (upstream.qt6) qtdeclarative qtshadertools;
   # GUI clients share Mesa's package set (including libc/libglvnd).
   inherit (upstream) vscode google-chrome codex spotify spicetify-cli discord steam;
   # ReGreet's authentication/controller stay upstream; only the login layout changes.

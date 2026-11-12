@@ -8,10 +8,17 @@ Item {
     property real fontSize: 200
     property real pointerX: 0
     property real pointerY: 0
-    property bool nearby: false
     property real pullX: 0
     property real pullY: 0
     property real tension: 0
+    // Transparent border leaves room for the deformed contour without changing layout.
+    readonly property real surfacePadding: 24
+    readonly property real surfaceWidth: width + surfacePadding * 2
+    readonly property real surfaceHeight: height + surfacePadding * 2
+    property real surfaceX: pointerX + surfacePadding
+    property real surfaceY: pointerY + surfacePadding
+    Behavior on surfaceX { SmoothedAnimation { duration: 110; velocity: -1 } }
+    Behavior on surfaceY { SmoothedAnimation { duration: 110; velocity: -1 } }
     readonly property bool software: GraphicsInfo.api === GraphicsInfo.Software
     implicitWidth: fontSize * (text === ":" ? 0.26 : 0.65)
     implicitHeight: fontSize * 1.35
@@ -20,12 +27,19 @@ Item {
     Behavior on tension { SpringAnimation { spring: 3; damping: 0.24 } }
     Item {
         id: liquid
-        anchors.fill: parent
-        transform: [
-            Translate { x: digit.pullX; y: digit.pullY },
-            Scale { origin.x: liquid.width / 2; origin.y: liquid.height / 2; xScale: 1 + digit.tension * 0.055; yScale: 1 - digit.tension * 0.025 },
-            Rotation { origin.x: liquid.width / 2; origin.y: liquid.height / 2; angle: digit.pullX * 0.15 }
-        ]
+        x: -digit.surfacePadding
+        y: -digit.surfacePadding
+        width: digit.surfaceWidth
+        height: digit.surfaceHeight
+        layer.enabled: !digit.software
+        layer.smooth: true
+        layer.effect: ShaderEffect {
+            property vector2d cursorPosition: Qt.vector2d(digit.surfaceX, digit.surfaceY)
+            property real strength: digit.tension
+            property real radius: digit.fontSize * 0.24
+            mesh: Qt.size(40, 56)
+            vertexShader: "droplet.vert.qsb"
+        }
         Text {
             id: glyph
             anchors.fill: parent

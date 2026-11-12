@@ -50,6 +50,8 @@ Item {
                 objectName: "glass-digit-" + index
                 text: modelData
                 fontSize: clock.digitSize
+                pointerX: clock.pointerX - digits.x - character.x
+                pointerY: clock.pointerY - digits.y - character.y
                 readonly property var field: ClockLogic.tension(clock.pointerX, clock.pointerY, digits.x + character.x + width / 2, digits.y + character.y + height / 2, clock.pointerActive)
                 pullX: field.x
                 pullY: field.y
@@ -58,9 +60,9 @@ Item {
                 ShaderEffectSource {
                     id: reflection
                     sourceItem: wallpaper
-                    sourceRect: Qt.rect(clock.desktopX + digits.x + character.x - character.pullX * 1.8,
-                        clock.desktopY + digits.y + character.y - character.pullY * 1.8, character.width, character.height)
-                    textureSize: Qt.size(character.width, character.height)
+                    sourceRect: Qt.rect(clock.desktopX + digits.x + character.x - character.surfacePadding - character.pullX * 0.6,
+                        clock.desktopY + digits.y + character.y - character.surfacePadding - character.pullY * 0.6, character.surfaceWidth, character.surfaceHeight)
+                    textureSize: Qt.size(character.surfaceWidth, character.surfaceHeight)
                     live: clock.pointerActive
                     visible: false
                     onSourceRectChanged: scheduleUpdate()
