@@ -39,6 +39,7 @@ ShellRoot {
         Taskbar {
             required property var modelData
             screen: modelData
+            musicPlayer: root.player
             onPowerRequested: {
                 powerMenu.screen = modelData;
                 powerMenu.visible = !powerMenu.visible;

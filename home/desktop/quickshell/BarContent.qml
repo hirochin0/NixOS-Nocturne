@@ -12,6 +12,7 @@ import "FocusLogic.js" as FocusLogic
 
 Item {
     id: root
+    property var musicPlayer: null
     property var hostWindow: null
     property var windows: Hyprland.toplevels.values
     property var workspaces: Hyprland.workspaces.values
@@ -94,6 +95,7 @@ Item {
                     model: root.workspaceIds
                     BarButton {
                         required property int modelData
+                        objectName: "workspace-" + modelData
                         readonly property var workspace: root.workspaces.find(w => w.id === modelData)
                         text: workspace ? workspace.name : String(modelData)
                         tint: workspace && workspace.urgent ? "#f38ba8" : workspace && workspace.focused ? Theme.cyan : Theme.muted
@@ -101,6 +103,11 @@ Item {
                         onClicked: root.switchWorkspace(modelData)
                         Rectangle { anchors.bottom: parent.bottom; anchors.horizontalCenter: parent.horizontalCenter; width: 14; height: 2; radius: 1; color: Theme.cyan; visible: !!parent.workspace && parent.workspace.active }
                     }
+                }
+                AlbumArt {
+                    objectName: "taskbar-artwork"
+                    side: Math.max(16, root.height - 8)
+                    player: root.musicPlayer
                 }
             }
         }

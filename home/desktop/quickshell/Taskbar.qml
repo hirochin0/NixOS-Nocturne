@@ -4,6 +4,7 @@ import Quickshell.Wayland
 
 PanelWindow {
     id: bar
+    property var musicPlayer: null
     signal powerRequested()
     anchors { top: true; left: true; right: true }
     margins { top: 10; left: 14; right: 14 }
@@ -13,5 +14,5 @@ PanelWindow {
     WlrLayershell.namespace: "nocturne-taskbar"
     WlrLayershell.keyboardFocus: WlrKeyboardFocus.None
     color: "transparent"
-    BarContent { anchors.fill: parent; hostWindow: bar; onPowerRequested: bar.powerRequested() }
+    BarContent { anchors.fill: parent; hostWindow: bar; musicPlayer: bar.musicPlayer; onPowerRequested: bar.powerRequested() }
 }

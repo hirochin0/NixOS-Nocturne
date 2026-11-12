@@ -63,6 +63,7 @@ in pkgs.runCommand "nocturne-quickshell-config" {
   singleton Theme 1.0 Theme.qml
   ActionButton 1.0 ActionButton.qml
   MusicCard 1.0 MusicCard.qml
+  AlbumArt 1.0 AlbumArt.qml
   LyricsProvider 1.0 LyricsProvider.qml
   LyricsView 1.0 LyricsView.qml
   PowerMenu 1.0 PowerMenu.qml

@@ -7,13 +7,12 @@ ShellRoot {
     id: testRoot
     property var calls: []
     QtObject {
-        id: testWorkspace
-        property int id: 3
-        property string name: "3"
-        property bool focused: true
-        property bool active: true
-        function activate() { testRoot.calls.push("workspace"); }
+        id: music
+        property string trackTitle: "Test track"
+        property url trackArtUrl: "file://@bundle@/launcher.svg"
     }
+    property var testWorkspace: ({id: 3, name: "3", focused: true, active: true,
+        activate: function() { testRoot.calls.push("workspace"); }})
     QtObject {
         id: window
         property string title: "Editor test"
@@ -37,6 +36,7 @@ ShellRoot {
             id: bar
             anchors { left: parent.left; right: parent.right; top: parent.top }
             height: 46
+            musicPlayer: music
             live: false
             windows: [window]
             workspaces: [testWorkspace]
@@ -68,6 +68,14 @@ ShellRoot {
                 }
                 if (bar.desktopFor({lastIpcObject: {}, wayland: null}) !== null)
                     throw new Error("Empty class must not match Files");
+                const artwork = find(bar, "taskbar-artwork"), lastWorkspace = find(bar, "workspace-5");
+                if (!artwork || !artwork.visible || artwork.status !== Image.Ready || artwork.width !== 38 || artwork.height !== 38)
+                    throw new Error("Taskbar artwork did not load at bar size");
+                if (artwork.mapToItem(bar, 0, 0).x < lastWorkspace.mapToItem(bar, lastWorkspace.width, 0).x)
+                    throw new Error("Artwork is not to the right of workspaces");
+                bar.musicPlayer = null;
+                if (artwork.visible) throw new Error("Artwork remained after Spotify closed");
+                bar.musicPlayer = music;
                 const clock = find(bar, "clockIsland");
                 if (!clock || Math.abs(clock.x + clock.width / 2 - bar.width / 2) > 0.5)
                     throw new Error("Clock is not at screen center");
