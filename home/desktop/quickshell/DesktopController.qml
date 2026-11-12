@@ -11,9 +11,17 @@ Scope {
     property var plan: null
     property bool pendingHide: false
     property bool restoreFocus: true
+    property int prepareAttempts: 0
+    property var queuedRequest: null
     function run(action, args) {
-        if (worker.busy) return;
+        if (worker.busy) {
+            if (action !== "state") queuedRequest = {action: action, args: args || []};
+            return;
+        }
+        queuedRequest = null;
+        worker.output = ""; worker.outputComplete = false; worker.finishedFlag = false; worker.delivered = false;
         worker.busy = true;
+        watchdog.restart();
         operation = action;
         worker.command = [Theme.desktopCommand, action === "recover" ? "restore" : action].concat(args || []);
         worker.running = true;
@@ -24,10 +32,19 @@ Scope {
         run("inspect");
     }
     function hide() {
-        if (phase === "idle" || phase === "recovery") return;
-        if (phase !== "desktop") { pendingHide = true; return; }
-        watch.stop(); phase = "return";
-        scene.returnWindows();
+        if (["idle", "recovery", "cleanup", "return", "restoring"].indexOf(phase) >= 0) return;
+        if (["inspect", "preparing", "capture"].indexOf(phase) >= 0) {
+            prepare.stop(); scene.reset(); phase = "cleanup";
+            if (!worker.busy) run("restore", plan ? ["--token=" + plan.token] : []);
+            return;
+        }
+        if (phase === "showing") { pendingHide = true; return; }
+        watch.stop();
+        if (phase === "settling") {
+            settle.stop(); phase = "return";
+            run("restore", ["--token=" + plan.token]); return;
+        }
+        phase = "return"; scene.returnWindows();
     }
     function toggle() { if (phase === "idle") show(); else hide(); }
     function fail(message) {
@@ -52,8 +69,9 @@ Scope {
             scene.screen = Quickshell.screens.find(s => s.name === data.monitor) || null;
             if (!scene.screen) { fail("Monitor disconnected"); return; }
             Hyprland.refreshToplevels();
-            phase = "preparing"; prepare.restart();
+            prepareAttempts = 0; phase = "preparing"; prepare.restart();
         } else if (operation === "show") {
+            if (pendingHide) { phase = "return"; run("restore", ["--token=" + plan.token]); return; }
             phase = "settling";
             settle.interval = plan.settleMs; settle.restart();
         } else if (operation === "state") {
@@ -64,9 +82,16 @@ Scope {
             }
         }
     }
+    function backendFailure(message) {
+        watchdog.stop(); worker.busy = false;
+        if (operation === "restore" || operation === "recover") {
+            console.warn("Desktop recovery:", message);
+            scene.reset(); phase = "recovery"; recovery.restart();
+        } else fail(message);
+    }
     function finish() {
-        watch.stop(); settle.stop(); prepare.stop(); recovery.stop(); scene.reset();
-        plan = null; phase = "idle"; pendingHide = false; restoreFocus = true;
+        watch.stop(); settle.stop(); prepare.stop(); recovery.stop(); watchdog.stop(); scene.reset();
+        queuedRequest = null; plan = null; phase = "idle"; pendingHide = false; restoreFocus = true;
     }
     Component.onCompleted: run("recover")
     Component.onDestruction: {
@@ -74,11 +99,12 @@ Scope {
     }
     Timer { id: recovery; interval: 2000; onTriggered: if (!worker.busy) controller.run("recover") }
     Timer {
-        id: prepare; interval: 180
+        id: prepare; interval: 60
         onTriggered: {
             scene.plan = controller.plan;
             scene.snapshots = DesktopLogic.windows(controller.plan, Hyprland.toplevels.values);
-            if (scene.snapshots.some(w => !w.source || w.width <= 0 || w.height <= 0)) { controller.fail("Window capture handle unavailable"); return; }
+            if (scene.snapshots.some(w => !w.source) && controller.prepareAttempts++ < 5) { prepare.restart(); return; }
+            scene.snapshots = scene.snapshots.filter(w => w.width > 0 && w.height > 0);
             controller.phase = "capture";
             scene.capture();
         }
@@ -91,6 +117,16 @@ Scope {
         }
     }
     Timer { id: watch; interval: 700; repeat: true; onTriggered: if (!worker.busy) controller.run("state", ["--token=" + controller.plan.token]) }
+    Timer {
+        id: watchdog
+        interval: 20000
+        onTriggered: {
+            if (worker.running) {
+                controller.fail("Desktop helper timed out; restoring workspace");
+                worker.signal(15);
+            } else controller.backendFailure("Desktop helper did not finish");
+        }
+    }
     Process {
         id: worker
         objectName: "desktop-helper"
@@ -104,9 +140,14 @@ Scope {
             delivered = true;
             const value = output;
             Qt.callLater(function() {
+                watchdog.stop();
                 worker.busy = false;
                 try { controller.receive(JSON.parse(value)); }
-                catch (e) { controller.fail("Desktop helper returned no result"); }
+                catch (e) { controller.backendFailure("Desktop helper returned no result"); }
+                if (!worker.busy && controller.queuedRequest) {
+                    const request = controller.queuedRequest;
+                    controller.run(request.action, request.args);
+                }
             });
         }
         stdout: StdioCollector {
@@ -114,10 +155,17 @@ Scope {
         }
         onStarted: { output = ""; outputComplete = false; finishedFlag = false; delivered = false; }
         onExited: { finishedFlag = true; deliver(); }
+        onRunningChanged: if (!running && busy && !finishedFlag) processStopped.restart()
+        property Timer processStopped: Timer {
+            interval: 80
+            onTriggered: if (!worker.running && worker.busy && !worker.finishedFlag) {
+                controller.backendFailure("Desktop helper could not start");
+            }
+        }
     }
     DesktopScene {
         id: scene
-        onCaptured: controller.run("show", ["--plan=" + JSON.stringify(controller.plan)])
+        onCaptured: { controller.phase = "showing"; controller.run("show", ["--plan=" + JSON.stringify(controller.plan)]); }
         onCaptureFailed: controller.fail("Window capture timed out; original workspace retained")
         onRetreated: {
             controller.phase = "desktop"; watch.start();

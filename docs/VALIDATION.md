@@ -318,3 +318,12 @@ XDG_DATA_DIRSに採用dconfパッケージのサービス定義を明示する�
 - Pythonの復旧テスト6件、Nodeの四隅/画面外終点/負座標モニター/0xの有無を正規化したキャプチャハンドルのテスト、既存のウィンドウフォーカステストが成功。Luaランタイムで上/下/距離/キャンセル/横スワイプのテストと全Luaファイルの構文確認が成功した。これらとカーテンの縁/中央クリックのQMLチェックをNixチェックへ追加した。
 - Qt Quick/softwareで、四隅への移動途中と逆経路・カーテンの遅延表示・半透明の縁と透明な中央を描画/画素確認した。キャプチャ通信のみ色付きのテスト矩形へ置き換えた。コントローラーもQt上で検証し、復旧/取得/表示/復帰と、IPC処理中の失敗・workspace変更を確認した（コンポジター/Processはスタブ）。
 - QMLのqmlformat確認とNix system-contract/quickshell/hyprland-configのderivation評価が成功。Hyprland実体の検証ビルドを試みたが、最初はローカルNixの内部assertで停止し、取得元を絞った再試行はcache.nixos.orgの依存取得HTTP 429で停止した。実体の--verify-config、全体Quickshellチェック、実機Wayland上の3本指入力とウィンドウキャプチャ連携は未確認。flake.lockは変更していない。
+
+## デスクトップ表示の安定化とSuperキー（2026-11-12 JST）
+
+- 上/下スワイプの独自50px判定を撤去。Hyprlandが認識したジェスチャーのfinishを使い、キャンセルだけを除外する。従来はstart時の移動量を数えずupdate分だけで閾値を判定しており、認識済みの短いスワイプも実行しなかった。左右のworkspaceジェスチャーは維持した。
+- キャプチャを全件必須にする中止条件を撤去。ハンドルを最大約360ms待ち、未取得のものは許容する。キャプチャの待機は最大1秒とし、取得できた画像だけを使う。画面画像がない場合も通常のworkspace切替で表示・復帰・カーテンを使えるようにした。
+- 状態確認Process中に復帰が要求されると、busyによりrestoreが失われていた。復帰要求をキューへ保存し、処理完了後に実行する。取得準備中の再操作は中止でき、切替中の復帰も保留後に確実に実行する。ヘルパー起動失敗時のbusy解除/復旧再試行とタイムアウト処理を追加し、Lua dispatchの戻り値ok=falseも検出する。
+- Super_L/Super_R単独のreleaseでアプリ検索、Super+Dでデスクトップ表示/復帰へ変更。Super+Ctrl+Dの旧バインドは外した。公式の修飾キー単独release形式に従い、Super+D等の組み合わせ後にランチャーを重ねて開かない。キー登録のLuaテストを追加した。
+- Pythonバックエンド7テスト、最寄り四隅のNodeテスト、Luaの短いスワイプ/キャンセル/左右操作と新キーバインドのテストが成功。Qtで取得失敗時にもdesktopへ進んで復帰できること、Processの状態確認中の復帰要求、起動失敗、準備/取得/切替中の連打、通常復帰を確認（キャプチャ・コンポジター・Processのみスタブ）。
+- QML構文確認とNix system-contract/quickshell/hyprland-configのderivation評価が成功。Quickshell v0.3.2のProcess/ScreencopyView実装とHyprland公式のSuper単独release説明を確認した。実機タッチパッド/Waylandキャプチャでの確認と全体ビルドは今回未実施。

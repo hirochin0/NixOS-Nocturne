@@ -26,7 +26,7 @@ def lua_string(value):
 
 def dispatch(commands):
     # Each argument is Lua-escaped and sent directly as argv, never through a shell.
-    code = 'local function run(d) local r=hl.dispatch(d); if r and r.success==false then error(r.error or "dispatch failed") end end; '
+    code = 'local function run(d) local r=hl.dispatch(d); if r and (r.ok==false or r.success==false) then error(r.error or r.message or "dispatch failed") end end; '
     code += '; '.join('run(' + command + ')' for command in commands)
     result = subprocess.run([HYPRCTL, "eval", code], capture_output=True, text=True, timeout=6, check=True)
     if result.stdout.strip() != "ok":

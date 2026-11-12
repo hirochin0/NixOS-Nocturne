@@ -10,6 +10,7 @@ from unittest.mock import patch
 spec = importlib.util.spec_from_file_location("desktop", sys.argv.pop())
 desktop = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(desktop)
+real_dispatch = desktop.dispatch
 
 
 class DesktopTest(unittest.TestCase):
@@ -101,6 +102,16 @@ class DesktopTest(unittest.TestCase):
         self.monitor["activeWorkspace"]["name"] = "1"
         self.clients.append(self.client("0xfff", plan["target"], 4))
         with self.assertRaises(RuntimeError): desktop.inspect()
+
+    def test_dispatch_checks_lua_ok_failures(self):
+        import subprocess
+        with patch.object(desktop.subprocess, "run", return_value=subprocess.CompletedProcess([], 0, "ok\n", "")) as run:
+            real_dispatch(['hl.dsp.focus({workspace="1"})'])
+            args = run.call_args.args[0]
+            self.assertIn("r.ok==false", args[-1])
+            self.assertNotIn("shell", run.call_args.kwargs)
+        with patch.object(desktop.subprocess, "run", return_value=subprocess.CompletedProcess([], 0, "Lua error: refused", "")):
+            with self.assertRaises(RuntimeError): real_dispatch(['hl.dsp.focus({workspace="1"})'])
 
     def test_lua_escaping_and_session_isolation(self):
         self.assertEqual(desktop.lua_string('x"\\\n'), '"x\\"\\\\\\010"')

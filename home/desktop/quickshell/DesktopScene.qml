@@ -10,6 +10,7 @@ PanelWindow {
     property string phase: "idle"
     property real progress: 0
     property bool frozenBackground: false
+    property bool canAnimate: false
     signal captured()
     signal captureFailed()
     signal retreated()
@@ -32,39 +33,49 @@ PanelWindow {
     function capture() {
         progress = 0;
         frozenBackground = false;
+        canAnimate = false;
         phase = "capture";
         captureTimeout.restart();
         Qt.callLater(function() {
             background.captureFrame();
-            for (let i = 0; i < copies.count; i++) copies.itemAt(i).captureFrame();
+            for (let i = 0; i < copies.count; i++) if (copies.itemAt(i).captureSource) copies.itemAt(i).captureFrame();
             checkReady();
         });
     }
     function checkReady() {
         if (phase !== "capture" || !background.hasContent) return;
-        for (let i = 0; i < copies.count; i++) if (!copies.itemAt(i).hasContent) return;
+        for (let i = 0; i < copies.count; i++) if (copies.itemAt(i).captureSource && !copies.itemAt(i).hasContent) return;
+        finishCapture();
+    }
+    function finishCapture() {
+        if (phase !== "capture") return;
         captureTimeout.stop();
+        let readyWindows = 0;
+        for (let i = 0; i < copies.count; i++) if (copies.itemAt(i).hasContent) readyWindows++;
+        canAnimate = background.hasContent && readyWindows > 0;
         phase = "switching";
-        frozenBackground = true;
+        frozenBackground = canAnimate;
         // Let the frozen frame reach the display before switching the real workspace.
         freezeDelay.restart();
     }
     function retreat() {
         frozenBackground = false;
         phase = "retreat";
+        if (!canAnimate) { progress = 1; phase = "desktop"; retreated(); return; }
         motion.to = 1;
         motion.restart();
     }
     function returnWindows() {
         phase = "return";
+        if (!canAnimate) { progress = 0; returned(); return; }
         motion.to = 0;
         motion.restart();
     }
     function reset() {
         captureTimeout.stop(); freezeDelay.stop(); motion.stop();
-        frozenBackground = false; phase = "idle"; snapshots = []; plan = null;
+        canAnimate = false; frozenBackground = false; phase = "idle"; snapshots = []; plan = null;
     }
-    Timer { id: captureTimeout; interval: 1800; onTriggered: window.captureFailed() }
+    Timer { id: captureTimeout; interval: 1000; onTriggered: window.finishCapture() }
     Timer { id: freezeDelay; interval: 40; onTriggered: window.captured() }
     NumberAnimation {
         id: motion
@@ -100,7 +111,7 @@ PanelWindow {
                 width: modelData.width; height: modelData.height
                 captureSource: modelData.source
                 live: false; paintCursor: false
-                opacity: window.phase === "capture" || window.phase === "desktop" ? 0 : 1
+                opacity: !window.canAnimate || !hasContent || window.phase === "capture" || window.phase === "desktop" ? 0 : 1
                 onHasContentChanged: window.checkReady()
             }
         }

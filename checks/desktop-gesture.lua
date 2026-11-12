@@ -10,13 +10,13 @@ input({keyboardLayout = "jp", commands = {desktopShow = "show", desktopHide = "h
 assert(gestures.horizontal.action == "workspace")
 local function swipe(direction, delta, cancelled)
     local action = gestures[direction].action
-    action.start({})
-    action.update({delta = {y = delta}})
+    if action.start then action.start({delta = {y = delta}}) end
+    if action.update then action.update({delta = {y = delta}}) end
     action.finish({cancelled = cancelled})
 end
 swipe("up", -70, false)
 swipe("down", 70, false)
 swipe("up", -20, false)
 swipe("up", -70, true)
-assert(#calls == 2 and calls[1] == "show" and calls[2] == "hide")
-print("Up/down swipe, distance threshold, cancellation and horizontal workspace gesture passed.")
+assert(#calls == 3 and calls[1] == "show" and calls[2] == "hide" and calls[3] == "show")
+print("Up/down swipe, short recognized swipe, cancellation and horizontal workspace gesture passed.")

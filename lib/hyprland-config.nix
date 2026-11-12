@@ -36,6 +36,7 @@ in pkgs.runCommand "nocturne-hyprland-config" {
   cp ${generated} "$out/generated.lua"
   for file in "$out/"*.lua; do luac -p "$file"; done
   lua ${../checks/desktop-gesture.lua} "$out/input.lua" > "$out/gestures.log"
+  lua ${../checks/desktop-binds.lua} "$out/binds.lua" > "$out/desktop-binds.log"
   cp "$out/"*.lua "$TMPDIR/config/hypr/"
   export HOME="$TMPDIR/home"
   export XDG_CONFIG_HOME="$TMPDIR/config"
