@@ -4,14 +4,18 @@ import "file://@bundle@"
 
 ShellRoot {
     FloatingWindow {
-        implicitWidth: 528
-        implicitHeight: 256
+        implicitWidth: 688
+        implicitHeight: 328
         MusicCard {
             id: card
             anchors.centerIn: parent
-            width: 480
-            height: 208
+            width: 640
+            height: 280
             player: mock
+            lyricStatus: "synced"
+            lyricLines: [{time: 0, text: "First test phrase"}, {time: 50, text: "Second test phrase"},
+                {time: 100, text: "Current test phrase"}, {time: 150, text: "Next test phrase"},
+                {time: 200, text: "Last test phrase"}]
         }
         QtObject {
             id: mock
@@ -43,6 +47,17 @@ ShellRoot {
             onTriggered: {
                 if (card.duration !== 258 || card.position !== 102)
                     throw new Error("MPRIS properties were not bound to the card");
+                function find(item, name) {
+                    if (item.objectName === name) return item;
+                    for (const child of item.children) { const result = find(child, name); if (result) return result; }
+                    return null;
+                }
+                const lyrics = find(card, "music-lyrics");
+                if (!lyrics || lyrics.activeIndex !== 2) throw new Error("Current lyric did not follow position");
+                mock.position = 151;
+                if (lyrics.activeIndex !== 3) throw new Error("Forward seek did not update lyrics");
+                mock.position = 5;
+                if (lyrics.activeIndex !== 0) throw new Error("Backward seek did not update lyrics");
                 card.player = null;
                 Qt.callLater(function() {
                     if (card.duration !== 0 || card.position !== 0)

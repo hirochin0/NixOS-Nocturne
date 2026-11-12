@@ -15,6 +15,7 @@ Item {
     property bool pointerActive: hover.hovered
     property real pointerX: hover.point.position.x
     property real pointerY: hover.point.position.y
+    readonly property real quoteBottom: quoteLabel.y + quoteLabel.height
     readonly property real digitSize: Math.min(204, Math.max(82, (width - 130) / 2.86))
     readonly property string dailyQuote: ClockLogic.quote(now)
     readonly property string timeText: Qt.formatTime(now, "HH:mm")
@@ -73,6 +74,7 @@ Item {
         }
     }
     Text {
+        id: quoteLabel
         anchors.horizontalCenter: parent.horizontalCenter
         y: parent.height - 62
         width: parent.width - 80

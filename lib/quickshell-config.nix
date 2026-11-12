@@ -5,6 +5,11 @@ let
     runtimeInputs = [ pkgs.python3 ];
     text = ''exec python3 ${../home/scripts/icon_catalog.py}'';
   };
+  lyricsTool = pkgs.writeShellApplication {
+    name = "nocturne-lyrics";
+    runtimeInputs = [ pkgs.python3 ];
+    text = ''exec python3 ${../home/scripts/lyrics.py} "$@"'';
+  };
   iconIndex = pkgs.runCommand "nocturne-icon-index" { nativeBuildInputs = [ pkgs.python3 ]; } ''
     python3 - <<'PYINDEX' > "$out"
     import json
@@ -35,6 +40,7 @@ let
       readonly property string font: ${builtins.toJSON theme.font}
       readonly property string iconCatalogCommand: "${iconCatalog}/bin/nocturne-icon-catalog"
       readonly property string iconIndexPath: "${iconIndex}"
+      readonly property string lyricsCommand: "${lyricsTool}/bin/nocturne-lyrics"
       readonly property string barCommand: "${barTools}/bin/nocturne-bar"
       readonly property string batteryCommand: "${batteryTools}/bin/nocturne-battery"
       readonly property string musicOutput: ${builtins.toJSON (user.musicWidgetOutput or "")}
@@ -57,6 +63,8 @@ in pkgs.runCommand "nocturne-quickshell-config" {
   singleton Theme 1.0 Theme.qml
   ActionButton 1.0 ActionButton.qml
   MusicCard 1.0 MusicCard.qml
+  LyricsProvider 1.0 LyricsProvider.qml
+  LyricsView 1.0 LyricsView.qml
   PowerMenu 1.0 PowerMenu.qml
   PowerCard 1.0 PowerCard.qml
   singleton IconCatalog 1.0 IconCatalog.qml

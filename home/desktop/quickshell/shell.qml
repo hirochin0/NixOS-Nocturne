@@ -27,28 +27,12 @@ ShellRoot {
         }
     }
 
-    Variants {
-        model: Logic.musicScreens(Quickshell.screens, Theme.musicOutput)
-        PanelWindow {
-            id: musicWindow
-            required property var modelData
-            screen: modelData
-            visible: root.musicEnabled && !!root.player && !!modelData
-            anchors { right: true; bottom: true }
-            margins { right: 24; bottom: 243 }
-            implicitWidth: Math.min(480, screen ? screen.width - 32 : 480)
-            implicitHeight: 208
-            exclusionMode: ExclusionMode.Ignore
-            WlrLayershell.layer: WlrLayer.Bottom
-            WlrLayershell.namespace: "nocturne-music"
-            WlrLayershell.keyboardFocus: WlrKeyboardFocus.None
-            color: "transparent"
-            MusicCard {
-                anchors.fill: parent
-                player: root.player
-                updating: musicWindow.visible
-            }
-        }
+    LyricsProvider { id: lyrics; player: root.player; enabled: root.musicEnabled }
+    Timer {
+        interval: 250
+        repeat: true
+        running: root.musicEnabled && !!root.player && root.player.isPlaying && root.player.positionSupported
+        onTriggered: root.player.positionChanged()
     }
     Variants {
         model: Quickshell.screens
@@ -66,6 +50,11 @@ ShellRoot {
         ClockWindow {
             required property var modelData
             screen: modelData
+            player: root.player
+            musicEnabled: root.musicEnabled && Logic.musicScreens(Quickshell.screens, Theme.musicOutput).indexOf(modelData) >= 0
+            lyricLines: lyrics.lines
+            lyricStatus: lyrics.status
+            onLyricsRetryRequested: lyrics.reload()
         }
     }
     Variants {

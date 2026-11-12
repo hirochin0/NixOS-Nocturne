@@ -4,124 +4,79 @@ import QtQuick.Layouts
 import Quickshell.Services.Mpris
 import "Logic.js" as Logic
 
-Rectangle {
+Item {
     id: card
     required property var player
     property bool updating: true
-    implicitWidth: 480
-    implicitHeight: 208
-    radius: 20
-    color: Qt.alpha(Theme.bg, 0.94)
-    border.width: 1
-    border.color: Qt.alpha(Theme.cyan, 0.55)
+    property var lyricLines: []
+    property string lyricStatus: "idle"
+    signal lyricsRetryRequested()
+    implicitWidth: 640
+    implicitHeight: 280
     readonly property real duration: player && player.lengthSupported ? player.length : 0
     readonly property real position: player && player.positionSupported ? player.position : 0
 
-    // Native D-Bus events handle metadata. Only the visible, playing clock ticks.
-    Timer {
-        interval: 1000
-        repeat: true
-        running: card.updating && !!card.player && card.player.isPlaying && card.player.positionSupported
-        onTriggered: card.player.positionChanged()
-    }
-
     ColumnLayout {
         anchors.fill: parent
-        anchors.margins: 18
-        spacing: 12
+        spacing: 4
+        Text {
+            Layout.fillWidth: true
+            text: card.player ? (card.player.trackTitle || "Spotify") : "Spotify"
+            textFormat: Text.PlainText
+            horizontalAlignment: Text.AlignHCenter
+            elide: Text.ElideRight
+            color: Theme.text
+            font { family: Theme.roundFont; pixelSize: 17; bold: true }
+        }
+        Text {
+            Layout.fillWidth: true
+            text: card.player ? (card.player.trackArtist || "") : ""
+            textFormat: Text.PlainText
+            horizontalAlignment: Text.AlignHCenter
+            elide: Text.ElideRight
+            color: Theme.muted
+            font { family: Theme.roundFont; pixelSize: 11 }
+        }
         RowLayout {
-            spacing: 18
-            Rectangle {
-                Layout.preferredWidth: 132
-                Layout.preferredHeight: 132
-                radius: 12
-                color: Theme.elevated
-                clip: true
-                Text {
-                    anchors.centerIn: parent
-                    text: "󰝚"
-                    font.family: Theme.font
-                    font.pixelSize: 46
-                    color: Theme.muted
-                }
-                Image {
-                    anchors.fill: parent
-                    anchors.margins: 3
-                    source: card.player ? card.player.trackArtUrl : ""
-                    sourceSize.width: 264
-                    sourceSize.height: 264
-                    fillMode: Image.PreserveAspectCrop
-                    asynchronous: true
-                    visible: status === Image.Ready
-                }
+            Layout.alignment: Qt.AlignHCenter
+            spacing: 8
+            ActionButton {
+                frameless: true
+                text: "󰒟"; hint: "Shuffle"
+                enabled: !!card.player && card.player.canControl && card.player.shuffleSupported
+                active: !!card.player && card.player.shuffle
+                onClicked: card.player.shuffle = !card.player.shuffle
             }
-            ColumnLayout {
-                Layout.fillWidth: true
-                Layout.fillHeight: true
-                spacing: 5
-                Text {
-                    text: "󰓇  SPOTIFY"
-                    color: Theme.green
-                    font.family: Theme.font
-                    font.pixelSize: 11
-                }
-                Text {
-                    Layout.fillWidth: true
-                    text: card.player ? (card.player.trackTitle || "Spotify") : "Spotify"
-                    textFormat: Text.PlainText
-                    elide: Text.ElideRight
-                    color: Theme.text
-                    font.family: Theme.font
-                    font.pixelSize: 18
-                    font.bold: true
-                }
-                Text {
-                    Layout.fillWidth: true
-                    text: card.player ? (card.player.trackArtist || "Unknown artist") : ""
-                    textFormat: Text.PlainText
-                    elide: Text.ElideRight
-                    color: Theme.muted
-                    font.family: Theme.font
-                    font.pixelSize: 12
-                }
-                Item { Layout.fillHeight: true }
-                RowLayout {
-                    Layout.fillWidth: true
-                    spacing: 8
-                    ActionButton {
-                        text: "󰒟"; hint: "Shuffle"
-                        enabled: !!card.player && card.player.canControl && card.player.shuffleSupported
-                        active: !!card.player && card.player.shuffle
-                        onClicked: card.player.shuffle = !card.player.shuffle
-                    }
-                    ActionButton {
-                        text: "󰒮"; hint: "Previous"
-                        enabled: !!card.player && card.player.canGoPrevious
-                        onClicked: card.player.previous()
-                    }
-                    ActionButton {
-                        accent: true
-                        text: card.player && card.player.isPlaying ? "󰏤" : "󰐊"
-                        hint: card.player && card.player.isPlaying ? "Pause" : "Play"
-                        enabled: !!card.player && card.player.canTogglePlaying
-                        onClicked: card.player.togglePlaying()
-                    }
-                    ActionButton {
-                        text: "󰒭"; hint: "Next"
-                        enabled: !!card.player && card.player.canGoNext
-                        onClicked: card.player.next()
-                    }
-                    ActionButton {
-                        text: card.player && card.player.loopState === MprisLoopState.Track ? "󰑘" : "󰑖"
-                        hint: "Repeat: off / playlist / track"
-                        enabled: !!card.player && card.player.canControl && card.player.loopSupported
-                        active: !!card.player && card.player.loopState !== MprisLoopState.None
-                        onClicked: {
-                            var current = card.player.loopState;
-                            card.player.loopState = current === MprisLoopState.None ? MprisLoopState.Playlist
-                                : current === MprisLoopState.Playlist ? MprisLoopState.Track : MprisLoopState.None;
-                        }
-                    }
+            ActionButton {
+                frameless: true
+                text: "󰒮"; hint: "Previous"
+                enabled: !!card.player && card.player.canGoPrevious
+                onClicked: card.player.previous()
+            }
+            ActionButton {
+                frameless: true
+                accent: true
+                text: card.player && card.player.isPlaying ? "󰏤" : "󰐊"
+                hint: card.player && card.player.isPlaying ? "Pause" : "Play"
+                enabled: !!card.player && card.player.canTogglePlaying
+                onClicked: card.player.togglePlaying()
+            }
+            ActionButton {
+                frameless: true
+                text: "󰒭"; hint: "Next"
+                enabled: !!card.player && card.player.canGoNext
+                onClicked: card.player.next()
+            }
+            ActionButton {
+                frameless: true
+                text: card.player && card.player.loopState === MprisLoopState.Track ? "󰑘" : "󰑖"
+                hint: "Repeat: off / playlist / track"
+                enabled: !!card.player && card.player.canControl && card.player.loopSupported
+                active: !!card.player && card.player.loopState !== MprisLoopState.None
+                onClicked: {
+                    var current = card.player.loopState;
+                    card.player.loopState = current === MprisLoopState.None ? MprisLoopState.Playlist
+                        : current === MprisLoopState.Playlist ? MprisLoopState.Track : MprisLoopState.None;
                 }
             }
         }
@@ -180,6 +135,17 @@ Rectangle {
                 text: card.duration > 0 ? Logic.timeText(card.duration) : "--:--"
                 color: Theme.muted; font.family: Theme.font; font.pixelSize: 11
             }
+        }
+        LyricsView {
+            id: lyricView
+            objectName: "music-lyrics"
+            Layout.fillWidth: true
+            Layout.fillHeight: true
+            Layout.minimumHeight: 60
+            lines: card.player && card.player.positionSupported ? card.lyricLines : []
+            status: card.player && card.player.positionSupported ? card.lyricStatus : "unsynced"
+            position: card.position
+            onRetryRequested: card.lyricsRetryRequested()
         }
     }
 }

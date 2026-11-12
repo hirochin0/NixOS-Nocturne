@@ -12,6 +12,8 @@ in pkgs.runCommand "nocturne-quickshell-check" {
   python ${./icon_catalog_test.py} ${../home/scripts/icon_catalog.py} > "$out/icon-catalog.log" 2>&1
   python ${./bar_tools_test.py} ${../home/scripts/bar.py} > "$out/bar-tools.log" 2>&1
   python ${./launcher_migrate_test.py} ${../home/scripts/launcher_migrate.py} ${../home/desktop/quickshell/launcher-defaults.json} > "$out/launcher-migration.log" 2>&1
+  python ${./lyrics_test.py} ${../home/scripts/lyrics.py} > "$out/lyrics-fetch.log" 2>&1
+  node ${./lyrics-logic.cjs} ${bundle}/LyricsLogic.js > "$out/lyrics-logic.log"
   node ${./branch-logic.cjs} ${bundle}/BranchLogic.js ${bundle}/launcher-defaults.json > "$out/branches.log"
   node ${./dino-logic.cjs} ${bundle}/DinoLogic.js > "$out/dino-logic.log"
   node ${./clock-logic.cjs} ${bundle}/ClockLogic.js > "$out/clock-logic.log"
