@@ -13,6 +13,7 @@ in pkgs.runCommand "nocturne-quickshell-check" {
   python ${./bar_tools_test.py} ${../home/scripts/bar.py} > "$out/bar-tools.log" 2>&1
   python ${./launcher_migrate_test.py} ${../home/scripts/launcher_migrate.py} ${../home/desktop/quickshell/launcher-defaults.json} > "$out/launcher-migration.log" 2>&1
   node ${./branch-logic.cjs} ${bundle}/BranchLogic.js ${bundle}/launcher-defaults.json > "$out/branches.log"
+  node ${./dino-logic.cjs} ${bundle}/DinoLogic.js > "$out/dino-logic.log"
   node ${./clock-logic.cjs} ${bundle}/ClockLogic.js > "$out/clock-logic.log"
   node ${./focus-logic.cjs} ${bundle}/FocusLogic.js ${bundle}/BarContent.qml > "$out/focus.log"
   node ${./quickshell-logic.cjs} ${bundle}/Logic.js > "$out/logic.log"
@@ -68,6 +69,16 @@ in pkgs.runCommand "nocturne-quickshell-check" {
   grep -q NOCTURNE_CLOCK_CHECK_PASSED "$out/clock.log"
   if grep -Eq 'ReferenceError|TypeError|Unable to assign|Failed to load configuration' "$out/clock.log"; then
     cat "$out/clock.log"
+    exit 1
+  fi
+  substitute ${./dino-game.qml} "$TMPDIR/dino-check.qml" --subst-var-by bundle ${bundle}
+  if ! timeout 10s quickshell --path "$TMPDIR/dino-check.qml" --no-color > "$out/dino.log" 2>&1; then
+    cat "$out/dino.log"
+    exit 1
+  fi
+  grep -q NOCTURNE_DINO_CHECK_PASSED "$out/dino.log"
+  if grep -Eq 'ReferenceError|TypeError|Unable to assign|Failed to load configuration|Failed to initialize QSettings' "$out/dino.log"; then
+    cat "$out/dino.log"
     exit 1
   fi
   cp -r ${bundle} "$out/config"

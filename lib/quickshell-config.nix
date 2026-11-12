@@ -63,6 +63,9 @@ in pkgs.runCommand "nocturne-quickshell-config" {
   GlassDigit 1.0 GlassDigit.qml
   GlassClock 1.0 GlassClock.qml
   ClockWindow 1.0 ClockWindow.qml
+  DinoGame 1.0 DinoGame.qml
+  DinoWindow 1.0 DinoWindow.qml
+  singleton DinoScores 1.0 DinoScores.qml
   AppIcon 1.0 AppIcon.qml
   Taskbar 1.0 Taskbar.qml
   BarContent 1.0 BarContent.qml

@@ -35,7 +35,7 @@ ShellRoot {
             screen: modelData
             visible: root.musicEnabled && !!root.player && !!modelData
             anchors { right: true; bottom: true }
-            margins { right: 24; bottom: 24 }
+            margins { right: 24; bottom: 175 }
             implicitWidth: Math.min(480, screen ? screen.width - 32 : 480)
             implicitHeight: 208
             exclusionMode: ExclusionMode.Ignore
@@ -71,6 +71,13 @@ ShellRoot {
     Variants {
         model: Quickshell.screens
         ArcLauncher {
+            required property var modelData
+            screen: modelData
+        }
+    }
+    Variants {
+        model: Quickshell.screens
+        DinoWindow {
             required property var modelData
             screen: modelData
         }
