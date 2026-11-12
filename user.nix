@@ -10,6 +10,6 @@
   enableGreetd = true;
   # 初めて Home Manager を使う場合の初期値。既存環境では元の値を維持。
   homeStateVersion = "26.05";
-  # 空なら内蔵画面を優先し、なければ最初の画面。例: "HDMI-A-1"
+  # 空ならSpotifyカードを全画面へ表示。特定画面だけに出す例: "HDMI-A-1"
   musicWidgetOutput = "";
 }

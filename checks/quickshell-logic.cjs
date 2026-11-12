@@ -18,6 +18,15 @@ assert.equal(logic.musicScreen([external, internal], ''), internal);
 assert.equal(logic.musicScreen([external, internal], 'HDMI-A-1'), external);
 assert.equal(logic.musicScreen([external], 'missing'), external);
 assert.equal(logic.musicScreen([], ''), null);
+// Screen list changes propagate: connect, disconnect, preference fallback, reconnect.
+assert.deepEqual(Array.from(logic.musicScreens([internal], '')), [internal]);
+assert.deepEqual(Array.from(logic.musicScreens([internal, external], '')), [internal, external]);
+assert.deepEqual(Array.from(logic.musicScreens([external], '')), [external]);
+assert.deepEqual(Array.from(logic.musicScreens([], '')), []);
+assert.deepEqual(Array.from(logic.musicScreens([internal, external], 'HDMI-A-1')), [external]);
+assert.deepEqual(Array.from(logic.musicScreens([internal], 'HDMI-A-1')), [internal]);
+assert.deepEqual(Array.from(logic.musicScreens([internal, external], 'HDMI-A-1')), [external]);
+assert.deepEqual(Array.from(logic.musicScreens([], 'HDMI-A-1')), []);
 assert.equal(logic.timeText(102.8), '1:42');
 assert.equal(logic.timeText(NaN), '--:--');
 assert.equal(logic.timeText(-1), '--:--');

@@ -21,6 +21,20 @@ in {
     };
     Install.WantedBy = [ target ];
   };
+  systemd.user.services.nocturne-wallpaper-watch = {
+    Unit = {
+      Description = "Restore NOCTURNE wallpaper on output changes";
+      PartOf = [ target ];
+      Wants = [ "nocturne-wallpaper.service" ];
+      After = [ target "nocturne-wallpaper.service" ];
+    };
+    Service = {
+      ExecStart = "${tool}/bin/nocturne-wallpaper watch";
+      Restart = "on-failure";
+      RestartSec = 2;
+    };
+    Install.WantedBy = [ target ];
+  };
   xdg.desktopEntries.nocturne-wallpaper = {
     name = "Wallpaper";
     comment = "Choose a wallpaper for NOCTURNE";

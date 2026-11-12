@@ -15,6 +15,13 @@ function musicScreen(screens, preferred) {
         || screens[0] || null;
 }
 
+// Default to every output; an explicit music preference keeps its fallback behavior.
+function musicScreens(screens, preferred) {
+    if (!preferred) return screens;
+    const selected = musicScreen(screens, preferred);
+    return selected ? [selected] : [];
+}
+
 function timeText(seconds) {
     if (!Number.isFinite(seconds) || seconds < 0) return "--:--";
     var total = Math.floor(seconds);

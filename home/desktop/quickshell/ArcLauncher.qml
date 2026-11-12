@@ -3,7 +3,6 @@ import Quickshell
 import Quickshell.Wayland
 
 PanelWindow {
-    screen: Quickshell.screens[0] ?? null
     anchors { left: true; top: true }
     margins { left: 20; top: 60 }
     implicitWidth: Math.min(card.implicitWidth, screen ? screen.width - 40 : 1140)

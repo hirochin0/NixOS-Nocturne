@@ -27,6 +27,7 @@ class WallpaperTest(unittest.TestCase):
         self.image = self.directory / '日本語 space "$(touch NEVER)".png'
         Image.new("RGB", (40, 80), "blue").save(self.image)
         self.calls = []
+        self.query_text = ""
         self.query_failures = 0
         self.menu_status = 0
         self.image_status = 0
@@ -48,7 +49,7 @@ class WallpaperTest(unittest.TestCase):
             if self.query_failures:
                 self.query_failures -= 1
                 return subprocess.CompletedProcess(command, 1)
-            return subprocess.CompletedProcess(command, 0)
+            return subprocess.CompletedProcess(command, 0, self.query_text, "")
         return subprocess.CompletedProcess(command, 1 if command[2] in self.failed_images else self.image_status)
 
     def invoke(self, *action):
@@ -95,6 +96,66 @@ class WallpaperTest(unittest.TestCase):
         self.failed_images.add(str(self.image))
         self.assertEqual(self.invoke("restore"), 0)
         self.assertEqual(self.calls[-1][2], str(self.default))
+
+    def query(self, *outputs):
+        self.query_text = "\n".join(
+            f"{name}: {size}, scale: {scale}, currently displaying: {image}"
+            for name, size, scale, image in outputs)
+
+    def test_hotplug_resize_unplug_and_reconnect(self):
+        internal = ("eDP-1", "1920x1200", "1.25", "image: /old.png")
+        external = ("HDMI-A-1", "1920x1080", "1", "image: /old.png")
+        with patch.object(wallpaper, "run", self.fake_run):
+            self.query(internal)
+            previous = wallpaper.sync_outputs("swww", self.default, {})
+            self.assertEqual(self.calls[-1][-2:], ["--outputs", "eDP-1"])
+            self.query(internal, external)
+            wallpaper.remember(self.image)
+            previous = wallpaper.sync_outputs("swww", self.default, previous)
+            self.assertEqual(self.calls[-1][2], str(self.image))
+            self.assertEqual(self.calls[-1][-2:], ["--outputs", "HDMI-A-1"])
+            count = len([c for c in self.calls if c[1] == "img"])
+            previous = wallpaper.sync_outputs("swww", self.default, previous)
+            self.assertEqual(len([c for c in self.calls if c[1] == "img"]), count)
+            self.query(internal, (external[0], "2560x1440", "1.5", external[3]))
+            previous = wallpaper.sync_outputs("swww", self.default, previous)
+            self.assertEqual(self.calls[-1][-1], "HDMI-A-1")
+            self.query(internal)
+            previous = wallpaper.sync_outputs("swww", self.default, previous)
+            self.assertNotIn("HDMI-A-1", previous)
+            self.query(internal, external)
+            wallpaper.sync_outputs("swww", self.default, previous)
+            self.assertEqual(self.calls[-1][-1], "HDMI-A-1")
+
+    def test_query_namespace_and_blank_surface_recovery(self):
+        self.assertEqual(wallpaper.output_state(
+            "default: DP-1: 2560x1440, scale: 1.5, currently displaying: color: 000000"),
+            {"DP-1": ("2560x1440", "1.5", True)})
+        self.assertEqual(wallpaper.output_state(""), {})
+        with self.assertRaises(RuntimeError):
+            wallpaper.output_state("unexpected protocol")
+        with patch.object(wallpaper, "run", self.fake_run):
+            self.query(("eDP-1", "1920x1200", "1", "color: 000000"))
+            wallpaper.sync_outputs("swww", self.default, {"eDP-1": ("1920x1200", "1")})
+            self.assertEqual(self.calls[-1][-1], "eDP-1")
+
+    def test_watcher_retries_daemon_and_apply_failures(self):
+        self.query(("HDMI-A-1", "1920x1080", "1", "image: /old.png"))
+        self.query_failures = 1
+        # First query fails, first apply fails, next apply succeeds.
+        real_fake_run = self.fake_run
+        failures = [1, 0]
+        def failing_once(command, **kwargs):
+            if command[1] == "img":
+                self.image_status = failures.pop(0)
+            return real_fake_run(command, **kwargs)
+        with patch.object(wallpaper, "run", failing_once), \
+                patch.object(wallpaper.time, "sleep", side_effect=[None, None, StopIteration]), \
+                patch("sys.stderr"):
+            with self.assertRaises(StopIteration):
+                wallpaper.watch_outputs("swww", self.default)
+        self.assertEqual(len([c for c in self.calls if c[1] == "query"]), 3)
+        self.assertEqual(len([c for c in self.calls if c[1] == "img"]), 2)
 
     def test_thumbnails_are_sized_cached_and_invalidated(self):
         cached = wallpaper.thumbnail(self.image)

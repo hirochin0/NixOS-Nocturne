@@ -4,6 +4,7 @@ from concurrent.futures import ThreadPoolExecutor
 import hashlib
 import json
 import os
+import re
 from pathlib import Path
 import subprocess
 import sys
@@ -124,6 +125,63 @@ def menu_rows(images, directory, default):
     return "\n".join(rows) + "\n"
 
 
+def apply_image(swww, image, default=None, outputs=None):
+    command = [swww, "img", str(image), "--transition-type", "fade",
+               "--transition-duration", "0.5"]
+    if outputs:
+        command += ["--outputs", ",".join(outputs)]
+    result = run(command, timeout=15)
+    if result.returncode and default is not None and image != default:
+        print("nocturne-wallpaper: saved image failed; restoring default", file=sys.stderr)
+        command[2] = str(default)
+        result = run(command, timeout=15)
+    if result.returncode:
+        raise RuntimeError("swww could not apply the image; previous selection retained")
+
+
+def output_state(query):
+    # v0.11.2 query format, with optional namespace prefix printed by the client.
+    pattern = r"^(?:[^:]+: )?([^:]+): ([0-9]+x[0-9]+), scale: ([^,]+), currently displaying: (.*)$"
+    outputs = {}
+    for line in query.splitlines():
+        match = re.fullmatch(pattern, line.strip())
+        if not match:
+            if line.strip():
+                raise RuntimeError("unrecognized swww query output")
+            continue
+        name, size, scale, displaying = match.groups()
+        outputs[name] = (size, scale, displaying.startswith("color:"))
+    return outputs
+
+
+def sync_outputs(swww, default, previous):
+    result = run([swww, "query"], capture_output=True, text=True, timeout=2)
+    if result.returncode:
+        raise RuntimeError("swww is not ready; retrying output discovery")
+    current = output_state(result.stdout)
+    changed = [name for name, state in current.items()
+               if previous.get(name) != state[:2] or state[2]]
+    if changed:
+        # Read the current selection on each change, not just when the watcher starts.
+        apply_image(swww, saved_or_default(default), default, changed)
+    return {name: state[:2] for name, state in current.items()}
+
+
+def watch_outputs(swww, default):
+    previous = {}
+    last_error = None
+    while True:
+        try:
+            previous = sync_outputs(swww, default, previous)
+            last_error = None
+        except (OSError, ValueError, RuntimeError, subprocess.TimeoutExpired) as error:
+            previous = {}  # Retry failed applies and rediscover after daemon restarts.
+            if str(error) != last_error:
+                print(f"nocturne-wallpaper: {error}", file=sys.stderr, flush=True)
+                last_error = str(error)
+        time.sleep(2)
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--swww", required=True)
@@ -131,9 +189,12 @@ def main():
     parser.add_argument("--menu-theme", required=True)
     parser.add_argument("--default", required=True, type=Path)
     parser.add_argument("--directory", required=True, type=Path)
-    parser.add_argument("action", choices=["restore", "pick", "set"])
+    parser.add_argument("action", choices=["restore", "pick", "set", "watch"])
     parser.add_argument("image", nargs="?", type=Path)
     args = parser.parse_args()
+    if args.action == "watch":
+        watch_outputs(args.swww, args.default)
+        return 0
     if args.action == "restore":
         image = saved_or_default(args.default)
     elif args.action == "set":
@@ -159,14 +220,7 @@ def main():
     if not image.is_file():
         raise FileNotFoundError(f"wallpaper does not exist: {image}")
     ready(args.swww)
-    result = run([args.swww, "img", str(image), "--transition-type", "fade",
-                  "--transition-duration", "0.5"], timeout=15)
-    if result.returncode and args.action == "restore" and image != args.default:
-        print("nocturne-wallpaper: saved image failed; restoring default", file=sys.stderr)
-        result = run([args.swww, "img", str(args.default), "--transition-type", "fade",
-                      "--transition-duration", "0.5"], timeout=15)
-    if result.returncode:
-        raise RuntimeError("swww could not apply the image; previous selection retained")
+    apply_image(args.swww, image, args.default if args.action == "restore" else None)
     if args.action != "restore":
         remember(image)
     return 0

@@ -27,23 +27,27 @@ ShellRoot {
         }
     }
 
-    PanelWindow {
-        id: musicWindow
-        screen: root.musicScreen
-        visible: root.musicEnabled && !!root.player && !!root.musicScreen
-        anchors { right: true; bottom: true }
-        margins { right: 24; bottom: 24 }
-        implicitWidth: Math.min(480, screen ? screen.width - 32 : 480)
-        implicitHeight: 208
-        exclusionMode: ExclusionMode.Ignore
-        WlrLayershell.layer: WlrLayer.Bottom
-        WlrLayershell.namespace: "nocturne-music"
-        WlrLayershell.keyboardFocus: WlrKeyboardFocus.None
-        color: "transparent"
-        MusicCard {
-            anchors.fill: parent
-            player: root.player
-            updating: musicWindow.visible
+    Variants {
+        model: Logic.musicScreens(Quickshell.screens, Theme.musicOutput)
+        PanelWindow {
+            id: musicWindow
+            required property var modelData
+            screen: modelData
+            visible: root.musicEnabled && !!root.player && !!modelData
+            anchors { right: true; bottom: true }
+            margins { right: 24; bottom: 24 }
+            implicitWidth: Math.min(480, screen ? screen.width - 32 : 480)
+            implicitHeight: 208
+            exclusionMode: ExclusionMode.Ignore
+            WlrLayershell.layer: WlrLayer.Bottom
+            WlrLayershell.namespace: "nocturne-music"
+            WlrLayershell.keyboardFocus: WlrKeyboardFocus.None
+            color: "transparent"
+            MusicCard {
+                anchors.fill: parent
+                player: root.player
+                updating: musicWindow.visible
+            }
         }
     }
     Variants {
@@ -57,7 +61,19 @@ ShellRoot {
             }
         }
     }
-    ClockWindow { screen: root.musicScreen }
-    ArcLauncher {}
+    Variants {
+        model: Quickshell.screens
+        ClockWindow {
+            required property var modelData
+            screen: modelData
+        }
+    }
+    Variants {
+        model: Quickshell.screens
+        ArcLauncher {
+            required property var modelData
+            screen: modelData
+        }
+    }
     PowerMenu { id: powerMenu; onDismissed: visible = false }
 }

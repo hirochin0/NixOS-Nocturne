@@ -270,3 +270,10 @@ XDG_DATA_DIRSに採用dconfパッケージのサービス定義を明示する�
 - ガラスのマスク・反射・縁をまとめて変形する。24pxの透明余白を加え、壁紙サンプルの座標と寸法も合わせた。シェーダーはQuickshellと同じQtパッケージセットのQtShaderTools/qsbで、batchable・GLSL/HLSL/MSLを含むqsbへビルドする。ソフトウェア描画では従来の読みやすい文字表示を使う。
 - Qt 6.12.0のqsbでコンパイル成功。PySide6/Qt QuickのOpenGL/llvmpipe実描画で、実マウスによる時計への接近・離脱・ばねの復帰が成功した。単一の「8」で固定位置へ引いた画像を比較し、近い右輪郭+10px、反対の左輪郭+1pxを確認。強度を戻した後は元画像へ復帰した。software描画の時計・英文・接近/離脱テストも成功した。
 - 変更したQMLのqmlformat構文確認、既存ClockLogicのNodeテスト、Nix system-contract derivation評価が成功。NixのQuickshell設定バンドル全体ビルドはcache.nixos.orgのHTTP 429による依存取得制限で中断し、完了していない。実機Wayland/GPUとnixos-rebuildでの確認は適用時に行う。
+
+## モニター接続時の壁紙・ウィジェット追従（2026-11-12 JST）
+
+- 時計の内蔵優先1画面指定と月ランチャーのscreens[0]固定を外し、Quickshell.screensのVariantsで各画面へ生成・破棄する。タスクバーの既存の画面別配置を維持し、Spotifyカードも既定では全画面へ表示する。musicWidgetOutputを明示した場合はカードだけを指定画面へ絞り、切断時の内蔵/先頭画面へのフォールバックを維持する。
+- 起動時の壁紙復元に加え、セッションに連動するnocturne-wallpaper-watch.serviceを追加した。swww queryを2秒間隔で確認し、新規出力・寸法/スケール変更・単色の未設定面へ現在保存されている画像を適用する。通常は変更のない出力へ再送しない。切断後は出力を記録から除外し、再接続時に復元する。daemonや適用の失敗後も再試行し、保存選択を書き換えない。
+- swww v0.11.2のqueryドキュメント/ソースとQuickshell v0.3.2のVariantsドキュメントを確認した。Pythonの壁紙テスト10件成功（既存の画像選択・キャンセル・サムネイル等に加え、接続/切断/再接続、寸法/スケール変更、namespace付きquery、未設定面、daemon/apply失敗後の再試行）。Nodeで全画面の選択と指定画面の接続/切断時フォールバックを確認した。
+- 変更したQMLのqmlformat構文確認、既存の時計/21ノード分岐テスト、Nix system-contract derivation評価が成功。system-contractへ監視サービスのセッション連動・起動順・watchコマンドのassertを追加した。Quickshell全体ビルドと実機Waylandでのモニター抜き差しは今回未実行。実機ではrebuild後に壁紙・監視・ウィジェットの3サービスを再起動して確認する。
