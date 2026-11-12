@@ -56,6 +56,8 @@ assert builtins.elem "nocturne-wallpaper.service" hm.systemd.user.services.noctu
 assert builtins.any (command: builtins.match ".*nocturne-wallpaper watch" command != null) hm.systemd.user.services.nocturne-wallpaper-watch.Service.ExecStart;
 assert cfg.services.power-profiles-daemon.enable;
 assert !cfg.services.tlp.enable && !cfg.services.auto-cpufreq.enable && !cfg.powerManagement.powertop.enable;
+assert builtins.any (command: lib.hasSuffix "/bin/nocturne-desktop restore" command) (lib.toList hm.systemd.user.services.nocturne-widgets.Service.ExecStartPre);
+assert builtins.any (command: lib.hasSuffix "/bin/nocturne-desktop restore" command) (lib.toList hm.systemd.user.services.nocturne-widgets.Service.ExecStopPost);
 assert hm.systemd.user.services.nocturne-widgets.Unit.PartOf == [ hm.wayland.systemd.target ];
 assert cfg.programs.regreet.enable == user.enableGreetd;
 assert !user.enableGreetd || (

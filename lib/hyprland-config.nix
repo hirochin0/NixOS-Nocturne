@@ -14,6 +14,9 @@ let
         files = command pkgs.thunar "thunar";
         launcher = pkgs.lib.getExe tools.launcher;
         wallpaper = "${wallpaper}/bin/nocturne-wallpaper pick";
+        desktopShow = "${pkgs.lib.getExe tools.widgets} desktop-show";
+        desktopHide = "${pkgs.lib.getExe tools.widgets} desktop-hide";
+        desktopToggle = "${pkgs.lib.getExe tools.widgets} desktop-toggle";
         widgets = "${pkgs.lib.getExe tools.widgets} music";
         lock = pkgs.lib.getExe tools.lock;
         power = pkgs.lib.getExe tools.power;
@@ -32,6 +35,7 @@ in pkgs.runCommand "nocturne-hyprland-config" {
   cp ${../home/desktop/hypr}/*.lua "$out/"
   cp ${generated} "$out/generated.lua"
   for file in "$out/"*.lua; do luac -p "$file"; done
+  lua ${../checks/desktop-gesture.lua} "$out/input.lua" > "$out/gestures.log"
   cp "$out/"*.lua "$TMPDIR/config/hypr/"
   export HOME="$TMPDIR/home"
   export XDG_CONFIG_HOME="$TMPDIR/config"

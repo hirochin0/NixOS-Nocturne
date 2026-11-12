@@ -12,6 +12,8 @@ in pkgs.runCommand "nocturne-quickshell-check" {
   python ${./icon_catalog_test.py} ${../home/scripts/icon_catalog.py} > "$out/icon-catalog.log" 2>&1
   python ${./bar_tools_test.py} ${../home/scripts/bar.py} > "$out/bar-tools.log" 2>&1
   python ${./launcher_migrate_test.py} ${../home/scripts/launcher_migrate.py} ${../home/desktop/quickshell/launcher-defaults.json} > "$out/launcher-migration.log" 2>&1
+  python ${./desktop_reveal_test.py} ${../home/scripts/desktop_reveal.py} > "$out/desktop-reveal.log" 2>&1
+  node ${./desktop-logic.cjs} ${bundle}/DesktopLogic.js > "$out/desktop-logic.log"
   python ${./lyrics_test.py} ${../home/scripts/lyrics.py} > "$out/lyrics-fetch.log" 2>&1
   node ${./lyrics-logic.cjs} ${bundle}/LyricsLogic.js > "$out/lyrics-logic.log"
   node ${./branch-logic.cjs} ${bundle}/BranchLogic.js ${bundle}/launcher-defaults.json > "$out/branches.log"
@@ -81,6 +83,16 @@ in pkgs.runCommand "nocturne-quickshell-check" {
   grep -q NOCTURNE_DINO_CHECK_PASSED "$out/dino.log"
   if grep -Eq 'ReferenceError|TypeError|Unable to assign|Failed to load configuration|Failed to initialize QSettings' "$out/dino.log"; then
     cat "$out/dino.log"
+    exit 1
+  fi
+  substitute ${./desktop-curtain.qml} "$TMPDIR/desktop-check.qml" --subst-var-by bundle ${bundle}
+  if ! timeout 10s quickshell --path "$TMPDIR/desktop-check.qml" --no-color > "$out/desktop-curtain.log" 2>&1; then
+    cat "$out/desktop-curtain.log"
+    exit 1
+  fi
+  grep -q NOCTURNE_DESKTOP_CURTAIN_CHECK_PASSED "$out/desktop-curtain.log"
+  if grep -Eq 'ReferenceError|TypeError|Unable to assign|Failed to load configuration' "$out/desktop-curtain.log"; then
+    cat "$out/desktop-curtain.log"
     exit 1
   fi
   cp -r ${bundle} "$out/config"

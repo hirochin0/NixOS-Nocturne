@@ -27,6 +27,13 @@ ShellRoot {
         }
     }
 
+    DesktopController { id: desktop }
+    IpcHandler {
+        target: "desktop"
+        function show(): void { desktop.show(); }
+        function hide(): void { desktop.hide(); }
+        function toggle(): void { desktop.toggle(); }
+    }
     LyricsProvider { id: lyrics; player: root.player; enabled: root.musicEnabled }
     Timer {
         interval: 250

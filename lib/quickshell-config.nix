@@ -5,6 +5,7 @@ let
     runtimeInputs = [ pkgs.python3 ];
     text = ''exec python3 ${../home/scripts/icon_catalog.py}'';
   };
+  desktopTool = import ./desktop-reveal.nix { inherit pkgs desktop; };
   lyricsTool = pkgs.writeShellApplication {
     name = "nocturne-lyrics";
     runtimeInputs = [ pkgs.python3 ];
@@ -40,6 +41,8 @@ let
       readonly property string font: ${builtins.toJSON theme.font}
       readonly property string iconCatalogCommand: "${iconCatalog}/bin/nocturne-icon-catalog"
       readonly property string iconIndexPath: "${iconIndex}"
+      readonly property string notificationCommand: "${pkgs.libnotify}/bin/notify-send"
+      readonly property string desktopCommand: "${desktopTool}/bin/nocturne-desktop"
       readonly property string lyricsCommand: "${lyricsTool}/bin/nocturne-lyrics"
       readonly property string barCommand: "${barTools}/bin/nocturne-bar"
       readonly property string batteryCommand: "${batteryTools}/bin/nocturne-battery"
@@ -72,6 +75,9 @@ in pkgs.runCommand "nocturne-quickshell-config" {
   GlassDigit 1.0 GlassDigit.qml
   GlassClock 1.0 GlassClock.qml
   ClockWindow 1.0 ClockWindow.qml
+  DesktopController 1.0 DesktopController.qml
+  DesktopScene 1.0 DesktopScene.qml
+  DesktopCurtain 1.0 DesktopCurtain.qml
   DinoGame 1.0 DinoGame.qml
   DinoWindow 1.0 DinoWindow.qml
   singleton DinoScores 1.0 DinoScores.qml

@@ -56,7 +56,7 @@ Item {
     }
     readonly property var workspaceIds: {
         const ids = [1, 2, 3, 4, 5];
-        for (const workspace of workspaces) if (!ids.includes(workspace.id)) ids.push(workspace.id);
+        for (const workspace of workspaces) if (!String(workspace.name || "").startsWith("NocturneDesktop-") && !ids.includes(workspace.id)) ids.push(workspace.id);
         return ids;
     }
     FileView {
