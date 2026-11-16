@@ -1,0 +1,17 @@
+const fs=require('node:fs'), vm=require('node:vm'), assert=require('node:assert/strict');
+const l=vm.createContext({});vm.runInContext(fs.readFileSync(process.argv[2],'utf8'),l);
+const a={name:'eDP-1',mode:'1920x1080@60.000',availableModes:['1920x1080@60.00Hz','1920x1080@120.00Hz','1280x720@59.94Hz'],scale:1.5,transform:0,x:0,y:0};
+const b={...a,name:'HDMI-A-1',scale:1,transform:1,x:1280,y:0};
+const plain=x=>JSON.parse(JSON.stringify(x));
+assert.equal(l.modes(a).length,3);
+assert.deepEqual(plain(l.resolutions(a)),['1920x1080','1280x720']);
+assert.deepEqual(plain(l.rates(a)).map(v=>v.hz),[60,120]);
+assert.deepEqual(plain(l.size(a)),{width:1280,height:720});
+assert.deepEqual(plain(l.size(b)),{width:1080,height:1920});
+assert.deepEqual(plain(l.place(b,a,'left')),{x:-1080,y:0});
+assert.deepEqual(plain(l.place(b,a,'right')),{x:1280,y:0});
+assert.deepEqual(plain(l.place(b,a,'above')),{x:0,y:-1920});
+assert.deepEqual(plain(l.place(b,a,'below')),{x:0,y:720});
+assert.deepEqual(plain(l.bounds([a,{...b,x:-1080}])),{x:-1080,y:0,width:2360,height:1920});
+assert.equal(l.bounds([]).width,1920);
+console.log('Supported modes, fractional refresh rates, rotation, scale, negative coordinates and placement passed.');

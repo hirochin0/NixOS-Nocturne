@@ -16,6 +16,7 @@ let
         wallpaper = "${wallpaper}/bin/nocturne-wallpaper pick";
         desktopShow = "${pkgs.lib.getExe tools.widgets} desktop-show";
         desktopHide = "${pkgs.lib.getExe tools.widgets} desktop-hide";
+        displays = "${pkgs.lib.getExe tools.widgets} displays";
         desktopToggle = "${pkgs.lib.getExe tools.widgets} desktop-toggle";
         widgets = "${pkgs.lib.getExe tools.widgets} music";
         lock = pkgs.lib.getExe tools.lock;

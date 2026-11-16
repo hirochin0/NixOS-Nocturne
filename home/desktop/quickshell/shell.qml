@@ -27,6 +27,11 @@ ShellRoot {
         }
     }
 
+    DisplaySettings { id: displaySettings }
+    IpcHandler {
+        target: "displays"
+        function toggle(): void { displaySettings.open(); }
+    }
     DesktopController { id: desktop }
     IpcHandler {
         target: "desktop"

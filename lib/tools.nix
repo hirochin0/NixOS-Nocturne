@@ -11,10 +11,11 @@ in {
     case "''${1:-music}" in
       music) exec quickshell --path "$config_path" ipc call widgets toggleMusic ;;
       power) exec quickshell --path "$config_path" ipc call widgets togglePower ;;
+      displays) exec quickshell --path "$config_path" ipc call displays toggle ;;
       desktop-show) exec quickshell --path "$config_path" ipc call desktop show ;;
       desktop-hide) exec quickshell --path "$config_path" ipc call desktop hide ;;
       desktop-toggle) exec quickshell --path "$config_path" ipc call desktop toggle ;;
-      *) printf 'Usage: nocturne-widgets [music|power|desktop-show|desktop-hide|desktop-toggle]\n' >&2; exit 2 ;;
+      *) printf 'Usage: nocturne-widgets [music|power|displays|desktop-show|desktop-hide|desktop-toggle]\n' >&2; exit 2 ;;
     esac
   '';
   launcher = script "nocturne-launcher" [ pkgs.fuzzel ] ''

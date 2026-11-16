@@ -2,9 +2,10 @@
 let
   bundle = import ../../lib/quickshell-config.nix { inherit pkgs desktop theme user; };
   target = config.wayland.systemd.target;
+  displayTool = import ../../lib/display-tools.nix { inherit pkgs desktop; };
   desktopTool = import ../../lib/desktop-reveal.nix { inherit pkgs desktop; };
 in {
-  home.packages = [ desktop.quickshell desktopTool ];
+  home.packages = [ desktop.quickshell desktopTool displayTool ];
   # Seed writable settings, then apply versioned migrations once.
   home.activation.nocturneLauncher = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
     configDir=${lib.escapeShellArg "${config.xdg.configHome}/nocturne"}
@@ -25,8 +26,8 @@ in {
       After = [ target ];
     };
     Service = {
-      ExecStartPre = "${desktopTool}/bin/nocturne-desktop restore";
-      ExecStopPost = "${desktopTool}/bin/nocturne-desktop restore";
+      ExecStartPre = [ "${desktopTool}/bin/nocturne-desktop restore" "${displayTool}/bin/nocturne-displays revert" ];
+      ExecStopPost = [ "${desktopTool}/bin/nocturne-desktop restore" "${displayTool}/bin/nocturne-displays revert" ];
       ExecStart = "${desktop.quickshell}/bin/quickshell --path ${lib.escapeShellArg "${config.xdg.configHome}/quickshell/nocturne"} --no-duplicate";
       Restart = "on-failure";
       RestartSec = 3;

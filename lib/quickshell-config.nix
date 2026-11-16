@@ -5,6 +5,7 @@ let
     runtimeInputs = [ pkgs.python3 ];
     text = ''exec python3 ${../home/scripts/icon_catalog.py}'';
   };
+  displayTool = import ./display-tools.nix { inherit pkgs desktop; };
   desktopTool = import ./desktop-reveal.nix { inherit pkgs desktop; };
   lyricsTool = pkgs.writeShellApplication {
     name = "nocturne-lyrics";
@@ -42,6 +43,7 @@ let
       readonly property string iconCatalogCommand: "${iconCatalog}/bin/nocturne-icon-catalog"
       readonly property string iconIndexPath: "${iconIndex}"
       readonly property string notificationCommand: "${pkgs.libnotify}/bin/notify-send"
+      readonly property string displayCommand: "${displayTool}/bin/nocturne-displays"
       readonly property string desktopCommand: "${desktopTool}/bin/nocturne-desktop"
       readonly property string lyricsCommand: "${lyricsTool}/bin/nocturne-lyrics"
       readonly property string barCommand: "${barTools}/bin/nocturne-bar"
@@ -75,6 +77,8 @@ in pkgs.runCommand "nocturne-quickshell-config" {
   GlassDigit 1.0 GlassDigit.qml
   GlassClock 1.0 GlassClock.qml
   ClockWindow 1.0 ClockWindow.qml
+  DisplaySettings 1.0 DisplaySettings.qml
+  DisplayCard 1.0 DisplayCard.qml
   DesktopController 1.0 DesktopController.qml
   DesktopScene 1.0 DesktopScene.qml
   DesktopCurtain 1.0 DesktopCurtain.qml
