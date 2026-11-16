@@ -61,7 +61,7 @@ Scope {
         if (operation === "recover" || operation === "restore") {
             if (data.ok === false) { phase = "recovery"; recovery.restart(); return; }
             if (operation === "restore" && scene.frozenBackground && restoreFocus) {
-                phase = "restoring"; settle.interval = plan ? plan.settleMs : 750; settle.restart();
+                phase = "restoring"; settle.interval = 32; settle.restart();
             } else finish();
         } else if (data.ok === false) fail(data.error || "backend failed");
         else if (operation === "inspect") {
@@ -73,7 +73,7 @@ Scope {
         } else if (operation === "show") {
             if (pendingHide) { phase = "return"; run("restore", ["--token=" + plan.token]); return; }
             phase = "settling";
-            settle.interval = plan.settleMs; settle.restart();
+            settle.interval = 16; settle.restart();
         } else if (operation === "state") {
             if (!data.active || data.opened) {
                 watch.stop(); restoreFocus = !!data.active;
@@ -99,11 +99,11 @@ Scope {
     }
     Timer { id: recovery; interval: 2000; onTriggered: if (!worker.busy) controller.run("recover") }
     Timer {
-        id: prepare; interval: 60
+        id: prepare; interval: 16
         onTriggered: {
             scene.plan = controller.plan;
             scene.snapshots = DesktopLogic.windows(controller.plan, Hyprland.toplevels.values);
-            if (scene.snapshots.some(w => !w.source) && controller.prepareAttempts++ < 5) { prepare.restart(); return; }
+            if (scene.snapshots.some(w => !w.source) && controller.prepareAttempts++ < 3) { prepare.restart(); return; }
             scene.snapshots = scene.snapshots.filter(w => w.width > 0 && w.height > 0);
             controller.phase = "capture";
             scene.capture();

@@ -19,7 +19,12 @@ Item {
                 GradientStop { position: 0; color: edge.index === 0 || edge.index === 2 ? "#68878a90" : "transparent" }
                 GradientStop { position: 1; color: edge.index === 0 || edge.index === 2 ? "transparent" : "#68878a90" }
             }
-            MouseArea { anchors.fill: parent; cursorShape: Qt.PointingHandCursor; onClicked: curtain.restoreRequested() }
+
         }
+    }
+    MouseArea {
+        anchors.fill: parent
+        acceptedButtons: Qt.LeftButton | Qt.RightButton | Qt.MiddleButton
+        onClicked: curtain.restoreRequested()
     }
 }

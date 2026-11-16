@@ -35,7 +35,7 @@ class DesktopTest(unittest.TestCase):
 
     def query(self, name):
         return {"monitors": [self.monitor], "clients": self.clients,
-                "animations": [[{"name": "workspaces", "speed": 6, "enabled": True}]]}[name]
+                "animations": [[{"name": "global", "speed": 6, "enabled": True, "overridden": True, "bezier": "default", "style": ""}]]}[name]
 
     def enter(self):
         plan = desktop.inspect()
@@ -48,7 +48,7 @@ class DesktopTest(unittest.TestCase):
         plan = self.enter()
         self.assertEqual({w["address"] for w in plan["windows"]}, {"0xaaa", "0xbbb"})
         self.assertTrue(desktop.journal_path().exists())
-        self.assertEqual(plan["settleMs"], 700)
+        self.assertNotIn("settleMs", plan)
         self.assertTrue(desktop.state(plan["token"])["active"])
         desktop.restore(plan["token"])
         self.assertFalse(desktop.journal_path().exists())
@@ -110,8 +110,31 @@ class DesktopTest(unittest.TestCase):
             args = run.call_args.args[0]
             self.assertIn("r.ok==false", args[-1])
             self.assertNotIn("shell", run.call_args.kwargs)
+            code = args[-1]
+            self.assertLess(code.index('style="slide 0%"'), code.index('run(hl.dsp.focus'))
+            self.assertGreater(code.rindex('speed=6.0'), code.index('run(hl.dsp.focus'))
+            self.assertLess(code.rindex('speed=6.0'), code.index('if not ok then error(err)'))
+            self.assertIn('pcall(function()', code)
         with patch.object(desktop.subprocess, "run", return_value=subprocess.CompletedProcess([], 0, "Lua error: refused", "")):
             with self.assertRaises(RuntimeError): real_dispatch(['hl.dsp.focus({workspace="1"})'])
+
+    def test_animation_settings_preserve_spring_and_disabled_nodes(self):
+        import subprocess
+        nodes = [
+            {"name": "global", "enabled": True, "overridden": True, "speed": 6, "bezier": "default", "style": ""},
+            {"name": "workspacesIn", "enabled": True, "overridden": True, "speed": 3,
+             "bezier": "spring:soft", "style": "slidefade 40%"},
+            {"name": "workspacesOut", "enabled": False, "overridden": True},
+        ]
+        with patch.object(desktop, "query", return_value=[nodes]), patch.object(desktop.subprocess, "run",
+                return_value=subprocess.CompletedProcess([], 0, "ok", "")) as run:
+            real_dispatch(['hl.dsp.focus({workspace="1"})'])
+            code = run.call_args.args[0][-1]
+        self.assertIn('spring="soft"', code)
+        self.assertIn('speed=3.0', code)
+        self.assertIn('style="slidefade 40%"', code)
+        self.assertIn('hl.animation({leaf="workspacesOut",enabled=false})', code)
+        self.assertLess(code.index('pcall(function()'), code.index('style="slide 0%"'))
 
     def test_lua_escaping_and_session_isolation(self):
         self.assertEqual(desktop.lua_string('x"\\\n'), '"x\\"\\\\\\010"')

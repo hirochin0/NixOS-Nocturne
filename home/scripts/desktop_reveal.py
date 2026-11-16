@@ -24,10 +24,33 @@ def lua_string(value):
                          f'\\{ord(c):03d}' if ord(c) < 32 else c for c in str(value)) + '"'
 
 
+def animation_config(node):
+    fields = ["leaf=" + lua_string(node["name"]), "enabled=" + str(bool(node["enabled"])).lower()]
+    if node["enabled"]:
+        curve = node["bezier"]
+        fields += ["speed=" + str(float(node["speed"])),
+                   ("spring=" + lua_string(curve[7:])) if curve.startswith("spring:") else "bezier=" + lua_string(curve),
+                   "style=" + lua_string(node.get("style", ""))]
+    return "hl.animation({" + ",".join(fields) + "})"
+
+
 def dispatch(commands):
     # Each argument is Lua-escaped and sent directly as argv, never through a shell.
     code = 'local function run(d) local r=hl.dispatch(d); if r and (r.ok==false or r.success==false) then error(r.error or r.message or "dispatch failed") end end; '
-    code += '; '.join('run(' + command + ')' for command in commands)
+    # Style is read synchronously when the workspace animation starts. Zero travel
+    # prevents a second slide without disabling animations on other monitors.
+    nodes = {a["name"]: a for a in query("animations")[0]}
+    originals = []
+    for name in ("workspacesIn", "workspacesOut"):
+        node = next((nodes[n] for n in (name, "workspaces", "global")
+                    if n in nodes and nodes[n].get("overridden", n == "global")), None)
+        if node is None:
+            raise RuntimeError("Cannot read workspace animation configuration")
+        originals.append(dict(node, name=name))
+    restore_code = '; '.join(animation_config(n) for n in originals)
+    zero = '; '.join(animation_config(dict(n, enabled=True, speed=1, bezier="default", style="slide 0%")) for n in originals)
+    body = '; '.join('run(' + command + ')' for command in commands)
+    code += 'local ok,err=pcall(function() ' + zero + '; ' + body + ' end); ' + restore_code + '; if not ok then error(err) end'
     result = subprocess.run([HYPRCTL, "eval", code], capture_output=True, text=True, timeout=6, check=True)
     if result.stdout.strip() != "ok":
         raise RuntimeError(result.stdout.strip() or result.stderr.strip() or "Hyprland dispatch failed")
@@ -78,17 +101,8 @@ def inspect():
                and (c.get("workspace", {}).get("name") == origin or c.get("pinned", False))]
     visible.sort(key=lambda c: c.get("focusHistoryID", 1000), reverse=True)
     focused = next((c["address"] for c in visible if c.get("focusHistoryID") == 0), "")
-    settle = 750
-    try:
-        animations = query("animations")
-        nodes = animations[0] if isinstance(animations, list) and animations and isinstance(animations[0], list) else []
-        speeds = [float(a["speed"]) for a in nodes if a.get("name", "").startswith("workspaces") and a.get("enabled")]
-        if speeds:
-            settle = min(2500, max(100, round(max(speeds) * 100 + 100)))
-    except (OSError, ValueError, KeyError, subprocess.SubprocessError):
-        pass
     return {"token": uuid.uuid4().hex, "monitor": monitor["name"], "monitorX": monitor["x"], "monitorY": monitor["y"],
-            "origin": origin, "target": target, "focused": focused, "windows": visible, "settleMs": settle}
+            "origin": origin, "target": target, "focused": focused, "windows": visible}
 
 
 def show(plan):

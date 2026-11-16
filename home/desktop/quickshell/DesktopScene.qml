@@ -23,13 +23,8 @@ PanelWindow {
     WlrLayershell.keyboardFocus: WlrKeyboardFocus.None
     visible: phase !== "idle"
     color: "transparent"
-    // Only edge strips take clicks; the desktop and its widgets remain interactive.
-    mask: Region {
-        Region { x: 0; y: 0; width: window.phase === "desktop" ? 30 : 0; height: window.height }
-        Region { x: window.width - 30; y: 0; width: window.phase === "desktop" ? 30 : 0; height: window.height }
-        Region { x: 0; y: 0; width: window.width; height: window.phase === "desktop" ? 30 : 0 }
-        Region { x: 0; y: window.height - 30; width: window.width; height: window.phase === "desktop" ? 30 : 0 }
-    }
+    // Consume the dismissal click instead of activating a widget underneath.
+    mask: Region { width: window.width; height: window.phase === "desktop" ? window.height : 0 }
     function capture() {
         progress = 0;
         frozenBackground = false;
@@ -75,12 +70,12 @@ PanelWindow {
         captureTimeout.stop(); freezeDelay.stop(); motion.stop();
         canAnimate = false; frozenBackground = false; phase = "idle"; snapshots = []; plan = null;
     }
-    Timer { id: captureTimeout; interval: 1000; onTriggered: window.finishCapture() }
-    Timer { id: freezeDelay; interval: 40; onTriggered: window.captured() }
+    Timer { id: captureTimeout; interval: 160; onTriggered: window.finishCapture() }
+    Timer { id: freezeDelay; interval: 16; onTriggered: window.captured() }
     NumberAnimation {
         id: motion
         target: window; property: "progress"
-        duration: 540; easing.type: Easing.InOutCubic
+        duration: 320; easing.type: Easing.InOutCubic
         onFinished: {
             if (window.phase === "retreat") { window.phase = "desktop"; window.retreated(); }
             else if (window.phase === "return") { window.frozenBackground = true; window.returned(); }
@@ -118,6 +113,7 @@ PanelWindow {
     }
     DesktopCurtain {
         anchors.fill: parent
+        enabled: window.phase === "desktop"
         opacity: window.phase === "desktop" ? 1 : 0
         Behavior on opacity { NumberAnimation { duration: 220 } }
         onRestoreRequested: window.restoreRequested()

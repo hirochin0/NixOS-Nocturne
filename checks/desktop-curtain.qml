@@ -19,7 +19,7 @@ ShellRoot {
                 for (const point of [[2, 200], [638, 200], [320, 2], [320, 398]]) input.mouseClick(curtain, point[0], point[1]);
                 if (surface.restores !== 4) throw new Error("Curtain edge did not request restore");
                 input.mouseClick(curtain, 320, 200);
-                if (surface.centerClicks !== 1 || surface.restores !== 4) throw new Error("Curtain blocked desktop center");
+                if (surface.centerClicks !== 0 || surface.restores !== 5) throw new Error("Center click did not restore or reached widget");
                 console.log("NOCTURNE_DESKTOP_CURTAIN_CHECK_PASSED");
                 Qt.quit();
             }
