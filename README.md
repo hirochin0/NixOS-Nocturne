@@ -53,7 +53,7 @@ sudo nixos-rebuild switch --flake path:.#nocturne
 | `modules/nixos/login.nix` | GUIログイン・キーボード・UWSMセッション |
 | `lib/battery-tools.nix` / `home/scripts/battery.py` | タスクバーのバッテリー表示・％表示設定の保存 |
 | `lib/login-style.nix` | ログイン画面のGTK CSS（色と壁紙は`theme.nix`参照） |
-| `home/programs/development.nix` | GCC・Codex・VS Code・Chrome・Discord・Neofetch、エディタ設定 |
+| `home/programs/development.nix` | GCC・lftp・Codex・VS Code・Chrome・Discord・Neofetch、エディタ設定 |
 | `home/programs/spotify.nix` | Spotify・Spicetify・テーマ・拡張機能 |
 | `home/programs/spicetify/Nocturne/` | Spotify用の追加CSS |
 | `home/desktop/wallpaper.nix` | swwwサービス、壁紙メニュー登録 |
@@ -472,3 +472,10 @@ Super単独（左右とも、キーを離したとき）でアプリランチャ
 設定画面・キーバインド・検証・保存処理の管理元はGitで追跡します。GUIで確定するモニター配置は、ランチャーの個人設定と同じくユーザーが変更できる設定として保持します。元の疑似タイル切替は`Super+Shift+P`へ移しました。実装は`DisplaySettings.qml`・`DisplayCard.qml`・`DisplayLogic.js`と`home/scripts/displays.py`、パッケージ定義は`lib/display-tools.nix`です。
 
 壁紙監視はswwwの空・非空namespace付き出力と旧形式を読み取り、0.5秒間隔で再検出します。新しいモニター・サイズ・倍率に加え、Hyprland側の位置・回転・Hz・画面復帰の変化でも、その出力へ現在の壁紙を再適用します。`swww query`の先頭が`: HDMI-A-1: ...`となる標準namespaceにも対応しています。
+
+
+## FTPクライアント
+
+`home/programs/development.nix`で`lftp`を導入します。FTPサーバーへは`lftp ftp://サーバーのIP:ポート番号`で接続します。たとえばVitaShellのFTPサーバーが192.168.1.50:1337なら`lftp ftp://192.168.1.50:1337`です。ユーザー名が必要な場合は`lftp -u ユーザー名 ftp://サーバーのIP:ポート番号`とし、パスワードは対話入力します。
+
+接続後は`ls`で一覧、`cd`で移動、`put ファイル名`で送信、`get ファイル名`で受信、`exit`で終了します。クライアントとして使用し、サーバーの起動やファイアウォールの開放は追加しません。

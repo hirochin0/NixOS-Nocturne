@@ -6,6 +6,7 @@
     desktop.neofetch
     desktop.discord
     pkgs.gcc
+    pkgs.lftp
     pkgs.htop
     pkgs.cmatrix
     pkgs.cava
