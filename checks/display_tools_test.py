@@ -94,6 +94,37 @@ class DisplaysTest(unittest.TestCase):
         self.assertEqual(d.validate(rows, d.snapshot(self.monitors))[1]["mode"], "1280x720@59.940")
         self.assertEqual(d.lua('a"\\\n'), '"a\\"\\\\\\010"')
 
+    def test_reported_60_003_timing_uses_advertised_selector(self):
+        self.monitors[0].update(height=1200, refreshRate=60.003, availableModes=["1920x1200@60.00Hz"])
+        rows = d.snapshot(self.monitors)
+        self.assertEqual(rows[0]["mode"], "1920x1200@60.000")
+        self.assertEqual(rows[0]["hz"], 60.003)
+
+    def test_delayed_native_apply_is_checked_before_confirmation_starts(self):
+        original = copy.deepcopy(self.monitors)
+        real_apply = self.apply
+        remaining = [2]
+        def query():
+            if remaining[0]:
+                remaining[0] -= 1
+                return copy.deepcopy(original)
+            return copy.deepcopy(self.monitors)
+        # First query snapshots the original; next query still sees the old mode.
+        with patch.object(d, "query", query), patch.object(d.time, "sleep") as sleep:
+            result = d.preview(self.draft())
+        sleep.assert_called_once()
+        self.assertEqual(result["remaining"], 15)
+        self.assertEqual(result["monitors"][1]["mode"], "1920x1080@120.000")
+        d.confirm(result["token"])
+        self.assertIn('1920x1080@120.000', d.paths()[2].read_text())
+
+    def test_rejected_refresh_is_reported_and_rolled_back_before_preview(self):
+        with patch.object(d, "apply", lambda rows: None), patch.object(d, "SETTLE_TIMEOUT", 0):
+            with self.assertRaisesRegex(ValueError, "要求 1920x1080@120.000 / 実際 1920x1080@60.000"):
+                d.preview(self.draft())
+        self.assertFalse(d.pending())
+        self.assertFalse(d.paths()[2].exists())
+
     def test_all_four_sides_and_diagonals_are_accepted(self):
         for x, y in [(-1920, 0), (1920, 0), (0, -1080), (0, 1080), (-2200, -1500), (2400, 1400)]:
             with self.subTest(x=x, y=y):

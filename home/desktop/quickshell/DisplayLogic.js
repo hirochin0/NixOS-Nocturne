@@ -4,12 +4,13 @@ function modes(display) {
         const m = /^(\d+)x(\d+)@([\d.]+)(?:Hz)?$/.exec(value);
         if (!m) continue;
         const key = m[1] + "x" + m[2] + "@" + Number(m[3]).toFixed(3);
-        if (!result.some(v => v.mode === key)) result.push({mode: key, resolution: m[1] + "x" + m[2], hz: Number(m[3])});
+        if (!result.some(v => v.resolution === m[1] + "x" + m[2] && Math.abs(v.hz - Number(m[3])) <= 0.01)) result.push({mode: key, resolution: m[1] + "x" + m[2], hz: Number(m[3])});
     }
     return result;
 }
 function resolutions(display) { return [...new Set(modes(display).map(m => m.resolution))]; }
-function rates(display) { return modes(display).filter(m => m.resolution === display.mode.split("@")[0]); }
+function rates(display) { return modes(display).filter(m => m.resolution === display.mode.split("@")[0]).sort((a,b) => b.hz-a.hz); }
+function rateIndex(display) { return rates(display).findIndex(m => Math.abs(m.hz - Number(display.mode.split("@")[1])) <= 0.01); }
 function size(display) {
     const parts = display.mode.split("@")[0].split("x").map(Number);
     if (display.transform % 2) parts.reverse();

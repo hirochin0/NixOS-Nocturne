@@ -15,6 +15,7 @@ import uuid
 
 HYPRCTL = "hyprctl"
 TIMEOUT = 15
+SETTLE_TIMEOUT = 4
 MODE = re.compile(r"^(\d{2,5})x(\d{2,5})@([0-9]+(?:\.[0-9]+)?)(?:Hz)?$")
 
 
@@ -64,11 +65,45 @@ def apply(rows):
 
 
 def snapshot(monitors):
-    return [{"name": m["name"], "description": m.get("description", ""), "width": m["width"], "height": m["height"],
-             "mode": f'{m["width"]}x{m["height"]}@{m["refreshRate"]:.3f}', "hz": m["refreshRate"],
-             "x": m["x"], "y": m["y"], "scale": m["scale"], "transform": m.get("transform", 0),
-             "availableModes": m.get("availableModes", []), "internal": m["name"].startswith(("eDP", "LVDS", "DSI"))}
-            for m in monitors]
+    rows = []
+    for m in monitors:
+        w, h, hz = m["width"], m["height"], m["refreshRate"]
+        # EDID modes have two decimals, the active timing has five decimals.
+        # Keep the actual Hz separately and use the advertised mode as selector.
+        advertised = [MODE.fullmatch(v) for v in m.get("availableModes", [])]
+        matches = [v for v in advertised if v and int(v[1]) == w and int(v[2]) == h and abs(float(v[3])-hz) <= 0.01]
+        rate = min(matches, key=lambda v: abs(float(v[3])-hz))[3] if matches else hz
+        rows.append({"name": m["name"], "description": m.get("description", ""), "width": w, "height": h,
+                     "mode": f'{w}x{h}@{float(rate):.3f}', "hz": hz, "x": m["x"], "y": m["y"],
+                     "scale": m["scale"], "transform": m.get("transform", 0), "availableModes": m.get("availableModes", []),
+                     "internal": m["name"].startswith(("eDP", "LVDS", "DSI"))})
+    return rows
+
+
+def layout_error(rows, current):
+    known = {m["name"]: m for m in current}
+    for row in rows:
+        actual = known.get(row["name"])
+        if not actual or actual["description"] != row["description"]:
+            return row["name"] + ": モニターの接続が変わりました"
+        if any(actual[k] != row[k] for k in ("width", "height", "transform")) or abs(actual["scale"]-row["scale"]) > 0.001 or abs(actual["hz"]-float(row["mode"].split('@')[1])) > 0.06:
+            return f'{row["name"]}: 要求 {row["mode"]} / 実際 {actual["mode"]}。別のHzを選択してください'
+        if any(abs(actual[k]-row[k]) > 1 for k in ("x", "y")):
+            return f'{row["name"]}: 配置が未反映です（要求 {row["x"]},{row["y"]} / 実際 {actual["x"]},{actual["y"]}）'
+    return ""
+
+
+def wait_applied(rows):
+    deadline = time.monotonic() + SETTLE_TIMEOUT
+    while True:
+        current = snapshot(query())
+        error = layout_error(rows, current)
+        if not error:
+            names = {r["name"] for r in rows}
+            return [r for r in current if r["name"] in names]
+        if time.monotonic() >= deadline:
+            raise ValueError(error)
+        time.sleep(0.1)
 
 
 def number(value, low, high, integer=False):
@@ -144,16 +179,21 @@ def preview(rows):
     before = snapshot(query())
     rows = validate(rows, before)
     token = uuid.uuid4().hex
-    atomic(paths()[0], json.dumps({"token": token, "deadline": time.monotonic() + TIMEOUT, "before": before, "after": rows}))
+    atomic(paths()[0], json.dumps({"token": token, "deadline": time.monotonic() + TIMEOUT + 15, "before": before, "after": rows}))
     try:
         # This child survives a Quickshell crash, a closed dialog and a screen change.
         subprocess.Popen([sys.executable, str(Path(__file__).resolve()), "--hyprctl", HYPRCTL, "watchdog", "--token", token],
                          stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, start_new_session=True)
         apply(rows)
+        actual = wait_applied(rows)
+        # Begin the user's confirmation period only after the compositor applied it.
+        saved = pending()
+        saved.update(after=actual, deadline=time.monotonic() + TIMEOUT)
+        atomic(paths()[0], json.dumps(saved))
     except Exception:
         rollback(token)
         raise
-    return {"ok": True, "token": token, "remaining": max(0, math.ceil(pending()["deadline"] - time.monotonic()))}
+    return {"ok": True, "token": token, "remaining": max(0, math.ceil(pending()["deadline"] - time.monotonic())), "monitors": actual}
 
 
 def confirm(token):
@@ -163,11 +203,9 @@ def confirm(token):
     if time.monotonic() >= saved["deadline"]:
         rollback(token)
         raise ValueError("Preview expired and was reverted")
-    current = {m["name"]: m for m in snapshot(query())}
-    for row in saved["after"]:
-        actual = current.get(row["name"])
-        if not actual or actual["description"] != row["description"] or any(actual[k] != row[k] for k in ("width", "height", "x", "y", "transform")) or abs(actual["scale"]-row["scale"]) > 0.001 or abs(actual["hz"]-float(row["mode"].split('@')[1])) > 0.1:
-            raise ValueError("The requested monitor settings were not applied. Revert and reload.")
+    error = layout_error(saved["after"], snapshot(query()))
+    if error:
+        raise ValueError(error)
     config = paths()[2]
     old = []
     if config.exists():
@@ -185,6 +223,8 @@ def confirm(token):
 def watchdog(token):
     # No lock while waiting: UI confirmation and manual rollback must remain responsive.
     while True:
+        if not paths()[0].exists():
+            return
         try:
             with paths()[1].open("a") as lock:
                 fcntl.flock(lock, fcntl.LOCK_EX)

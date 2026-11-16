@@ -36,6 +36,7 @@ Pane {
     signal revertRequested()
     signal closeRequested()
     component SettingCombo: ComboBox {
+        popup.popupType: Popup.Item
         background: Rectangle { radius: 12; color: Theme.elevated; border.color: parent.activeFocus ? Theme.cyan : "transparent" }
         indicator: Text { x: parent.width - width - 12; y: (parent.height - height) / 2; text: "⌄"; color: Theme.cyan; font.pixelSize: 18 }
     }
@@ -188,7 +189,8 @@ Pane {
                         BarButton {
                             required property var modelData
                             required property int index
-                            text: modelData.name
+                            objectName: "display-select-" + modelData.name
+                            text: (modelData.internal ? "内蔵 · " : "外部 · ") + modelData.name
                             tint: index === card.selected ? Theme.cyan : Theme.text
                             onClicked: card.selected = index
                         }
@@ -218,7 +220,7 @@ Pane {
                         Layout.fillWidth: true
                         objectName: "display-refresh"
                         model: card.current ? DisplayLogic.rates(card.current).map(m => m.hz.toFixed(3) + " Hz") : []
-                        currentIndex: card.current ? DisplayLogic.rates(card.current).findIndex(m => Math.abs(m.hz - Number(card.current.mode.split("@")[1])) < 0.001) : -1
+                        currentIndex: card.current ? DisplayLogic.rateIndex(card.current) : -1
                         onActivated: index => card.editRequested(card.selected, {mode: DisplayLogic.rates(card.current)[index].mode})
                     }
                     Label { text: "表示倍率" }
@@ -242,6 +244,21 @@ Pane {
                     SettingSpin { Layout.fillWidth: true; from: -32768; to: 32768; editable: true; value: card.current ? card.current.x : 0; onValueModified: card.editRequested(card.selected, {x: value}) }
                     Label { text: "Y 座標" }
                     SettingSpin { Layout.fillWidth: true; from: -32768; to: 32768; editable: true; value: card.current ? card.current.y : 0; onValueModified: card.editRequested(card.selected, {y: value}) }
+                }
+                Flow {
+                    Layout.fillWidth: true
+                    spacing: 6
+                    enabled: !!card.current && !card.busy && !card.previewing
+                    Repeater {
+                        model: card.current ? DisplayLogic.rates(card.current) : []
+                        BarButton {
+                            required property var modelData
+                            objectName: "display-hz-" + modelData.hz.toFixed(3)
+                            text: modelData.hz.toFixed(2) + " Hz"
+                            tint: card.current && Math.abs(Number(card.current.mode.split("@")[1])-modelData.hz) <= 0.01 ? Theme.cyan : Theme.text
+                            onClicked: card.editRequested(card.selected, {mode: modelData.mode})
+                        }
+                    }
                 }
                 RowLayout {
                     visible: card.displays.length > 1
@@ -272,13 +289,13 @@ Pane {
             Layout.fillWidth: true
             Label {
                 Layout.fillWidth: true
-                text: card.previewing ? "この設定を保持しますか？ " + card.remaining + " 秒で元に戻ります" : card.notice || "変更後に15秒間のプレビューを行います"
+                text: card.previewing ? "「この設定を保存」を押してください · " + card.remaining + " 秒で元に戻ります" : card.notice || "変更後に15秒間のプレビューを行います"
                 color: card.previewing ? Theme.cyan : Theme.muted
                 wrapMode: Text.Wrap
                 font.pixelSize: 12
             }
             Button { text: "元に戻す"; visible: card.previewing; enabled: !card.busy; onClicked: card.revertRequested() }
-            Button { objectName: "display-apply"; text: card.previewing ? "保持" : "適用して確認"; highlighted: true; enabled: !card.busy && card.displays.length > 0; onClicked: card.previewing ? card.keepRequested() : card.applyRequested() }
+            Button { objectName: "display-apply"; text: card.previewing ? "この設定を保存" : "適用して確認"; highlighted: true; enabled: !card.busy && card.displays.length > 0; onClicked: card.previewing ? card.keepRequested() : card.applyRequested() }
         }
     }
 }

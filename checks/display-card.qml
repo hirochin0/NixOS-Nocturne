@@ -26,7 +26,7 @@ ShellRoot {
             onTriggered: {
                 card.selected = 1;
                 const refresh = input.findChild(card, "display-refresh");
-                refresh.currentIndex = 1; refresh.activated(1);
+                refresh.currentIndex = 0; refresh.activated(0);
                 if (card.displays[1].mode !== "1920x1080@120.000" || card.edits !== 1) throw new Error("Hz selection did not edit selected monitor");
                 const resolution = input.findChild(card, "display-resolution");
                 resolution.currentIndex = 1; resolution.activated(1);

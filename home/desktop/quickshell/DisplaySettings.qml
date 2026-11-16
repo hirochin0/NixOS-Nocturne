@@ -56,13 +56,20 @@ PanelWindow {
             remaining = data.pending ? data.pending.remaining : 0;
         } else if (operation === "preview") {
             token = data.token; remaining = data.remaining;
+            if (data.monitors) monitors = data.monitors;
         } else {
             token = ""; remaining = 0;
             notice = operation === "confirm" ? "保存しました。再ログイン・モニター再接続後にも適用されます" : "元の設定に戻しました";
             if (visible) run("read");
         }
     }
-    MouseArea { anchors.fill: parent; onClicked: window.close() }
+    MouseArea {
+        anchors.fill: parent
+        onClicked: {
+            if (window.token) window.notice = "保存する場合は「この設定を保存」を押してください";
+            else window.close();
+        }
+    }
     Item {
         anchors.fill: parent
         focus: window.visible
@@ -108,7 +115,7 @@ PanelWindow {
     }
     Timer {
         id: processTimeout
-        interval: 12000
+        interval: 20000
         onTriggered: {
             window.error = "モニター設定の応答がありません。プレビューは自動で元に戻ります";
             window.revertQueued = true;

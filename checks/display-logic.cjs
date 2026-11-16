@@ -5,7 +5,7 @@ const b={...a,name:'HDMI-A-1',scale:1,transform:1,x:1280,y:0};
 const plain=x=>JSON.parse(JSON.stringify(x));
 assert.equal(l.modes(a).length,3);
 assert.deepEqual(plain(l.resolutions(a)),['1920x1080','1280x720']);
-assert.deepEqual(plain(l.rates(a)).map(v=>v.hz),[60,120]);
+assert.deepEqual(plain(l.rates(a)).map(v=>v.hz),[120,60]);
 assert.deepEqual(plain(l.size(a)),{width:1280,height:720});
 assert.deepEqual(plain(l.size(b)),{width:1080,height:1920});
 assert.deepEqual(plain(l.place(b,a,'left')),{x:-1080,y:0});
@@ -24,3 +24,11 @@ for (const [direction, x, y] of [['left',-1920,0],['right',1920,0],['above',0,-1
 assert.deepEqual(plain(l.drop([normal,{...normal,name:'external'}],1,-2600.4,-1900.6,10)),{x:-2600,y:-1901});
 assert.deepEqual(plain(l.drop([normal,{...normal,name:'external'}],1,2300,1700,10)),{x:2300,y:1700});
 console.log('Drag placement: four sides, diagonal gaps and negative coordinates passed.');
+
+const thinkpad={...a,mode:'1920x1200@60.003',availableModes:['1920x1200@60.00Hz','1920x1080@60.00Hz'],scale:1};
+assert.equal(l.rates(thinkpad).length,1);
+assert.equal(l.rateIndex(thinkpad),0);
+const benq={...a,mode:'1920x1080@60.000',availableModes:['1920x1080@60.00Hz','3840x2160@60.00Hz','1920x1080@165.00Hz','1920x1080@144.00Hz','1920x1080@120.00Hz','1920x1080@119.88Hz','1920x1080@100.00Hz','1920x1080@60.00Hz','1920x1080@59.94Hz']};
+assert.deepEqual(plain(l.rates(benq)).map(v=>v.hz),[165,144,120,119.88,100,60,59.94]);
+assert.equal(l.rateIndex(benq),5);
+console.log('Reported ThinkPad/BenQ data: rounded timings deduplicated; 165/144/120 Hz retained.');
