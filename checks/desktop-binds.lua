@@ -13,3 +13,17 @@ assert(binds["SUPER + D"].action.args[1]=="desktop")
 assert(not binds["SUPER + CTRL + D"])
 assert(binds["SUPER + Return"] and binds["SUPER + 1"])
 print("Super release launcher, Super+D desktop and existing shortcuts passed.")
+
+if arg[2] then
+    local gestures, requested = {}, nil
+    hl.config = function() end
+    hl.gesture = function(value) gestures[value.direction] = value end
+    hl.dispatch = function(action) requested = action end
+    assert(loadfile(arg[2]))()({keyboardLayout="jp", commands=commands})
+    gestures.up.action.finish({cancelled=false})
+    assert(requested.args[1] == binds["SUPER + D"].action.args[1])
+    requested = nil
+    gestures.up.action.finish({cancelled=true})
+    assert(requested == nil)
+    print("Three-finger up and Super+D dispatch exactly the same command.")
+end

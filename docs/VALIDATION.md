@@ -327,3 +327,8 @@ XDG_DATA_DIRSに採用dconfパッケージのサービス定義を明示する�
 - Super_L/Super_R単独のreleaseでアプリ検索、Super+Dでデスクトップ表示/復帰へ変更。Super+Ctrl+Dの旧バインドは外した。公式の修飾キー単独release形式に従い、Super+D等の組み合わせ後にランチャーを重ねて開かない。キー登録のLuaテストを追加した。
 - Pythonバックエンド7テスト、最寄り四隅のNodeテスト、Luaの短いスワイプ/キャンセル/左右操作と新キーバインドのテストが成功。Qtで取得失敗時にもdesktopへ進んで復帰できること、Processの状態確認中の復帰要求、起動失敗、準備/取得/切替中の連打、通常復帰を確認（キャプチャ・コンポジター・Processのみスタブ）。
 - QML構文確認とNix system-contract/quickshell/hyprland-configのderivation評価が成功。Quickshell v0.3.2のProcess/ScreencopyView実装とHyprland公式のSuper単独release説明を確認した。実機タッチパッド/Waylandキャプチャでの確認と全体ビルドは今回未実施。
+
+## 上スワイプとSuper+Dを同じ操作に統一（2026-11-16 JST）
+
+- 実機から、直接IPC・Super+D・3本指左右スワイプは動作するとの報告を受けた。上スワイプだけがdesktopShow（表示専用）を使っていたため、Super+Dと同一のdesktopToggleへ変更した。上スワイプを繰り返すと表示/復帰を切り替える。下スワイプの復帰専用操作は維持する。
+- Luaのジェスチャー/キーバインドテストが成功。実際のinput.lua/binds.luaを同じコマンド定義で読み込み、上スワイプとSuper+Dが完全に同じexecコマンドを発行すること、およびキャンセル時は発行しないことを検証した。この照合を既存Hyprland設定チェックに追加した。実機タッチパッドでの再確認は適用後に必要。

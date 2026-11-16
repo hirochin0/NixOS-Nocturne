@@ -13,6 +13,6 @@ return function(settings)
             end,
         } })
     end
-    revealGesture("up", settings.commands.desktopShow)
+    revealGesture("up", settings.commands.desktopToggle)
     revealGesture("down", settings.commands.desktopHide)
 end
