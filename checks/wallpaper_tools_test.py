@@ -139,6 +139,37 @@ class WallpaperTest(unittest.TestCase):
             wallpaper.sync_outputs("swww", self.default, {"eDP-1": ("1920x1200", "1")})
             self.assertEqual(self.calls[-1][-1], "eDP-1")
 
+    def test_pinned_swww_empty_namespace_hotplug(self):
+        # Pinned client prints "{namespace}: {BgInfo}" with an EMPTY default namespace.
+        self.query_text = ": eDP-1: 1920x1080, scale: 1, currently displaying: image: /old.png"
+        with patch.object(wallpaper, "run", self.fake_run):
+            previous = wallpaper.sync_outputs("swww", self.default, {})
+            self.assertEqual(set(previous), {"eDP-1"})
+            self.query_text += "\n: HDMI-A-1: 1920x1080, scale: 1.25, currently displaying: color: 000000"
+            previous = wallpaper.sync_outputs("swww", self.default, previous)
+            self.assertEqual(self.calls[-1][-2:], ["--outputs", "HDMI-A-1"])
+            self.assertEqual(set(previous), {"eDP-1", "HDMI-A-1"})
+
+    def test_position_rotation_hz_and_wake_repaint_without_swww_size_change(self):
+        self.query(("eDP-1", "1920x1080", "1", "image: /old.png"))
+        monitor = {"name": "eDP-1", "x": 0, "y": 0, "width": 1920, "height": 1080,
+                   "transform": 0, "refreshRate": 60, "scale": 1, "dpmsStatus": True}
+        def run(command, **kwargs):
+            if command[0] == "hyprctl":
+                return subprocess.CompletedProcess(command, 0, json.dumps([monitor]), "")
+            return self.fake_run(command, **kwargs)
+        with patch.object(wallpaper, "run", run):
+            previous = wallpaper.sync_outputs("swww", self.default, {}, "hyprctl")
+            count = len([c for c in self.calls if c[1] == "img"])
+            previous = wallpaper.sync_outputs("swww", self.default, previous, "hyprctl")
+            self.assertEqual(len([c for c in self.calls if c[1] == "img"]), count)
+            for key, value in [("x", -1920), ("y", -1080), ("transform", 2), ("refreshRate", 120), ("dpmsStatus", False), ("dpmsStatus", True)]:
+                monitor[key] = value
+                previous = wallpaper.sync_outputs("swww", self.default, previous, "hyprctl")
+                count += 1
+                self.assertEqual(len([c for c in self.calls if c[1] == "img"]), count)
+                self.assertEqual(self.calls[-1][-1], "eDP-1")
+
     def test_watcher_retries_daemon_and_apply_failures(self):
         self.query(("HDMI-A-1", "1920x1080", "1", "image: /old.png"))
         self.query_failures = 1

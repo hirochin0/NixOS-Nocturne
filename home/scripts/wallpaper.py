@@ -141,7 +141,7 @@ def apply_image(swww, image, default=None, outputs=None):
 
 def output_state(query):
     # v0.11.2 query format, with optional namespace prefix printed by the client.
-    pattern = r"^(?:[^:]+: )?([^:]+): ([0-9]+x[0-9]+), scale: ([^,]+), currently displaying: (.*)$"
+    pattern = r"^(?:[^:]*: )?([^:]+): ([0-9]+x[0-9]+), scale: ([^,]+), currently displaying: (.*)$"
     outputs = {}
     for line in query.splitlines():
         match = re.fullmatch(pattern, line.strip())
@@ -154,37 +154,46 @@ def output_state(query):
     return outputs
 
 
-def sync_outputs(swww, default, previous):
+def sync_outputs(swww, default, previous, hyprctl=None):
     result = run([swww, "query"], capture_output=True, text=True, timeout=2)
     if result.returncode:
         raise RuntimeError("swww is not ready; retrying output discovery")
     current = output_state(result.stdout)
+    geometry = {}
+    if hyprctl:
+        monitors = run([hyprctl, "-j", "monitors"], capture_output=True, text=True, timeout=2)
+        if monitors.returncode:
+            raise RuntimeError("Hyprland output discovery failed; retrying")
+        geometry = {m["name"]: tuple(m.get(k) for k in ("x", "y", "width", "height", "scale", "transform", "refreshRate", "dpmsStatus"))
+                    for m in json.loads(monitors.stdout)}
+    signatures = {name: state[:2] + geometry.get(name, ()) for name, state in current.items()}
     changed = [name for name, state in current.items()
-               if previous.get(name) != state[:2] or state[2]]
+               if previous.get(name) != signatures[name] or state[2]]
     if changed:
         # Read the current selection on each change, not just when the watcher starts.
         apply_image(swww, saved_or_default(default), default, changed)
-    return {name: state[:2] for name, state in current.items()}
+    return signatures
 
 
-def watch_outputs(swww, default):
+def watch_outputs(swww, default, hyprctl=None):
     previous = {}
     last_error = None
     while True:
         try:
-            previous = sync_outputs(swww, default, previous)
+            previous = sync_outputs(swww, default, previous, hyprctl)
             last_error = None
-        except (OSError, ValueError, RuntimeError, subprocess.TimeoutExpired) as error:
+        except (OSError, ValueError, KeyError, TypeError, RuntimeError, subprocess.TimeoutExpired) as error:
             previous = {}  # Retry failed applies and rediscover after daemon restarts.
             if str(error) != last_error:
                 print(f"nocturne-wallpaper: {error}", file=sys.stderr, flush=True)
                 last_error = str(error)
-        time.sleep(2)
+        time.sleep(0.5)
 
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--swww", required=True)
+    parser.add_argument("--hyprctl")
     parser.add_argument("--rofi", required=True)
     parser.add_argument("--menu-theme", required=True)
     parser.add_argument("--default", required=True, type=Path)
@@ -193,7 +202,7 @@ def main():
     parser.add_argument("image", nargs="?", type=Path)
     args = parser.parse_args()
     if args.action == "watch":
-        watch_outputs(args.swww, args.default)
+        watch_outputs(args.swww, args.default, args.hyprctl)
         return 0
     if args.action == "restore":
         image = saved_or_default(args.default)
@@ -229,6 +238,6 @@ def main():
 if __name__ == "__main__":
     try:
         sys.exit(main())
-    except (OSError, ValueError, RuntimeError, subprocess.TimeoutExpired) as error:
+    except (OSError, ValueError, KeyError, TypeError, RuntimeError, subprocess.TimeoutExpired) as error:
         print(f"nocturne-wallpaper: {error}", file=sys.stderr)
         sys.exit(1)

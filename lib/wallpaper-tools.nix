@@ -9,6 +9,7 @@ pkgs.writeShellApplication {
   text = ''
     exec python3 ${../home/scripts/wallpaper.py} \
       --swww ${desktop.swww}/bin/swww \
+      --hyprctl ${desktop.hyprland}/bin/hyprctl \
       --rofi ${desktop.rofi}/bin/rofi \
       --menu-theme ${menuTheme} \
       --default ${theme.wallpaper} \

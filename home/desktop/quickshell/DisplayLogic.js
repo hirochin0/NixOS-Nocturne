@@ -30,3 +30,21 @@ function place(display, reference, direction) {
     if (direction === "above") return {x: reference.x, y: Math.round(reference.y - own.height)};
     return {x: reference.x, y: Math.round(reference.y + other.height)};
 }
+
+// Snap close edges, including diagonal corners, without restricting directions.
+function drop(displays, index, x, y, tolerance) {
+    const own = size(displays[index]);
+    let bestX = tolerance, bestY = tolerance;
+    let resultX = x, resultY = y;
+    displays.forEach((other, i) => {
+        if (i === index) return;
+        const s = size(other);
+        [other.x - own.width, other.x, other.x + s.width - own.width, other.x + s.width].forEach(edge => {
+            if (Math.abs(edge - x) < bestX) { bestX = Math.abs(edge - x); resultX = edge; }
+        });
+        [other.y - own.height, other.y, other.y + s.height - own.height, other.y + s.height].forEach(edge => {
+            if (Math.abs(edge - y) < bestY) { bestY = Math.abs(edge - y); resultY = edge; }
+        });
+    });
+    return {x: Math.round(resultX), y: Math.round(resultY)};
+}

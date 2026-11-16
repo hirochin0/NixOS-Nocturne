@@ -15,3 +15,12 @@ assert.deepEqual(plain(l.place(b,a,'below')),{x:0,y:720});
 assert.deepEqual(plain(l.bounds([a,{...b,x:-1080}])),{x:-1080,y:0,width:2360,height:1920});
 assert.equal(l.bounds([]).width,1920);
 console.log('Supported modes, fractional refresh rates, rotation, scale, negative coordinates and placement passed.');
+
+const normal={...a,scale:1,transform:0};
+for (const [direction, x, y] of [['left',-1920,0],['right',1920,0],['above',0,-1080],['below',0,1080]]) {
+    const result=l.drop([normal,{...normal,name:'external'}],1,x+5,y-5,12);
+    assert.deepEqual(plain(result),{x,y},direction+' drag must snap to adjacent edges');
+}
+assert.deepEqual(plain(l.drop([normal,{...normal,name:'external'}],1,-2600.4,-1900.6,10)),{x:-2600,y:-1901});
+assert.deepEqual(plain(l.drop([normal,{...normal,name:'external'}],1,2300,1700,10)),{x:2300,y:1700});
+console.log('Drag placement: four sides, diagonal gaps and negative coordinates passed.');

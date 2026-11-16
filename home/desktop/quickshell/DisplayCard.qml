@@ -7,6 +7,22 @@ Pane {
     id: card
     property var displays: []
     property int selected: 0
+    property real viewCenterX: 0
+    property real viewCenterY: 0
+    property real viewZoom: 1
+    property bool viewReady: false
+    function fitView() {
+        if (!displays.length || map.width <= 48 || map.height <= 40) return;
+        const extent = DisplayLogic.bounds(displays);
+        const sizes = displays.map(d => DisplayLogic.size(d));
+        // Keep room for a monitor on every side, rather than filling the canvas.
+        viewCenterX = extent.x + extent.width / 2;
+        viewCenterY = extent.y + extent.height / 2;
+        viewZoom = Math.max(0.005, Math.min(2, (map.width - 48) / (extent.width + 2 * Math.max(...sizes.map(s => s.width))),
+                           (map.height - 40) / (extent.height + 2 * Math.max(...sizes.map(s => s.height)))));
+        viewReady = true;
+    }
+    onDisplaysChanged: if (!viewReady && displays.length) Qt.callLater(fitView)
     property bool busy: false
     property bool previewing: false
     property int remaining: 0
@@ -70,17 +86,42 @@ Pane {
             ColumnLayout {
                 width: parent.width
                 spacing: 14
-                Label { text: "ドラッグで配置 · X / Yは倍率適用後の座標"; color: Theme.muted; wrapMode: Text.Wrap; Layout.fillWidth: true }
+                RowLayout {
+                    Layout.fillWidth: true
+                    Label { text: "ドラッグで自由配置 · 空白をドラッグで移動"; color: Theme.muted; Layout.fillWidth: true; wrapMode: Text.Wrap }
+                    BarButton { text: "−"; hint: "縮小"; onClicked: card.viewZoom = Math.max(0.005, card.viewZoom / 1.25) }
+                    BarButton { text: "+"; hint: "拡大"; onClicked: card.viewZoom = Math.min(2, card.viewZoom * 1.25) }
+                    BarButton { text: "全体表示"; onClicked: card.fitView() }
+                }
                 Rectangle {
                     id: map
+                    onWidthChanged: if (!card.viewReady) Qt.callLater(card.fitView)
+                    onHeightChanged: if (!card.viewReady) Qt.callLater(card.fitView)
                     Layout.fillWidth: true
-                    Layout.preferredHeight: 230
+                    Layout.preferredHeight: 290
                     color: Theme.bg; radius: 20
                     clip: true
-                    readonly property var extent: DisplayLogic.bounds(card.displays)
-                    readonly property real factor: Math.min((width - 64) / Math.max(1, extent.width), (height - 48) / Math.max(1, extent.height))
-                    readonly property real originX: (width - extent.width * factor) / 2 - extent.x * factor
-                    readonly property real originY: (height - extent.height * factor) / 2 - extent.y * factor
+                    readonly property real factor: card.viewZoom
+                    readonly property real originX: width / 2 - card.viewCenterX * factor
+                    readonly property real originY: height / 2 - card.viewCenterY * factor
+                    MouseArea {
+                        anchors.fill: parent
+                        preventStealing: true
+                        property point pointer
+                        property real centerX
+                        property real centerY
+                        cursorShape: pressed ? Qt.ClosedHandCursor : Qt.OpenHandCursor
+                        onPressed: mouse => { pointer = Qt.point(mouse.x, mouse.y); centerX = card.viewCenterX; centerY = card.viewCenterY; }
+                        onPositionChanged: mouse => {
+                            if (!pressed) return;
+                            card.viewCenterX = centerX - (mouse.x - pointer.x) / map.factor;
+                            card.viewCenterY = centerY - (mouse.y - pointer.y) / map.factor;
+                        }
+                        onWheel: wheel => {
+                            card.viewZoom = Math.max(0.005, Math.min(2, card.viewZoom * (wheel.angleDelta.y > 0 ? 1.15 : 1 / 1.15)));
+                            wheel.accepted = true;
+                        }
+                    }
                     Repeater {
                         model: card.displays
                         Rectangle {
@@ -89,10 +130,11 @@ Pane {
                             required property var modelData
                             required property int index
                             readonly property var logicalSize: DisplayLogic.size(modelData)
-                            x: map.originX + modelData.x * map.factor
-                            y: map.originY + modelData.y * map.factor
+                            x: map.originX + modelData.x * map.factor + pointer.dragX
+                            y: map.originY + modelData.y * map.factor + pointer.dragY
                             width: logicalSize.width * map.factor
                             height: logicalSize.height * map.factor
+                            z: pointer.pressed ? 2 : index === card.selected ? 1 : 0
                             radius: 12
                             color: index === card.selected ? Qt.alpha(Theme.cyan, 0.19) : Theme.elevated
                             border.color: index === card.selected ? Theme.cyan : Qt.alpha(Theme.muted, 0.5)
@@ -105,36 +147,35 @@ Pane {
                                 Text { width: parent.width; text: monitor.modelData.mode.replace("@", " · ") + " Hz"; color: Theme.muted; font.pixelSize: 10; horizontalAlignment: Text.AlignHCenter; elide: Text.ElideRight }
                             }
                             MouseArea {
+                                id: pointer
                                 anchors.fill: parent
                                 enabled: !card.busy && !card.previewing
+                                preventStealing: true
                                 cursorShape: pressed ? Qt.ClosedHandCursor : Qt.OpenHandCursor
-                                property real startX: 0
-                                property real startY: 0
-                                property real oldX: 0
-                                property real oldY: 0
+                                property real dragX: 0
+                                property real dragY: 0
                                 property real factor: 1
                                 property point offset: Qt.point(0, 0)
                                 onPressed: mouse => {
                                     card.selected = monitor.index;
                                     offset = mapToItem(map, mouse.x, mouse.y);
-                                    startX = monitor.x; startY = monitor.y;
-                                    oldX = monitor.modelData.x; oldY = monitor.modelData.y;
                                     factor = map.factor;
+                                    dragX = 0; dragY = 0;
                                 }
                                 onPositionChanged: mouse => {
                                     if (!pressed) return;
                                     const point = mapToItem(map, mouse.x, mouse.y);
-                                    if (Math.abs(point.x - offset.x) + Math.abs(point.y - offset.y) < 3) return;
-                                    monitor.x = startX + point.x - offset.x;
-                                    monitor.y = startY + point.y - offset.y;
+                                    dragX = point.x - offset.x;
+                                    dragY = point.y - offset.y;
                                 }
                                 onReleased: {
-                                    if (Math.abs(monitor.x - startX) + Math.abs(monitor.y - startY) < 3) return;
-                                    const x = Math.round((oldX + (monitor.x - startX) / factor) / 8) * 8;
-                                    const y = Math.round((oldY + (monitor.y - startY) / factor) / 8) * 8;
-                                    card.editRequested(monitor.index, {x: x, y: y});
+                                    if (Math.abs(dragX) + Math.abs(dragY) < 3) { dragX = 0; dragY = 0; return; }
+                                    const patch = DisplayLogic.drop(card.displays, monitor.index,
+                                        monitor.modelData.x + dragX / factor, monitor.modelData.y + dragY / factor, 14 / factor);
+                                    dragX = 0; dragY = 0;
+                                    card.editRequested(monitor.index, patch);
                                 }
-                                onCanceled: { card.editRequested(monitor.index, {x: oldX, y: oldY}); }
+                                onCanceled: { dragX = 0; dragY = 0; }
                             }
                         }
                     }

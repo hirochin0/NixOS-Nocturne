@@ -94,6 +94,13 @@ class DisplaysTest(unittest.TestCase):
         self.assertEqual(d.validate(rows, d.snapshot(self.monitors))[1]["mode"], "1280x720@59.940")
         self.assertEqual(d.lua('a"\\\n'), '"a\\"\\\\\\010"')
 
+    def test_all_four_sides_and_diagonals_are_accepted(self):
+        for x, y in [(-1920, 0), (1920, 0), (0, -1080), (0, 1080), (-2200, -1500), (2400, 1400)]:
+            with self.subTest(x=x, y=y):
+                rows = self.draft(); rows[1].update(x=x, y=y)
+                clean = d.validate(rows, d.snapshot(self.monitors))
+                self.assertEqual((clean[1]["x"], clean[1]["y"]), (x, y))
+
     def test_overlap_uses_rotation_and_logical_scale(self):
         rows = self.draft(); rows[1].update(x=1000, scale=1.5, transform=1)
         with self.assertRaises(ValueError): d.validate(rows, d.snapshot(self.monitors))

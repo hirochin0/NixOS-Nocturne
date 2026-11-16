@@ -50,6 +50,7 @@ PanelWindow {
         if (!data.ok) { error = data.error || "設定を変更できませんでした"; return; }
         if (operation === "read") {
             monitors = data.monitors;
+            Qt.callLater(card.fitView);
             if (card.selected >= monitors.length) card.selected = Math.max(0, monitors.length - 1);
             token = data.pending ? data.pending.token : "";
             remaining = data.pending ? data.pending.remaining : 0;
