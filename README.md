@@ -479,3 +479,27 @@ Super単独（左右とも、キーを離したとき）でアプリランチャ
 `home/programs/development.nix`で`lftp`を導入します。FTPサーバーへは`lftp ftp://サーバーのIP:ポート番号`で接続します。たとえばVitaShellのFTPサーバーが192.168.1.50:1337なら`lftp ftp://192.168.1.50:1337`です。ユーザー名が必要な場合は`lftp -u ユーザー名 ftp://サーバーのIP:ポート番号`とし、パスワードは対話入力します。
 
 接続後は`ls`で一覧、`cd`で移動、`put ファイル名`で送信、`get ファイル名`で受信、`exit`で終了します。クライアントとして使用し、サーバーの起動やファイアウォールの開放は追加しません。
+
+
+## USB転送・VitaShell
+
+NixOS側は`modules/nixos/removable-media.nix`でUDisks2・GVfsとFAT/exFAT検査ツールを導入し、Home Manager側は`home/desktop/removable-media.nix`でudiskieをUWSMセッションに連動させます。新しい外付けボリュームを自動マウントし、Thunarから開けるようにします。外付けと判定されたFAT32（vfat）/exFATは`sync`を追加してマウントします。同期書き込みにより転送が遅くなる場合があります。既にマウント済みのボリュームには遡って適用されません。
+
+コピー終了後も、VitaShellのUSBモード終了・ケーブル取り外しより先に、PC側でアンマウントを完了させてください。Thunarの取り外し操作、または次のコマンドを使用します。パスは実際のボリューム名へ置き換えてください。
+
+```bash
+lsblk -o NAME,TRAN,SIZE,FSTYPE,LABEL,MOUNTPOINTS
+nocturne-usb unmount "/run/media/hiroto/ボリューム名"
+```
+
+`nocturne-usb unmount`は指定パスが属するマウントを特定し、`sync -f`の成功を待ってからUDisksでアンマウントします。対象は`/run/media/`または`/media/`配下のブロックデバイスです。使用中・書き込み失敗の場合はエラーを返し、完了とは表示しません。ファイラーやターミナルが対象フォルダーを開いていて失敗する場合は、そのフォルダーから離れて再実行してください。成功後にVitaShellのUSBモードを終了して抜きます。
+
+転送したファイルは、アンマウント・再接続後に比較すると、OSの読み取りキャッシュに頼らず再確認しやすくなります。次は読み取りだけを行います。
+
+```bash
+nocturne-usb verify "元ファイル.vpk" "/run/media/hiroto/ボリューム名/転送したファイル.vpk"
+```
+
+SHA-256が不一致なら、元ファイルを残して原因を調べてください。この設定は既存の破損ファイルを復元するものではありません。検査ツールの自動実行・自動修復・フォーマットは行いません。修復操作はバックアップと対象デバイスを確認してから判断します。接続先はVitaShellのSTART設定の「USB device」（SD2Vita/Memory Card等）でも確認してください。
+
+同期マウントでもケーブル不良・USBリセット・ストレージ故障・VitaShell側の問題は解消できません。再発したら、転送直後の`lsblk -o NAME,TRAN,SIZE,FSTYPE,LABEL,MOUNTPOINTS`、`findmnt -T "/run/media/hiroto/ボリューム名" -o SOURCE,TARGET,FSTYPE,OPTIONS`、`journalctl -k -b --no-pager -n 100`を確認します。`I/O error`やUSB切断・リセットが出る場合は書き込みを続けず、接続と記録媒体を調べます。

@@ -33,6 +33,7 @@
       };
     in {
       checks.${user.system} = {
+        removable-media = import ./checks/removable-media.nix { inherit pkgs; };
         vim = import ./checks/vim.nix { inherit pkgs home-manager theme; };
         hyprland-config = import ./lib/hyprland-config.nix { inherit pkgs desktop user theme; };
         system-contract = import ./checks/system-contract.nix {

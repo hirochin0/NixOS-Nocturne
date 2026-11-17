@@ -27,6 +27,16 @@ let
   failures = lib.filter (a: !a.assertion) (cfg.assertions ++ hm.assertions);
 in
 assert lib.assertMsg (failures == []) (lib.concatMapStringsSep "\n" (a: a.message) failures);
+assert cfg.services.udisks2.enable && cfg.services.gvfs.enable;
+assert hm.services.udiskie.enable && hm.services.udiskie.automount;
+assert hm.services.udiskie.tray == "never";
+assert hm.systemd.user.services.udiskie.Unit.PartOf == [ hm.wayland.systemd.target ];
+assert hm.systemd.user.services.udiskie.Install.WantedBy == [ hm.wayland.systemd.target ];
+assert hm.services.udiskie.settings.device_config == [
+  { is_external = true; id_type = "vfat"; options = [ "sync" ]; }
+  { is_external = true; id_type = "exfat"; options = [ "sync" ]; }
+];
+assert lib.any (p: p.name == "nocturne-usb") hm.home.packages;
 assert cfg.programs.hyprland.withUWSM;
 assert cfg.programs.steam.enable;
 assert cfg.programs.steam.package.version == desktop.steam.version;

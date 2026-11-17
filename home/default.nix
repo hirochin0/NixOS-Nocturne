@@ -6,6 +6,7 @@
     ./desktop/notifications.nix
     ./desktop/lock.nix
     ./desktop/theme.nix
+    ./desktop/removable-media.nix
     ./desktop/dconf.nix
     ./desktop/wallpaper.nix
     ./desktop/quickshell.nix
