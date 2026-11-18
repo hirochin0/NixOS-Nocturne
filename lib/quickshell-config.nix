@@ -89,6 +89,9 @@ in pkgs.runCommand "nocturne-quickshell-config" {
   Taskbar 1.0 Taskbar.qml
   BarContent 1.0 BarContent.qml
   BarButton 1.0 BarButton.qml
+  GlassHint 1.0 GlassHint.qml
+  LiquidGlassText 1.0 LiquidGlassText.qml
+  LiquidPreviewSurface 1.0 LiquidPreviewSurface.qml
   ArcLauncher 1.0 ArcLauncher.qml
   ArcLauncherCard 1.0 ArcLauncherCard.qml
   EOF

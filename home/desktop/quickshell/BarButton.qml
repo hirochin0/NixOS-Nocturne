@@ -7,6 +7,7 @@ Button {
     property string labelFont: Theme.roundFont
     property int labelWeight: Font.Bold
     property string hint: ""
+    property var previewTarget: null
     property color tint: Theme.text
     signal secondaryClicked()
     signal scrolled(bool up)
@@ -15,6 +16,7 @@ Button {
     hoverEnabled: true
     padding: 8
     Accessible.name: hint || text
+    onDownChanged: if (down) glassHint.dismiss()
     contentItem: Text {
         id: label
         text: control.text
@@ -31,10 +33,8 @@ Button {
     MouseArea {
         anchors.fill: parent
         acceptedButtons: Qt.RightButton
-        onClicked: control.secondaryClicked()
-        onWheel: wheel => { control.scrolled(wheel.angleDelta.y > 0); wheel.accepted = true; }
+        onClicked: { glassHint.dismiss(); control.secondaryClicked(); }
+        onWheel: wheel => { glassHint.dismiss(); control.scrolled(wheel.angleDelta.y > 0); wheel.accepted = true; }
     }
-    ToolTip.visible: hovered && hint.length > 0
-    ToolTip.text: hint
-    ToolTip.delay: 350
+    GlassHint { id: glassHint; owner: control; text: control.hint; previewTarget: control.previewTarget; active: control.hovered && !control.down }
 }

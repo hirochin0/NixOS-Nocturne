@@ -15,6 +15,7 @@ in pkgs.runCommand "nocturne-quickshell-check" {
   python ${./display_tools_test.py} ${../home/scripts/displays.py} > "$out/display-tools.log" 2>&1
   node ${./display-logic.cjs} ${bundle}/DisplayLogic.js > "$out/display-logic.log"
   python ${./desktop_reveal_test.py} ${../home/scripts/desktop_reveal.py} > "$out/desktop-reveal.log" 2>&1
+  node ${./preview-logic.cjs} ${bundle}/PreviewLogic.js > "$out/preview-logic.log"
   node ${./desktop-logic.cjs} ${bundle}/DesktopLogic.js > "$out/desktop-logic.log"
   python ${./lyrics_test.py} ${../home/scripts/lyrics.py} > "$out/lyrics-fetch.log" 2>&1
   node ${./lyrics-logic.cjs} ${bundle}/LyricsLogic.js > "$out/lyrics-logic.log"
@@ -105,6 +106,16 @@ in pkgs.runCommand "nocturne-quickshell-check" {
   grep -q NOCTURNE_DISPLAY_CARD_CHECK_PASSED "$out/display-card.log"
   if grep -Eq 'ReferenceError|TypeError|Unable to assign|Failed to load configuration' "$out/display-card.log"; then
     cat "$out/display-card.log"
+    exit 1
+  fi
+  substitute ${./glass-preview.qml} "$TMPDIR/glass-preview-check.qml" --subst-var-by bundle ${bundle}
+  if ! timeout 10s quickshell --path "$TMPDIR/glass-preview-check.qml" --no-color > "$out/glass-preview.log" 2>&1; then
+    cat "$out/glass-preview.log"
+    exit 1
+  fi
+  grep -q NOCTURNE_GLASS_PREVIEW_CHECK_PASSED "$out/glass-preview.log"
+  if grep -Eq 'ReferenceError|TypeError|Unable to assign|Failed to load configuration' "$out/glass-preview.log"; then
+    cat "$out/glass-preview.log"
     exit 1
   fi
   cp -r ${bundle} "$out/config"

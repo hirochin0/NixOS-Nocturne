@@ -155,6 +155,7 @@ Item {
                             readonly property var desktop: root.desktopFor(modelData)
                             readonly property var workspace: root.workspaceFor(modelData)
                             implicitWidth: 34; implicitHeight: 34
+                            previewTarget: root.windows.includes(modelData) ? modelData : null
                             hint: modelData.title + (workspace ? " · Workspace " + workspace.name : "")
                             tint: modelData.activated ? Theme.cyan : Theme.muted
                             onClicked: root.focusWindow(modelData)
