@@ -18,7 +18,7 @@ Item {
         wrapMode: Text.Wrap
         maximumLineCount: glass.maxLines
         elide: Text.ElideRight
-        font { family: Theme.roundFont; pixelSize: glass.pixelSize; weight: Font.ExtraBold; variableAxes: ({"wght": 800}) }
+        font { family: Theme.roundFont; pixelSize: glass.pixelSize; weight: Font.Medium; variableAxes: ({"wght": 500}) }
         color: "white"
         visible: false
         layer.enabled: !glass.software
@@ -29,14 +29,12 @@ Item {
         text: glyph.text; font: glyph.font; textFormat: Text.PlainText
         wrapMode: glyph.wrapMode; maximumLineCount: glyph.maximumLineCount; elide: glyph.elide
         color: "#80030c1a"
-        style: Text.Outline; styleColor: "#45000000"
     }
     Text {
         width: glass.width
         text: glyph.text; font: glyph.font; textFormat: Text.PlainText
         wrapMode: glyph.wrapMode; maximumLineCount: glyph.maximumLineCount; elide: glyph.elide
         color: glass.software ? "#e9f8ff" : "#65c7e4f8"
-        style: Text.Outline; styleColor: "#b0effaff"
     }
     Rectangle {
         anchors.fill: parent

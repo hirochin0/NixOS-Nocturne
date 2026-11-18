@@ -27,6 +27,7 @@ let
   failures = lib.filter (a: !a.assertion) (cfg.assertions ++ hm.assertions);
 in
 assert lib.assertMsg (failures == []) (lib.concatMapStringsSep "\n" (a: a.message) failures);
+assert builtins.elem "QS_DISABLE_DMABUF=1" hm.systemd.user.services.nocturne-widgets.Service.Environment;
 assert cfg.services.udisks2.enable && cfg.services.gvfs.enable;
 assert hm.services.udiskie.enable && hm.services.udiskie.automount;
 assert hm.services.udiskie.tray == "never";

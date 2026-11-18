@@ -13,10 +13,11 @@ Scope {
     property bool captureFailed: false
     readonly property bool preview: !!previewTarget
     readonly property var source: previewTarget && previewTarget.wayland ? previewTarget.wayland : null
+    readonly property bool captureReady: !!captureLoader.item && captureLoader.item.hasContent
     readonly property var sourceSize: PreviewLogic.windowSize(previewTarget)
     readonly property var dimensions: PreviewLogic.dimensions(
-        copy.hasContent ? copy.sourceSize.width : sourceSize.width,
-        copy.hasContent ? copy.sourceSize.height : sourceSize.height,
+        captureReady ? captureLoader.item.sourceSize.width : sourceSize.width,
+        captureReady ? captureLoader.item.sourceSize.height : sourceSize.height,
         popup.screen ? popup.screen.width : 1280, popup.screen ? popup.screen.height : 800)
     function dismiss() { delay.stop(); leave.stop(); displayed = false; }
     onActiveChanged: {
@@ -36,11 +37,11 @@ Scope {
     }
     Timer { id: delay; interval: 350; onTriggered: if (hint.active && hint.text.length) hint.displayed = true }
     Timer { id: leave; interval: 120; onTriggered: hint.displayed = false }
-    Timer { id: captureTimeout; interval: 900; onTriggered: if (popup.visible && hint.source && !copy.hasContent) hint.captureFailed = true }
+    Timer { id: captureTimeout; interval: 2000; onTriggered: if (popup.visible && hint.source && !hint.captureReady) hint.captureFailed = true }
     Timer {
         id: captureDelay
         interval: 60
-        onTriggered: if (popup.visible && copy.captureSource) { copy.captureFrame(); captureTimeout.restart(); }
+        onTriggered: if (popup.visible && captureLoader.item && captureLoader.item.captureSource && !hint.captureReady) { captureLoader.item.captureFrame(); captureTimeout.restart(); }
     }
     PopupWindow {
         id: popup
@@ -60,12 +61,7 @@ Scope {
             if (visible) { hint.captureFailed = false; if (hint.preview) water.appear(); if (hint.source) captureDelay.restart(); }
             else { captureDelay.stop(); captureTimeout.stop(); water.disappear(); }
         }
-        Rectangle {
-            anchors.fill: parent
-            radius: 20
-            color: "#dd111927"
-            border.color: "#65c5e6fa"
-        }
+        GlassBoard { id: board; anchors.fill: parent }
         LiquidGlassText {
             id: label
             x: 16; y: 12
@@ -73,7 +69,7 @@ Scope {
             height: implicitHeight
             maxWidth: Math.max(1, Math.min(560, hint.preview ? popup.width - 32 : (popup.screen ? popup.screen.width - 64 : 560)))
             text: hint.text
-            pixelSize: hint.preview ? 16 : 14
+            pixelSize: hint.preview ? 14 : 13
             maxLines: hint.preview ? 2 : 5
         }
         LiquidPreviewSurface {
@@ -84,15 +80,25 @@ Scope {
             width: hint.dimensions.imageWidth
             height: hint.dimensions.imageHeight
             Rectangle { parent: water.contentItem; anchors.fill: parent; color: "#171f30" }
-            ScreencopyView {
-                id: copy
+            Loader {
+                id: captureLoader
                 parent: water.contentItem
                 anchors.fill: parent
-                captureSource: popup.visible && hint.preview && !hint.captureFailed ? hint.source : null
-                live: false
-                paintCursor: false
-                onHasContentChanged: if (hasContent) captureTimeout.stop()
-                onStopped: hint.captureFailed = true
+                // The popup and its render window must exist before initializing
+                // Quickshell's screencopy context and buffer manager.
+                active: popup.visible && hint.preview && !!hint.source && !hint.captureFailed
+                onLoaded: captureDelay.restart()
+                sourceComponent: Component {
+                    ScreencopyView {
+                        id: copy
+                        anchors.fill: parent
+                        captureSource: popup.visible && !hint.captureFailed ? hint.source : null
+                        live: false
+                        paintCursor: false
+                        onHasContentChanged: if (hasContent) captureTimeout.stop()
+                        onStopped: hint.captureFailed = true
+                    }
+                }
             }
             LiquidGlassText {
                 parent: water.contentItem
@@ -101,7 +107,7 @@ Scope {
                 height: implicitHeight
                 maxWidth: Math.max(1, parent.width - 32)
                 text: hint.captureFailed || !hint.source ? "Preview unavailable" : "Loading preview…"
-                visible: !copy.hasContent
+                visible: !hint.captureReady
                 pixelSize: 14
             }
         }
@@ -112,6 +118,7 @@ Scope {
             onEntered: leave.stop()
             onExited: if (!hint.active) leave.restart()
             onPositionChanged: mouse => {
+                board.lightX = mouse.x;
                 water.cursorX = mouse.x - water.x;
                 water.cursorY = mouse.y - water.y;
                 water.tension = 0.16;

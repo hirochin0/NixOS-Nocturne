@@ -31,7 +31,7 @@ in {
       ExecStart = "${desktop.quickshell}/bin/quickshell --path ${lib.escapeShellArg "${config.xdg.configHome}/quickshell/nocturne"} --no-duplicate";
       Restart = "on-failure";
       RestartSec = 3;
-      Environment = [ "QT_QPA_PLATFORM=wayland" "QS_ICON_THEME=Papirus-Dark" ];
+      Environment = [ "QT_QPA_PLATFORM=wayland" "QS_ICON_THEME=Papirus-Dark" "QS_DISABLE_DMABUF=1" ];
     };
     Install.WantedBy = [ target ];
   };

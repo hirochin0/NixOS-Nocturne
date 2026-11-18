@@ -9,7 +9,7 @@ ShellRoot {
         GlassHint { id: hint; owner: anchorButton; text: "Network · Connected" }
         LiquidGlassText { id: label; x: 20; y: 100; width: implicitWidth; height: implicitHeight; text: "Literal <b>title</b> · Workspace 3" }
         LiquidPreviewSurface {
-            id: water; x: 20; y: 180; width: 720; height: 450
+            id: water; x: 20; y: 180; width: 420; height: 260
             Rectangle { parent: water.contentItem; anchors.fill: parent; color: "#456078" }
         }
         QtObject { id: missing; property var wayland: null; property var lastIpcObject: ({size:[1920,1080]}) }
@@ -27,7 +27,7 @@ ShellRoot {
                 if (hint.displayed) throw new Error("Interaction did not dismiss hint");
                 hint.previewTarget = missing;
                 if (hint.source !== null || !hint.preview) throw new Error("Missing screenshot did not use fallback");
-                if (hint.dimensions.width > 1000 || hint.dimensions.height > 900) throw new Error("Preview exceeded bounds");
+                if (hint.dimensions.width > 480 || hint.dimensions.height > 360) throw new Error("Preview exceeded bounds");
                 water.appear(); input.wait(180);
                 if (water.entrance <= 0) throw new Error("Droplet did not animate");
                 input.wait(600);
