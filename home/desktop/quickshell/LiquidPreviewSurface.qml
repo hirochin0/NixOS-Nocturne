@@ -1,9 +1,8 @@
 import QtQuick
-import Quickshell.Widgets
 
 Item {
     id: water
-    property alias contentItem: face.contentItem
+    property alias contentItem: content
     property real roundness: 12
     property real cursorX: width * 0.65
     property real cursorY: height * 0.25
@@ -24,13 +23,14 @@ Item {
     }
     // Render the captured buffer directly. Offscreen texture effects stay on the
     // decorative board, never on the native screencopy node.
-    ClippingRectangle {
+    Item {
         id: face
         anchors.fill: parent
-        radius: water.roundness
-        color: "#181f2c"
-        border.width: 1
-        border.color: "#80d7efff"
+        clip: true
+        Rectangle { anchors.fill: parent; color: "#181f2c" }
+        Item { id: content; anchors.fill: parent; anchors.margins: 1 }
+        // No layer, ShaderEffectSource, or ClippingRectangle here: the native
+        // screencopy node must render in the popup's own scene graph.
         transform: [
             Translate { x: (water.cursorX - water.width / 2) * water.tension * 0.025; y: (water.cursorY - water.height / 2) * water.tension * 0.025 },
             Scale {
@@ -39,6 +39,42 @@ Item {
                 yScale: 0.88 + water.entrance * 0.12 - water.ripple * 0.012
             }
         ]
+        // Cover only the four corners. These decorations never sample or
+        // redirect the captured image into a render texture.
+        Canvas {
+            id: corners
+            z: 10
+            anchors.fill: parent
+            property real radius: Math.min(water.roundness, width / 2, height / 2)
+            onWidthChanged: requestPaint()
+            onHeightChanged: requestPaint()
+            onRadiusChanged: requestPaint()
+            onPaint: {
+                const ctx = getContext("2d");
+                ctx.reset();
+                ctx.fillStyle = "#1b293b";
+                for (let i = 0; i < 4; ++i) {
+                    ctx.save();
+                    ctx.translate(i % 2 ? width : 0, i >= 2 ? height : 0);
+                    ctx.scale(i % 2 ? -1 : 1, i >= 2 ? -1 : 1);
+                    ctx.beginPath();
+                    ctx.moveTo(0, 0);
+                    ctx.lineTo(radius, 0);
+                    ctx.arcTo(0, 0, 0, radius, radius);
+                    ctx.closePath();
+                    ctx.fill();
+                    ctx.restore();
+                }
+            }
+        }
+        Rectangle {
+            z: 11
+            anchors.fill: parent
+            radius: water.roundness
+            color: "transparent"
+            border.width: 1
+            border.color: "#80d7efff"
+        }
     }
     Rectangle {
         anchors { left: parent.left; right: parent.right; top: parent.top; margins: 1 }

@@ -32,6 +32,9 @@ ShellRoot {
                 if (water.entrance <= 0) throw new Error("Droplet did not animate");
                 input.wait(600);
                 if (Math.abs(water.entrance - 1) > 0.001 || Math.abs(water.ripple) > 0.001) throw new Error("Droplet did not settle");
+                const image = input.grabImage(water);
+                if (image.red(200, 100) !== 69 || image.green(200, 100) !== 96 || image.blue(200, 100) !== 120)
+                    throw new Error("Preview content was hidden or rendered black");
                 water.disappear();
                 console.log("NOCTURNE_GLASS_PREVIEW_CHECK_PASSED");
                 Qt.quit();

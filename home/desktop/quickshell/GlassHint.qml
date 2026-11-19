@@ -19,6 +19,11 @@ Scope {
         captureReady ? captureLoader.item.sourceSize.width : sourceSize.width,
         captureReady ? captureLoader.item.sourceSize.height : sourceSize.height,
         popup.screen ? popup.screen.width : 1280, popup.screen ? popup.screen.height : 800)
+    function report(status) {
+        console.log("NOCTURNE_PREVIEW", status, "address=" + (previewTarget ? previewTarget.address : "none"),
+            "source=" + !!source, "ready=" + captureReady,
+            "view=" + (captureLoader.item ? captureLoader.item.width + "x" + captureLoader.item.height : "none"));
+    }
     function dismiss() { delay.stop(); leave.stop(); displayed = false; }
     onActiveChanged: {
         if (active && text.length) {
@@ -37,7 +42,10 @@ Scope {
     }
     Timer { id: delay; interval: 350; onTriggered: if (hint.active && hint.text.length) hint.displayed = true }
     Timer { id: leave; interval: 120; onTriggered: hint.displayed = false }
-    Timer { id: captureTimeout; interval: 2000; onTriggered: if (popup.visible && hint.source && !hint.captureReady) hint.captureFailed = true }
+    Timer { id: captureTimeout; interval: 2000; onTriggered: if (popup.visible && hint.preview && !hint.captureReady) {
+        hint.report(hint.source ? "capture-timeout" : "missing-wayland-handle");
+        hint.captureFailed = true;
+    } }
     Timer {
         id: captureDelay
         interval: 60
@@ -58,7 +66,7 @@ Scope {
         onWidthChanged: if (visible) anchor.updateAnchor()
         onHeightChanged: if (visible) anchor.updateAnchor()
         onVisibleChanged: {
-            if (visible) { hint.captureFailed = false; if (hint.preview) water.appear(); if (hint.source) captureDelay.restart(); }
+            if (visible) { hint.captureFailed = false; if (hint.preview) { water.appear(); captureTimeout.restart(); hint.report("opened"); } if (hint.source) captureDelay.restart(); }
             else { captureDelay.stop(); captureTimeout.stop(); water.disappear(); }
         }
         GlassBoard { id: board; anchors.fill: parent }
@@ -95,8 +103,12 @@ Scope {
                         captureSource: popup.visible && !hint.captureFailed ? hint.source : null
                         live: false
                         paintCursor: false
-                        onHasContentChanged: if (hasContent) captureTimeout.stop()
-                        onStopped: hint.captureFailed = true
+                        onHasContentChanged: if (hasContent) {
+                            captureTimeout.stop();
+                            console.log("NOCTURNE_PREVIEW frame-received", "size=" + sourceSize.width + "x" + sourceSize.height,
+                                "view=" + width + "x" + height);
+                        }
+                        onStopped: { hint.report("capture-stopped"); hint.captureFailed = true; }
                     }
                 }
             }
