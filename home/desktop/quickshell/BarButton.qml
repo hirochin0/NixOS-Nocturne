@@ -7,6 +7,9 @@ Button {
     property string labelFont: Theme.roundFont
     property int labelWeight: Font.Bold
     property string hint: ""
+    property string hintFont: Theme.roundFont
+    property bool hintWrap: true
+    property int hintMaxLines: 5
     property var previewTarget: null
     property color tint: Theme.text
     signal secondaryClicked()
@@ -36,5 +39,10 @@ Button {
         onClicked: { glassHint.dismiss(); control.secondaryClicked(); }
         onWheel: wheel => { glassHint.dismiss(); control.scrolled(wheel.angleDelta.y > 0); wheel.accepted = true; }
     }
-    GlassHint { id: glassHint; owner: control; text: control.hint; previewTarget: control.previewTarget; active: control.hovered && !control.down }
+    GlassHint {
+        id: glassHint
+        owner: control; text: control.hint; previewTarget: control.previewTarget
+        fontFamily: control.hintFont; wrapText: control.hintWrap; maxLines: control.hintMaxLines
+        active: control.hovered && !control.down
+    }
 }

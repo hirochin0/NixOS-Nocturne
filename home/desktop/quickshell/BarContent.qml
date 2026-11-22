@@ -99,7 +99,9 @@ Item {
                         readonly property var workspace: root.workspaces.find(w => w.id === modelData)
                         text: workspace ? workspace.name : String(modelData)
                         tint: workspace && workspace.urgent ? "#f38ba8" : workspace && workspace.focused ? Theme.cyan : Theme.muted
-                        hint: "Workspace " + text
+                        hint: "Workspace " + modelData
+                        hintWrap: false
+                        hintMaxLines: 1
                         onClicked: root.switchWorkspace(modelData)
                         Rectangle { anchors.bottom: parent.bottom; anchors.horizontalCenter: parent.horizontalCenter; width: 14; height: 2; radius: 1; color: Theme.cyan; visible: !!parent.workspace && parent.workspace.active }
                     }
@@ -123,7 +125,10 @@ Item {
             id: clock
             anchors.fill: parent
             text: Qt.formatDateTime(root.now, "ddd  MM.dd  ·  HH:mm")
-            hint: root.status.calendar || Qt.formatDate(root.now, "yyyy-MM-dd")
+            hint: root.status.calendar ? root.status.calendar.trimEnd() : Qt.formatDate(root.now, "yyyy-MM-dd")
+            hintFont: Theme.font
+            hintWrap: false
+            hintMaxLines: 8
         }
     }
     RowLayout {

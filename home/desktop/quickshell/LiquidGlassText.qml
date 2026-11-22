@@ -6,8 +6,20 @@ Item {
     property int maxLines: 5
     property real pixelSize: 15
     property real maxWidth: 560
-    implicitWidth: Math.min(maxWidth, glyph.implicitWidth)
+    property string fontFamily: Theme.roundFont
+    property int wrapMode: Text.Wrap
+    // Measure before wrapping. Measuring the width-constrained glyph can
+    // shrink a popup to its longest word and cause an unwanted extra line.
+    implicitWidth: Math.min(maxWidth, Math.ceil(measure.implicitWidth))
     implicitHeight: glyph.implicitHeight
+    Text {
+        id: measure
+        text: glass.text
+        textFormat: Text.PlainText
+        font: glyph.font
+        wrapMode: Text.NoWrap
+        visible: false
+    }
     Text {
         x: 0; y: 0.6
         width: glass.width
@@ -20,10 +32,10 @@ Item {
         width: glass.width
         text: glass.text
         textFormat: Text.PlainText
-        wrapMode: Text.Wrap
+        wrapMode: glass.wrapMode
         maximumLineCount: glass.maxLines
         elide: Text.ElideRight
-        font { family: Theme.roundFont; pixelSize: glass.pixelSize; weight: Font.Normal; variableAxes: ({"wght": 400}); kerning: true }
+        font { family: glass.fontFamily; pixelSize: glass.pixelSize; weight: Font.Normal; variableAxes: ({"wght": 400}); kerning: true }
         color: "#fcfdff"
     }
 }

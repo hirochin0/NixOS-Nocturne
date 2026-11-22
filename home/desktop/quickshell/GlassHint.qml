@@ -6,6 +6,9 @@ Scope {
     id: hint
     required property Item owner
     property string text: ""
+    property string fontFamily: Theme.roundFont
+    property bool wrapText: true
+    property int maxLines: 5
     property var previewTarget: null
     property bool active: false
     property bool displayed: false
@@ -48,13 +51,16 @@ Scope {
         GlassBoard { id: board; anchors.fill: parent }
         LiquidGlassText {
             id: label
+            objectName: "hint-label"
             x: 18; y: 14
             width: Math.min(implicitWidth, popup.width - 36)
             height: implicitHeight
             maxWidth: Math.max(1, Math.min(560, hint.preview ? popup.width - 36 : (popup.screen ? popup.screen.width - 64 : 560)))
             text: hint.text
             pixelSize: 14
-            maxLines: hint.preview ? 2 : 5
+            fontFamily: hint.fontFamily
+            wrapMode: hint.wrapText ? Text.Wrap : Text.NoWrap
+            maxLines: hint.preview ? 2 : hint.maxLines
         }
         LiquidPreviewSurface {
             id: water

@@ -58,6 +58,29 @@ ShellRoot {
                 const cx = Math.floor(fullImage.width / 2), cy = Math.floor(fullImage.height / 2);
                 if (fullImage.red(cx, cy) !== 255 || fullImage.green(cx, cy) !== 0 || fullImage.blue(cx, cy) !== 0)
                     throw new Error("Full hint backdrop covered the captured image");
+                hint.previewTarget = null;
+                hint.text = "Workspace 12";
+                hint.wrapText = false;
+                hint.maxLines = 1;
+                input.wait(80);
+                function checkHintLines(expected) {
+                    const label = input.findChild(hint, "hint-label");
+                    let checked = 0;
+                    for (const child of label.children) {
+                        if (child.visible && child.lineCount !== undefined) {
+                            if (child.lineCount !== expected || child.truncated)
+                                throw new Error("Hint wrapped or truncated: " + hint.text);
+                            ++checked;
+                        }
+                    }
+                    if (!checked) throw new Error("Hint text was not inspected");
+                }
+                checkHintLines(1);
+                hint.text = "    August 2026\nMo Tu We Th Fr Sa Su\n                1  2\n 3  4  5  6  7  8  9\n10 11 12 13 14 15 16\n17 18 19 20 21 22 23\n24 25 26 27 28 29 30\n31";
+                hint.fontFamily = Theme.font;
+                hint.maxLines = 8;
+                input.wait(80);
+                checkHintLines(8);
                 hint.dismiss();
                 pngPreview.active = false;
                 if (pngPreview.imageData.length) throw new Error("Preview retained image after closing");
