@@ -43,6 +43,22 @@ ShellRoot {
                 const pngImage = input.grabImage(pngPreview);
                 if (pngImage.red(32, 32) !== 255 || pngImage.green(32, 32) !== 0 || pngImage.blue(32, 32) !== 0)
                     throw new Error("PNG pixels did not render");
+                // Test the assembled hint: testing Image alone missed the
+                // backdrop covering it after children were reparented.
+                hint.active = false;
+                hint.active = true;
+                input.wait(450);
+                const fullPreview = input.findChild(hint, "window-preview");
+                const fullSurface = input.findChild(hint, "preview-surface");
+                if (!fullPreview || !fullSurface) throw new Error("Full preview components missing");
+                fullPreview.acceptResult(JSON.stringify({ok:true,width:1920,height:1080,image:pngPreview.imageData}));
+                input.wait(150);
+                if (!fullPreview.ready) throw new Error("Full hint image failed to load");
+                const fullImage = input.grabImage(fullSurface);
+                const cx = Math.floor(fullImage.width / 2), cy = Math.floor(fullImage.height / 2);
+                if (fullImage.red(cx, cy) !== 255 || fullImage.green(cx, cy) !== 0 || fullImage.blue(cx, cy) !== 0)
+                    throw new Error("Full hint backdrop covered the captured image");
+                hint.dismiss();
                 pngPreview.active = false;
                 if (pngPreview.imageData.length) throw new Error("Preview retained image after closing");
                 water.disappear();

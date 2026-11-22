@@ -49,7 +49,7 @@ Item {
         cache: false
         onStatusChanged: {
             if (status === Image.Ready)
-                console.log("NOCTURNE_PREVIEW image-visible", "size=" + preview.originalSize.width + "x" + preview.originalSize.height);
+                console.log("NOCTURNE_PREVIEW image-loaded", "size=" + preview.originalSize.width + "x" + preview.originalSize.height);
             else if (status === Image.Error) preview.error = "image-decode-failed";
         }
     }

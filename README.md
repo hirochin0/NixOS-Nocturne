@@ -513,4 +513,6 @@ SHA-256が不一致なら、元ファイルを残して原因を調べてくだ�
 
 キャプチャはホバー表示ごとの静止画です。非表示時はキャプチャ元を解除し、取得できないアプリではタイトルと代替表示を残します。文字の縁取りは使わず、背景にはぼかした壁紙・半透明の色・光沢と細い反射線を重ねます。画像は通常のItemへ直接描画し、オフスクリーン描画を行うClippingRectangleやShaderEffectSourceは使用しません。角丸は四隅の小さなカバーと枠線で表現します。水滴の伸縮とカーソルに引かれる動きを枠に付け、画像取得プロセスは表示中だけ生成します。専用の`nocturne-preview`が64bitのウィンドウアドレスを照合し、SHMで受け取った画素をPNGへ変換して通常のImageへ渡します。画像はメモリー内だけで扱い、アルファ値を不透明化して透明なフレームによる空欄表示も避けます。実装は`WindowPreview.qml`・`home/scripts/preview_capture.py`・`GlassHint.qml`・`GlassBoard.qml`・`LiquidGlassText.qml`・`LiquidPreviewSurface.qml`・`PreviewLogic.js`、接続元は`BarButton.qml`と`BarContent.qml`です。
 
-サムネイル取得の診断では、PNGの表示完了（`image-visible`）・取得エラーを `NOCTURNE_PREVIEW` としてサービスのログへ出します。`journalctl --user -u nocturne-widgets.service -b --no-pager | rg NOCTURNE_PREVIEW` で、PNGの表示状態と元画像サイズを確認できます。ウィンドウタイトルや画像はログに保存しません。
+サムネイル取得の診断では、PNGの読み込み完了（`image-loaded`）・取得エラーを `NOCTURNE_PREVIEW` としてサービスのログへ出します。`journalctl --user -u nocturne-widgets.service -b --no-pager | rg NOCTURNE_PREVIEW` で、PNGの表示状態と元画像サイズを確認できます。ウィンドウタイトルや画像はログに保存しません。
+
+サムネイル領域は背景をz=0、画像をz=1、状態表示をz=2に固定しています。別の親へ配置した子要素は宣言順と描画順が一致しないため、画像単体だけでなく組み立てたGlassHint全体の画素も検証します。

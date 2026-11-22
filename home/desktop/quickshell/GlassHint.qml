@@ -58,21 +58,27 @@ Scope {
         }
         LiquidPreviewSurface {
             id: water
+            objectName: "preview-surface"
             visible: hint.preview
             x: hint.dimensions.padding
             y: hint.dimensions.padding + hint.dimensions.heading
             width: hint.dimensions.imageWidth
             height: hint.dimensions.imageHeight
-            Rectangle { parent: water.contentItem; anchors.fill: parent; color: "#171f30" }
+            // Reparented components do not necessarily retain declaration
+            // order. Keep the backdrop behind the image and loading text.
+            Rectangle { parent: water.contentItem; anchors.fill: parent; z: 0; color: "#171f30" }
             WindowPreview {
                 id: windowPreview
+                objectName: "window-preview"
                 parent: water.contentItem
                 anchors.fill: parent
+                z: 1
                 address: hint.address
                 active: popup.visible && hint.preview
             }
             LiquidGlassText {
                 parent: water.contentItem
+                z: 2
                 anchors.centerIn: parent
                 width: Math.min(implicitWidth, parent.width - 32)
                 height: implicitHeight
