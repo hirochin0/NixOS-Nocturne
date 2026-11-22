@@ -37,7 +37,7 @@ Scope {
         grabFocus: false
         color: "transparent"
         visible: hint.displayed && hint.owner.visible && hint.owner.enabled
-        implicitWidth: hint.preview ? hint.dimensions.width : Math.min(600, label.implicitWidth + 32)
+        implicitWidth: hint.preview ? hint.dimensions.width : Math.min(600, label.implicitWidth + 36)
         implicitHeight: hint.preview ? hint.dimensions.height : label.implicitHeight + 28
         onWidthChanged: if (visible) anchor.updateAnchor()
         onHeightChanged: if (visible) anchor.updateAnchor()
@@ -48,12 +48,12 @@ Scope {
         GlassBoard { id: board; anchors.fill: parent }
         LiquidGlassText {
             id: label
-            x: 16; y: 12
-            width: Math.min(implicitWidth, popup.width - 32)
+            x: 18; y: 14
+            width: Math.min(implicitWidth, popup.width - 36)
             height: implicitHeight
-            maxWidth: Math.max(1, Math.min(560, hint.preview ? popup.width - 32 : (popup.screen ? popup.screen.width - 64 : 560)))
+            maxWidth: Math.max(1, Math.min(560, hint.preview ? popup.width - 36 : (popup.screen ? popup.screen.width - 64 : 560)))
             text: hint.text
-            pixelSize: hint.preview ? 14 : 13
+            pixelSize: 14
             maxLines: hint.preview ? 2 : 5
         }
         LiquidPreviewSurface {

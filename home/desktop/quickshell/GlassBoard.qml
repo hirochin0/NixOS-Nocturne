@@ -3,10 +3,18 @@ import QtQuick.Effects
 
 Item {
     id: board
-    property real cornerRadius: 18
-    property real lightX: width * 0.7
+    property real cornerRadius: Math.min(height / 2, 32)
+    property real lightX: width * 0.24
     readonly property bool software: GraphicsInfo.api === GraphicsInfo.Software
-    Rectangle { anchors.fill: parent; radius: board.cornerRadius; color: "#ad121b2a" }
+    Behavior on lightX { SmoothedAnimation { duration: 180; velocity: -1 } }
+    onLightXChanged: lens.requestPaint()
+    Rectangle {
+        x: 1; y: 3
+        width: Math.max(0, board.width - 2); height: board.height
+        radius: board.cornerRadius
+        color: "#18000c35"
+    }
+    Rectangle { anchors.fill: parent; radius: board.cornerRadius; color: "#482354ab" }
     Image {
         id: backdrop
         source: Theme.wallpaperPath
@@ -22,35 +30,68 @@ Item {
         anchors.fill: parent
         visible: !board.software && backdrop.status === Image.Ready
         source: backdrop
-        blurEnabled: true; blurMax: 32; blur: 0.7
-        saturation: -0.25
-        opacity: 0.26
+        blurEnabled: true; blurMax: 32; blur: 0.8
+        saturation: 0.05
+        opacity: 0.34
         maskEnabled: true; maskSource: mask
         autoPaddingEnabled: false
     }
-    Rectangle {
+    // Reflections belong to this decorative surface, behind the preview.
+    Canvas {
+        id: lens
         anchors.fill: parent
-        radius: board.cornerRadius
-        gradient: Gradient {
-            GradientStop { position: 0; color: "#42f1fbff" }
-            GradientStop { position: 0.16; color: "#0ff5fbff" }
-            GradientStop { position: 0.6; color: "#061d3358" }
-            GradientStop { position: 1; color: "#245784a5" }
+        onWidthChanged: requestPaint()
+        onHeightChanged: requestPaint()
+        Connections { target: board; function onCornerRadiusChanged() { lens.requestPaint(); } }
+        function contour(ctx, inset) {
+            const r = Math.max(0, Math.min(board.cornerRadius - inset, (width - inset * 2) / 2, (height - inset * 2) / 2));
+            const left = inset, top = inset, right = width - inset, bottom = height - inset;
+            ctx.beginPath();
+            ctx.moveTo(left + r, top);
+            ctx.arcTo(right, top, right, bottom, r);
+            ctx.arcTo(right, bottom, left, bottom, r);
+            ctx.arcTo(left, bottom, left, top, r);
+            ctx.arcTo(left, top, right, top, r);
+            ctx.closePath();
         }
-        border.width: 1
-        border.color: "#80d9f4ff"
-    }
-    Rectangle {
-        x: 8; y: 1
-        width: Math.max(0, board.width - 16); height: 1
-        radius: 1
-        gradient: Gradient {
-            orientation: Gradient.Horizontal
-            GradientStop { position: 0; color: "transparent" }
-            GradientStop { position: Math.max(0.1, Math.min(0.9, board.lightX / Math.max(1, board.width))); color: "#d0ffffff" }
-            GradientStop { position: 1; color: "transparent" }
+        onPaint: {
+            if (width < 2 || height < 2) return;
+            const ctx = getContext("2d");
+            ctx.reset();
+            contour(ctx, 0.5);
+            ctx.save();
+            ctx.clip();
+            const blue = ctx.createLinearGradient(0, 0, 0, height);
+            blue.addColorStop(0, "rgba(108,163,255,0.30)");
+            blue.addColorStop(0.43, "rgba(30,84,193,0.12)");
+            blue.addColorStop(1, "rgba(7,16,91,0.42)");
+            ctx.fillStyle = blue;
+            ctx.fillRect(0, 0, width, height);
+            const glowX = Math.max(0, Math.min(width, board.lightX * 0.45));
+            const glow = ctx.createRadialGradient(glowX, height * 0.55, 0, glowX, height * 0.55, Math.max(height, width * 0.68));
+            glow.addColorStop(0, "rgba(218,251,255,0.46)");
+            glow.addColorStop(0.38, "rgba(171,226,255,0.22)");
+            glow.addColorStop(1, "rgba(153,204,255,0)");
+            ctx.fillStyle = glow;
+            ctx.fillRect(0, 0, width, height);
+            const rim = ctx.createLinearGradient(0, 0, width, height);
+            rim.addColorStop(0, "rgba(247,255,255,0.90)");
+            rim.addColorStop(0.46, "rgba(193,221,255,0.46)");
+            rim.addColorStop(0.72, "rgba(123,158,246,0.20)");
+            rim.addColorStop(1, "rgba(212,232,255,0.62)");
+            contour(ctx, 2.5);
+            ctx.strokeStyle = "rgba(193,223,255,0.12)";
+            ctx.lineWidth = 6;
+            ctx.stroke();
+            contour(ctx, 1.2);
+            ctx.strokeStyle = "rgba(204,231,255,0.16)";
+            ctx.lineWidth = 3;
+            ctx.stroke();
+            contour(ctx, 0.8);
+            ctx.strokeStyle = rim;
+            ctx.lineWidth = 1.2;
+            ctx.stroke();
+            ctx.restore();
         }
     }
-    Rectangle { x: 2; y: 10; width: 1; height: Math.max(0, board.height - 20); color: "#2ae1f6ff"; radius: 1 }
-    Rectangle { x: board.width - 3; y: 10; width: 1; height: Math.max(0, board.height - 20); color: "#3ba0c6ed"; radius: 1 }
 }
