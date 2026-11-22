@@ -1,6 +1,5 @@
 import QtQuick
 import Quickshell
-import Quickshell.Wayland
 import "PreviewLogic.js" as PreviewLogic
 
 Scope {
@@ -10,20 +9,14 @@ Scope {
     property var previewTarget: null
     property bool active: false
     property bool displayed: false
-    property bool captureFailed: false
     readonly property bool preview: !!previewTarget
-    readonly property var source: previewTarget && previewTarget.wayland ? previewTarget.wayland : null
-    readonly property bool captureReady: !!captureLoader.item && captureLoader.item.hasContent
+    readonly property string address: previewTarget && previewTarget.address ? previewTarget.address : ""
+    readonly property bool captureReady: windowPreview.ready
     readonly property var sourceSize: PreviewLogic.windowSize(previewTarget)
     readonly property var dimensions: PreviewLogic.dimensions(
-        captureReady ? captureLoader.item.sourceSize.width : sourceSize.width,
-        captureReady ? captureLoader.item.sourceSize.height : sourceSize.height,
+        captureReady ? windowPreview.originalSize.width : sourceSize.width,
+        captureReady ? windowPreview.originalSize.height : sourceSize.height,
         popup.screen ? popup.screen.width : 1280, popup.screen ? popup.screen.height : 800)
-    function report(status) {
-        console.log("NOCTURNE_PREVIEW", status, "address=" + (previewTarget ? previewTarget.address : "none"),
-            "source=" + !!source, "ready=" + captureReady,
-            "view=" + (captureLoader.item ? captureLoader.item.width + "x" + captureLoader.item.height : "none"));
-    }
     function dismiss() { delay.stop(); leave.stop(); displayed = false; }
     onActiveChanged: {
         if (active && text.length) {
@@ -32,25 +25,8 @@ Scope {
         } else { delay.stop(); leave.restart(); }
     }
     onTextChanged: { if (!text.length) dismiss(); else if (active && !displayed) delay.restart(); }
-    onSourceChanged: {
-        captureDelay.stop(); captureTimeout.stop();
-        if (displayed && source) { captureFailed = false; captureDelay.restart(); }
-    }
-    onPreviewTargetChanged: {
-        captureFailed = false;
-        if (displayed) captureDelay.restart();
-    }
     Timer { id: delay; interval: 350; onTriggered: if (hint.active && hint.text.length) hint.displayed = true }
     Timer { id: leave; interval: 120; onTriggered: hint.displayed = false }
-    Timer { id: captureTimeout; interval: 2000; onTriggered: if (popup.visible && hint.preview && !hint.captureReady) {
-        hint.report(hint.source ? "capture-timeout" : "missing-wayland-handle");
-        hint.captureFailed = true;
-    } }
-    Timer {
-        id: captureDelay
-        interval: 60
-        onTriggered: if (popup.visible && captureLoader.item && captureLoader.item.captureSource && !hint.captureReady) { captureLoader.item.captureFrame(); captureTimeout.restart(); }
-    }
     PopupWindow {
         id: popup
         anchor.item: hint.owner
@@ -66,8 +42,8 @@ Scope {
         onWidthChanged: if (visible) anchor.updateAnchor()
         onHeightChanged: if (visible) anchor.updateAnchor()
         onVisibleChanged: {
-            if (visible) { hint.captureFailed = false; if (hint.preview) { water.appear(); captureTimeout.restart(); hint.report("opened"); } if (hint.source) captureDelay.restart(); }
-            else { captureDelay.stop(); captureTimeout.stop(); water.disappear(); }
+            if (visible && hint.preview) water.appear();
+            else water.disappear();
         }
         GlassBoard { id: board; anchors.fill: parent }
         LiquidGlassText {
@@ -88,29 +64,12 @@ Scope {
             width: hint.dimensions.imageWidth
             height: hint.dimensions.imageHeight
             Rectangle { parent: water.contentItem; anchors.fill: parent; color: "#171f30" }
-            Loader {
-                id: captureLoader
+            WindowPreview {
+                id: windowPreview
                 parent: water.contentItem
                 anchors.fill: parent
-                // The popup and its render window must exist before initializing
-                // Quickshell's screencopy context and buffer manager.
-                active: popup.visible && hint.preview && !!hint.source && !hint.captureFailed
-                onLoaded: captureDelay.restart()
-                sourceComponent: Component {
-                    ScreencopyView {
-                        id: copy
-                        anchors.fill: parent
-                        captureSource: popup.visible && !hint.captureFailed ? hint.source : null
-                        live: false
-                        paintCursor: false
-                        onHasContentChanged: if (hasContent) {
-                            captureTimeout.stop();
-                            console.log("NOCTURNE_PREVIEW frame-received", "size=" + sourceSize.width + "x" + sourceSize.height,
-                                "view=" + width + "x" + height);
-                        }
-                        onStopped: { hint.report("capture-stopped"); hint.captureFailed = true; }
-                    }
-                }
+                address: hint.address
+                active: popup.visible && hint.preview
             }
             LiquidGlassText {
                 parent: water.contentItem
@@ -118,7 +77,7 @@ Scope {
                 width: Math.min(implicitWidth, parent.width - 32)
                 height: implicitHeight
                 maxWidth: Math.max(1, parent.width - 32)
-                text: hint.captureFailed || !hint.source ? "Preview unavailable" : "Loading preview…"
+                text: windowPreview.error.length || !hint.address.length ? "Preview unavailable" : "Loading preview…"
                 visible: !hint.captureReady
                 pixelSize: 14
             }

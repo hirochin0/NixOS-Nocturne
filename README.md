@@ -511,6 +511,6 @@ SHA-256が不一致なら、元ファイルを残して原因を調べてくだ�
 
 ポップアップ全体を最大480×360論理ピクセル（通常の横長ウィンドウは幅420px程度）に制限し、画面が小さい場合はさらに縮小します。サムネイルの縦横比を維持し、画面端では表示位置を調整します。フォーカスは奪わず、クリックによるアプリ移動とスクロール操作を維持します。項目からプレビューへポインターを移動するため120msの猶予を設けています。
 
-キャプチャはホバー表示ごとの静止画です。非表示時はキャプチャ元を解除し、取得できないアプリではタイトルと代替表示を残します。文字の縁取りは使わず、背景にはぼかした壁紙・半透明の色・光沢と細い反射線を重ねます。画像は通常のItemへ直接描画し、オフスクリーン描画を行うClippingRectangleやShaderEffectSourceは使用しません。角丸は四隅の小さなカバーと枠線で表現します。水滴の伸縮とカーソルに引かれる動きを枠に付け、画像取得オブジェクトは表示中だけ生成します。キャプチャはSHM方式を使用し、DMA-BUF取り込み時の相性問題を避けます。実装は`GlassHint.qml`・`GlassBoard.qml`・`LiquidGlassText.qml`・`LiquidPreviewSurface.qml`・`PreviewLogic.js`、接続元は`BarButton.qml`と`BarContent.qml`です。
+キャプチャはホバー表示ごとの静止画です。非表示時はキャプチャ元を解除し、取得できないアプリではタイトルと代替表示を残します。文字の縁取りは使わず、背景にはぼかした壁紙・半透明の色・光沢と細い反射線を重ねます。画像は通常のItemへ直接描画し、オフスクリーン描画を行うClippingRectangleやShaderEffectSourceは使用しません。角丸は四隅の小さなカバーと枠線で表現します。水滴の伸縮とカーソルに引かれる動きを枠に付け、画像取得プロセスは表示中だけ生成します。専用の`nocturne-preview`が64bitのウィンドウアドレスを照合し、SHMで受け取った画素をPNGへ変換して通常のImageへ渡します。画像はメモリー内だけで扱い、アルファ値を不透明化して透明なフレームによる空欄表示も避けます。実装は`WindowPreview.qml`・`home/scripts/preview_capture.py`・`GlassHint.qml`・`GlassBoard.qml`・`LiquidGlassText.qml`・`LiquidPreviewSurface.qml`・`PreviewLogic.js`、接続元は`BarButton.qml`と`BarContent.qml`です。
 
-サムネイル取得の診断では、ホバーの開始・フレーム到着・タイムアウトを `NOCTURNE_PREVIEW` としてサービスのログへ出します。`journalctl --user -u nocturne-widgets.service -b --no-pager | rg NOCTURNE_PREVIEW` で、Waylandハンドルの有無と描画サイズを確認できます。ウィンドウタイトルや画像はログに保存しません。
+サムネイル取得の診断では、PNGの表示完了（`image-visible`）・取得エラーを `NOCTURNE_PREVIEW` としてサービスのログへ出します。`journalctl --user -u nocturne-widgets.service -b --no-pager | rg NOCTURNE_PREVIEW` で、PNGの表示状態と元画像サイズを確認できます。ウィンドウタイトルや画像はログに保存しません。

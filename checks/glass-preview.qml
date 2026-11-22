@@ -12,7 +12,8 @@ ShellRoot {
             id: water; x: 20; y: 180; width: 420; height: 260
             Rectangle { parent: water.contentItem; anchors.fill: parent; color: "#456078" }
         }
-        QtObject { id: missing; property var wayland: null; property var lastIpcObject: ({size:[1920,1080]}) }
+        WindowPreview { id: pngPreview; x: 500; y: 100; width: 64; height: 64 }
+        QtObject { id: missing; property string address: ""; property var lastIpcObject: ({size:[1920,1080]}) }
         TestCase { id: input; name: "GlassPreview"; when: false }
         Timer {
             interval: 300; running: true
@@ -26,7 +27,7 @@ ShellRoot {
                 hint.dismiss();
                 if (hint.displayed) throw new Error("Interaction did not dismiss hint");
                 hint.previewTarget = missing;
-                if (hint.source !== null || !hint.preview) throw new Error("Missing screenshot did not use fallback");
+                if (hint.address !== "" || !hint.preview) throw new Error("Missing screenshot did not use fallback");
                 if (hint.dimensions.width > 480 || hint.dimensions.height > 360) throw new Error("Preview exceeded bounds");
                 water.appear(); input.wait(180);
                 if (water.entrance <= 0) throw new Error("Droplet did not animate");
@@ -35,6 +36,15 @@ ShellRoot {
                 const image = input.grabImage(water);
                 if (image.red(200, 100) !== 69 || image.green(200, 100) !== 96 || image.blue(200, 100) !== 120)
                     throw new Error("Preview content was hidden or rendered black");
+                pngPreview.active = true;
+                pngPreview.acceptResult(JSON.stringify({ok:true,width:2,height:2,image:"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAIAAAACCAIAAAD91JpzAAAAFklEQVR4nGP8z8DAwMDAxMDAwMDAAAANHQEDasKb6QAAAABJRU5ErkJggg=="}));
+                input.wait(100);
+                if (!pngPreview.ready) throw new Error("PNG did not load into Image");
+                const pngImage = input.grabImage(pngPreview);
+                if (pngImage.red(32, 32) !== 255 || pngImage.green(32, 32) !== 0 || pngImage.blue(32, 32) !== 0)
+                    throw new Error("PNG pixels did not render");
+                pngPreview.active = false;
+                if (pngPreview.imageData.length) throw new Error("Preview retained image after closing");
                 water.disappear();
                 console.log("NOCTURNE_GLASS_PREVIEW_CHECK_PASSED");
                 Qt.quit();

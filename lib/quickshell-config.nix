@@ -20,6 +20,7 @@ let
     print(json.dumps({p.stem: str(p) for p in root.glob("*.svg")}))
     PYINDEX
   '';
+  previewTool = import ./preview-capture.nix { inherit pkgs desktop; };
   barTools = import ./bar-tools.nix { inherit pkgs desktop; };
   batteryTools = import ./battery-tools.nix { inherit pkgs; };
   palette = pkgs.writeText "nocturne-quickshell-theme.qml" ''
@@ -46,6 +47,7 @@ let
       readonly property string displayCommand: "${displayTool}/bin/nocturne-displays"
       readonly property string desktopCommand: "${desktopTool}/bin/nocturne-desktop"
       readonly property string lyricsCommand: "${lyricsTool}/bin/nocturne-lyrics"
+      readonly property string previewCommand: "${previewTool}/bin/nocturne-preview";
       readonly property string barCommand: "${barTools}/bin/nocturne-bar"
       readonly property string batteryCommand: "${batteryTools}/bin/nocturne-battery"
       readonly property string musicOutput: ${builtins.toJSON (user.musicWidgetOutput or "")}
@@ -90,6 +92,7 @@ in pkgs.runCommand "nocturne-quickshell-config" {
   BarContent 1.0 BarContent.qml
   BarButton 1.0 BarButton.qml
   GlassBoard 1.0 GlassBoard.qml
+  WindowPreview 1.0 WindowPreview.qml
   GlassHint 1.0 GlassHint.qml
   LiquidGlassText 1.0 LiquidGlassText.qml
   LiquidPreviewSurface 1.0 LiquidPreviewSurface.qml

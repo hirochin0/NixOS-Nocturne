@@ -1,6 +1,8 @@
 { pkgs, desktop, theme, user }:
 let
   bundle = import ../lib/quickshell-config.nix { inherit pkgs desktop theme user; };
+  previewTool = import ../lib/preview-capture.nix { inherit pkgs desktop; };
+  previewPython = pkgs.python3.withPackages (p: [ p.pywayland p.pillow ]);
 in pkgs.runCommand "nocturne-quickshell-check" {
   nativeBuildInputs = [ desktop.qtdeclarative desktop.quickshell pkgs.nodejs pkgs.python3 ];
 } ''
@@ -16,6 +18,8 @@ in pkgs.runCommand "nocturne-quickshell-check" {
   node ${./display-logic.cjs} ${bundle}/DisplayLogic.js > "$out/display-logic.log"
   python ${./desktop_reveal_test.py} ${../home/scripts/desktop_reveal.py} > "$out/desktop-reveal.log" 2>&1
   node ${./preview-logic.cjs} ${bundle}/PreviewLogic.js > "$out/preview-logic.log"
+  PYTHONPATH=${previewTool}/lib ${previewPython}/bin/python ${./preview_capture_test.py} \
+    ${previewTool}/lib/preview_capture.py > "$out/preview-capture.log" 2>&1
   node ${./desktop-logic.cjs} ${bundle}/DesktopLogic.js > "$out/desktop-logic.log"
   python ${./lyrics_test.py} ${../home/scripts/lyrics.py} > "$out/lyrics-fetch.log" 2>&1
   node ${./lyrics-logic.cjs} ${bundle}/LyricsLogic.js > "$out/lyrics-logic.log"
