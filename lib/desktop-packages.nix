@@ -2,13 +2,13 @@
 let
   upstream = import hyprland.inputs.nixpkgs {
     inherit system;
-    config.allowUnfreePredicate = pkg: builtins.elem (upstream.lib.getName pkg) [ "vscode" "google-chrome" "spotify" "discord" "discord-unwrapped" "steam" "steam-unwrapped" ];
+    config.allowUnfreePredicate = pkg: builtins.elem (upstream.lib.getName pkg) [ "vscode" "google-chrome" "spotify" "discord" "discord-unwrapped" "steam" "steam-unwrapped" "checkra1n" ];
   };
 in {
   hyprland = hyprland.packages.${system}.hyprland;
   portal = hyprland.packages.${system}.xdg-desktop-portal-hyprland;
   # EGL clients must use a libc compatible with the runtime-loaded Mesa driver.
-  inherit (upstream) mesa kitty waybar hypridle hyprlock rofi quickshell cage;
+  inherit (upstream) mesa kitty waybar hypridle hyprlock rofi quickshell cage checkra1n;
   inherit (upstream.qt6) qtdeclarative qtshadertools;
   # GUI clients share Mesa's package set (including libc/libglvnd).
   inherit (upstream) vscode google-chrome codex spotify spicetify-cli discord steam;

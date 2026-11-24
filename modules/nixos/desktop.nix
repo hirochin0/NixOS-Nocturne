@@ -40,7 +40,7 @@
     shell = pkgs.fish;
   };
   fonts.packages = with pkgs; [ nunito nerd-fonts.jetbrains-mono noto-fonts-cjk-sans noto-fonts-color-emoji ];
-  environment.systemPackages = with pkgs; [ git ];
+  environment.systemPackages = with pkgs; [ git desktop.checkra1n ];
   assertions = [{
     assertion = lib.versionAtLeast config.programs.hyprland.package.version "0.57.1"
       && lib.versionOlder config.programs.hyprland.package.version "0.58";

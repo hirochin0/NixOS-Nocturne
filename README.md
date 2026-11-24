@@ -516,3 +516,7 @@ SHA-256が不一致なら、元ファイルを残して原因を調べてくだ�
 サムネイル取得の診断では、PNGの読み込み完了（`image-loaded`）・取得エラーを `NOCTURNE_PREVIEW` としてサービスのログへ出します。`journalctl --user -u nocturne-widgets.service -b --no-pager | rg NOCTURNE_PREVIEW` で、PNGの表示状態と元画像サイズを確認できます。ウィンドウタイトルや画像はログに保存しません。
 
 サムネイル領域は背景をz=0、画像をz=1、状態表示をz=2に固定しています。別の親へ配置した子要素は宣言順と描画順が一致しないため、画像単体だけでなく組み立てたGlassHint全体の画素も検証します。
+
+## checkra1n
+
+checkra1nはNixpkgsのCLI版をシステムへ導入します。USB機器へアクセスするため、ターミナルで`sudo checkra1n`を実行してください。パッケージの非自由ライセンスは`lib/desktop-packages.nix`の許可リストで管理します。
